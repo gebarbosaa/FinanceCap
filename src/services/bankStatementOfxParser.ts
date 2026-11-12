@@ -22,7 +22,9 @@ function ofxDate(value: string): string | null {
 }
 
 function amountToCents(value: string, allowZero = false): number | null {
-  const raw = value.trim();\n  if (!raw) return null;\n  const amount = Number(raw.replace(',', '.'));
+  const raw = value.trim();
+  if (!raw) return null;
+  const amount = Number(raw.replace(',', '.'));
   if (!Number.isFinite(amount) || (!allowZero && amount === 0)) return null;
   const cents = Math.round(amount * 100);
   return Number.isSafeInteger(cents) && (allowZero || cents !== 0) ? cents : null;
