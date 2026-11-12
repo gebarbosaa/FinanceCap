@@ -12,6 +12,7 @@ import { Sidebar, ActiveTab } from './components/Sidebar';
 import { DashboardView } from './components/DashboardView';
 import { TransactionsView } from './components/TransactionsView';
 import { CardsView } from './components/CardsView';
+import { AccountsView } from './components/AccountsView';
 import { InstallmentsView } from './components/InstallmentsView';
 import { PlanningView } from './components/PlanningView';
 import { DebtsView } from './components/DebtsView';
@@ -258,6 +259,13 @@ export default function App() {
               onDeleteTransaction={(txId, reason) => {
                 storageService.deleteTransaction(txId, reason);
               }}
+            />
+          )}
+
+          {activeTab === 'accounts' && (
+            <AccountsView
+              accounts={data.accounts}
+              onAddAccount={(account) => storageService.addAccount(account)}
             />
           )}
 
