@@ -24,21 +24,34 @@ export function formatCurrency(centavos: number): string {
  */
 export function parseToCentavos(value: string | number): number {
   if (typeof value === 'number') {
-    return Math.round(value * 100);
+    if (!Number.isFinite(value)) return 0;
+    const cents = Math.round(value * 100);
+    return Number.isSafeInteger(cents) ? cents : 0;
   }
   if (!value) return 0;
 
-  // Clean currency symbols, spaces
-  let clean = value.replace(/[R$\s]/g, '').trim();
+  let clean = value.replace(/R\$/gi, '').replace(/\s/g, '').trim();
+  if (!clean) return 0;
 
-  // Handle Brazilian format (1.234,56 or 1234,56)
+  const negative = clean.startsWith('-');
+  if (negative) clean = clean.slice(1);
+  if (!clean || !/^\d[\d.,]*$/.test(clean)) return 0;
+
+  // Brazilian grouping + decimal: 1.234,56 / 1234,56.
   if (clean.includes(',')) {
+    if (!/^\d{1,3}(\.\d{3})*(,\d{1,2})?$/.test(clean) && !/^\d+(,\d{1,2})?$/.test(clean)) return 0;
     clean = clean.replace(/\./g, '').replace(',', '.');
+  } else if (clean.includes('.')) {
+    // A dot followed by exactly three-digit groups is a thousands separator;
+    // otherwise it is treated as the decimal separator (1234.56).
+    if (/^\d{1,3}(\.\d{3})+$/.test(clean)) clean = clean.replace(/\./g, '');
+    else if (!/^\d+\.\d{1,2}$/.test(clean)) return 0;
   }
 
-  const parsed = parseFloat(clean);
-  if (isNaN(parsed)) return 0;
-  return Math.round(parsed * 100);
+  const [whole, fraction = ''] = clean.split('.');
+  const cents = Number(whole) * 100 + Number(fraction.padEnd(2, '0'));
+  if (!Number.isSafeInteger(cents)) return 0;
+  return negative ? -cents : cents;
 }
 
 /**
