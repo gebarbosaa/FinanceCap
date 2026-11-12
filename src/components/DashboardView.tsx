@@ -338,7 +338,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
           <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
             <div>
-              <div className="flex items-center space-x-2">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
                 <h3 className="font-bold text-slate-900 dark:text-white text-base">
                   15 Maiores Despesas do Mês
                 </h3>
