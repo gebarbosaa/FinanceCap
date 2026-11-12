@@ -215,13 +215,9 @@ export default function App() {
               accounts={data.accounts}
               installments={data.installments}
               debts={data.debts}
+              recurrences={data.recurrences}
               currentCompetencia={currentCompetencia}
-              onUpdateBudget={(bgt) => {
-                const idx = data.budgets.findIndex((b) => b.id === bgt.id);
-                if (idx !== -1) {
-                  data.budgets[idx] = bgt;
-                }
-              }}
+              onUpdateBudget={(bgt) => storageService.upsertBudget(bgt)}
             />
           )}
 
