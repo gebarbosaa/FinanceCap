@@ -584,7 +584,7 @@ export function runAll20MandatoryTests(): TestCaseResult[] {
 
   // Test 19: Importação robusta de extrato
   record(19, 'Importação robusta de extrato', 'Valida CSV com campos entre aspas, separador dentro da descrição e moeda brasileira', () => {
-    const csv = 'Data;Descrição;Valor;Categoria\\n08/11/2026;"Supermercado; Pão de Açúcar";-1.234,56;Alimentação\\n09/11/2026;Salário;5.000,00;Receita';
+    const csv = 'Data;Descrição;Valor;Categoria\n08/11/2026;"Supermercado; Pão de Açúcar";-1.234,56;Alimentação\n09/11/2026;Salário;5.000,00;Receita';
     const parsed = parseBankStatementCsv(csv);
     const first = parsed.rows[0];
     const second = parsed.rows[1];
