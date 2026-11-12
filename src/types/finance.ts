@@ -86,6 +86,7 @@ export interface Category {
   cor: string;
   limiteMensalCentavos?: number;
   isGranaExtra?: boolean; // Excluded from top 15 expenses ranking
+  ativo?: boolean; // Archived categories remain available for historical records
 }
 
 export interface CreditCard {
