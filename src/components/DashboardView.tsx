@@ -87,7 +87,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
           <div>
             <div className="mb-1">
-              <span className="text-xs text-blue-200">Competência {currentCompetencia}</span>
+              <span className="text-xs text-white/80">Competência {currentCompetencia}</span>
             </div>
             <h1 className="text-2xl font-extrabold tracking-tight">
               Visão Patrimonial e Fluxo de Caixa
@@ -98,7 +98,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <span>Google Workspace Ativo ({user.email})</span>
               </div>
             ) : (
-              <p className="text-xs text-blue-200/80 mt-1">
+              <p className="text-xs text-white/80/80 mt-1">
                 Barbosa Fernandes Finance OS • Gestão Patrimonial Executiva
               </p>
             )}
@@ -135,7 +135,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                   Conecte sua Conta Google ao BF Finance OS
                 </h3>
-                <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
+                <span className="text-[10px] font-bold text-orange-600 dark:text-orange-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
                   Google Workspace
                 </span>
               </div>
@@ -194,7 +194,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Saldo Consolidado
             </span>
-            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-orange-500/10 dark:bg-orange-500/15 text-orange-500 flex items-center justify-center">
               <Wallet className="w-4 h-4" />
             </div>
           </div>
@@ -208,32 +208,32 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* 2. Dinheiro Disponível para Gastar (Special BF Indicator) */}
-        <div className="bg-gradient-to-br from-emerald-500/10 via-white to-white dark:from-emerald-950/30 dark:via-slate-800 dark:to-slate-800 p-5 rounded-2xl border-2 border-emerald-500/30 dark:border-emerald-500/30 shadow-sm relative overflow-hidden">
+        <div className="bg-white dark:bg-[#141414] p-5 rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm relative overflow-hidden">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-1.5">
-              <span className="text-xs font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider">
+              <span className="text-xs font-bold text-slate-700 dark:text-white uppercase tracking-wider">
                 Disponível p/ Gastar
               </span>
               <button
                 onClick={() => setShowMethodologyModal(true)}
                 title="Ver metodologia de cálculo seguro"
-                className="text-emerald-600 hover:text-emerald-800 cursor-pointer"
+                className="text-orange-500 hover:text-orange-600 cursor-pointer"
               >
                 <Info className="w-3.5 h-3.5" />
               </button>
             </div>
-            <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold">
+            <div className="w-8 h-8 rounded-lg bg-orange-500/10 dark:bg-orange-500/15 text-orange-500 flex items-center justify-center font-bold">
               R$
             </div>
           </div>
-          <div className="break-words text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
+          <div className="break-words text-xl sm:text-2xl font-black text-orange-600 dark:text-orange-400 tracking-tight">
             {formatCurrency(summary.dinheiroDisponivelGastarCentavos)}
           </div>
-          <div className="text-[11px] text-emerald-700/80 dark:text-emerald-300/80 mt-2 flex items-center justify-between">
+          <div className="text-[11px] text-slate-600 dark:text-white/75 mt-2 flex items-center justify-between">
             <span>Livre de faturas e compromissos</span>
             <button
               onClick={() => setShowMethodologyModal(true)}
-              className="underline font-semibold hover:text-emerald-900 cursor-pointer"
+              className="underline font-semibold hover:text-orange-600 cursor-pointer"
             >
               Ver Cálculo
             </button>
@@ -311,7 +311,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Faturas Abertas */}
         <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+            <div className="p-2.5 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-orange-600 dark:text-orange-400">
               <CreditCard className="w-5 h-5" />
             </div>
             <div>
@@ -323,7 +323,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
           <button
             onClick={() => onNavigate('cards')}
-            className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+            className="text-xs font-semibold text-orange-600 dark:text-orange-400 hover:underline cursor-pointer"
           >
             Gerenciar
           </button>
@@ -547,7 +547,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   </div>
                   <button
                     onClick={() => onNavigate('cards')}
-                    className="mt-3 w-full py-1.5 bg-[#0B2545] hover:bg-[#1F4E79] text-white text-xs font-semibold rounded-lg transition cursor-pointer"
+                    className="mt-3 w-full py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold rounded-lg transition cursor-pointer"
                   >
                     Liquidar Fatura
                   </button>
