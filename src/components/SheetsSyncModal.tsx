@@ -55,7 +55,7 @@ export const SheetsSyncModal: React.FC<SheetsSyncModalProps> = ({
 
       // Immediately sync initial data
       setStatusMessage('Povoando as 32 abas com cabeçalhos e lançamentos...');
-      await syncDataToGoogleSheets(res.spreadsheetId, data);
+      await syncDataToGoogleSheets(res.spreadsheetId, data, true);
 
       setStatusMessage('Planilha criada e sincronizada com sucesso no seu Google Drive!');
     } catch (err: unknown) {
