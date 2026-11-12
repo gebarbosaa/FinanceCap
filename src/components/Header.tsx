@@ -54,7 +54,7 @@ export const Header: React.FC<HeaderProps> = ({
   ];
 
   return (
-    <header className={`sticky top-0 z-30 border-b shadow-md transition-colors duration-200 ${darkMode ? "bg-[#0B2545] text-white border-[#1F4E79]" : "bg-white text-slate-900 border-slate-200"}`}>
+    <header className={`bf-header sticky top-0 z-30 border-b transition-colors duration-200 ${darkMode ? "text-white" : "text-slate-900"}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex min-h-16 flex-wrap items-center justify-between gap-3 py-2.5">
           {/* Logo and System Title */}
