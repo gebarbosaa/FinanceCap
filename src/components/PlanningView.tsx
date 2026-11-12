@@ -69,7 +69,7 @@ export const PlanningView: React.FC<PlanningViewProps> = ({
   const budgetExecution = effectiveBudgets.map((b) => {
       const cat = catMap.get(b.categoriaId);
       const spent = transactions
-        .filter((t) => !t.isDeleted && t.categoriaId === b.categoriaId && t.competencia === currentCompetencia && t.status === 'REALIZADO')
+        .filter((t) => !t.isDeleted && t.tipo === 'DESPESA' && t.categoriaId === b.categoriaId && t.competencia === currentCompetencia && t.status === 'REALIZADO')
         .reduce((sum, t) => sum + t.valorCentavos, 0);
 
       const diff = b.valorPlanejadoCentavos - spent;
