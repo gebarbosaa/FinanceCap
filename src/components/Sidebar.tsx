@@ -95,7 +95,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
               )}
               <button
-                title={item.label}\n                aria-label={item.label}\n                onClick={() => onTabChange(item.id)}
+                title={item.label}
+                aria-label={item.label}
+                onClick={() => onTabChange(item.id)}
                 className={`w-full flex items-center justify-center lg:justify-between px-2 lg:px-3 py-2.5 lg:py-2 rounded-lg text-xs font-semibold transition cursor-pointer group ${
                   isActive
                     ? 'bg-[#1F4E79] text-white shadow-sm border-l-4 border-amber-400 pl-2'
