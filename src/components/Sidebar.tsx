@@ -16,6 +16,7 @@ import {
   History,
   CheckCircle2,
   Settings,
+  Tags,
   ChevronRight,
 } from 'lucide-react';
 
@@ -35,7 +36,8 @@ export type ActiveTab =
   | 'reports'
   | 'audit'
   | 'tests'
-  | 'settings';
+  | 'settings'
+  | 'categories';
 
 interface SidebarProps {
   activeTab: ActiveTab;
@@ -76,6 +78,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { section: 'DADOS & GOVERNANÇA', id: 'reports', label: '32 Abas & Relatórios', icon: <FileSpreadsheet className="w-4 h-4 text-emerald-400" /> },
     { id: 'audit', label: 'Log de Auditoria', icon: <History className="w-4 h-4" /> },
     { id: 'tests', label: 'Testes do Sistema (20)', icon: <CheckCircle2 className="w-4 h-4 text-emerald-400" />, badge: '20/20', badgeColor: 'bg-emerald-500/20 text-emerald-300' },
+    { id: 'categories', label: 'Categorias', icon: <Tags className="w-4 h-4" /> },
     { id: 'settings', label: 'Configurações', icon: <Settings className="w-4 h-4" /> },
   ];
 
