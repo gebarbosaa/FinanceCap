@@ -12,7 +12,7 @@ import {
   SystemSettings,
   Recurrence,
 } from '../types/finance';
-import { addMonthsToCompetencia, getCurrentCompetencia } from './currency';
+import { addMonthsToCompetencia, getCurrentCompetencia, monthDiff } from './currency';
 
 /**
  * Calculates current actual balance for a specific account based on initial balance and all transactions
@@ -305,7 +305,7 @@ export function generate12MonthProjection(
 
     // Include only future planned transactions; realized expenses are already reflected in bank balances.
     for (const tx of transactions) {
-      if (tx.isDeleted || tx.parcelamentoId || tx.competencia !== competencia || (tx.status !== 'PREVISTO' && tx.status !== 'PENDENTE')) continue;
+      if (tx.isDeleted || tx.parcelamentoId || tx.recorrenciaId || tx.competencia !== competencia || (tx.status !== 'PREVISTO' && tx.status !== 'PENDENTE')) continue;
       if (tx.tipo === 'RECEITA') receitasEsperadasCentavos += tx.valorCentavos;
       if (tx.tipo === 'DESPESA') despesasFixasCentavos += tx.valorCentavos;
     }
