@@ -207,7 +207,14 @@ class StorageService {
     if (!inv) return { success: false, message: 'Fatura não encontrada.' };
 
     const conta = this.data.accounts.find((a) => a.id === contaBancariaId);
-    if (!conta) return { success: false, message: 'Conta bancária de pagamento não encontrada.' };
+    if (!conta || !conta.ativo) return { success: false, message: 'Conta bancária ativa para pagamento não encontrada.' };
+
+    if (!Number.isSafeInteger(valorPagoCentavos) || valorPagoCentavos <= 0) {
+      return { success: false, message: 'O pagamento deve ser um valor positivo em centavos inteiros.' };
+    }
+    if (inv.status === 'PAGA' || inv.status === 'CANCELADA' || valorPagoCentavos > inv.saldoRestanteCentavos) {
+      return { success: false, message: 'O pagamento não pode superar o saldo restante de uma fatura em aberto.' };
+    }
 
     const novoValorPago = inv.valorPagoCentavos + valorPagoCentavos;
     const novoSaldoRestante = Math.max(0, inv.valorTotalCentavos - novoValorPago);
@@ -317,6 +324,56 @@ class StorageService {
     );
     this.persist({ ...this.data });
     return saved;
+  }
+
+
+  // Persist and audit entities created by the app. Never mutate getData() collections directly.
+  public addCard(card: Omit<CreditCard, 'id'>): CreditCard {
+    const created: CreditCard = { ...card, id: `card-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` };
+    this.data.cards = [...this.data.cards, created];
+    this.logAudit('CRIAR', 'CARTÕES', created.id, `Cadastro do cartão ${created.nome}`, undefined, JSON.stringify(created));
+    this.persist({ ...this.data });
+    return created;
+  }
+
+  public addInstallment(plan: Omit<InstallmentPlan, 'id'>): InstallmentPlan {
+    const created: InstallmentPlan = { ...plan, id: `inst-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` };
+    this.data.installments = [...this.data.installments, created];
+    this.logAudit('CRIAR', 'PARCELAMENTOS', created.id, `Cadastro do parcelamento ${created.descricao}`, undefined, JSON.stringify(created));
+    this.persist({ ...this.data });
+    return created;
+  }
+
+  public addDebt(debt: Omit<Debt, 'id'>): Debt {
+    const created: Debt = { ...debt, id: `debt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` };
+    this.data.debts = [...this.data.debts, created];
+    this.logAudit('CRIAR', 'DÍVIDAS', created.id, `Cadastro da dívida ${created.credor}`, undefined, JSON.stringify(created));
+    this.persist({ ...this.data });
+    return created;
+  }
+
+  public addPatrimony(item: Omit<PatrimonyItem, 'id'>): PatrimonyItem {
+    const created: PatrimonyItem = { ...item, id: `pat-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` };
+    this.data.patrimony = [...this.data.patrimony, created];
+    this.logAudit('CRIAR', 'PATRIMÔNIO', created.id, `Cadastro patrimonial: ${created.descricao}`, undefined, JSON.stringify(created));
+    this.persist({ ...this.data });
+    return created;
+  }
+
+  public addInvestment(investment: Omit<Investment, 'id'>): Investment {
+    const created: Investment = { ...investment, id: `inv-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` };
+    this.data.investments = [...this.data.investments, created];
+    this.logAudit('CRIAR', 'INVESTIMENTOS', created.id, `Cadastro do investimento ${created.produto}`, undefined, JSON.stringify(created));
+    this.persist({ ...this.data });
+    return created;
+  }
+
+  public addGoal(goal: Omit<Goal, 'id'>): Goal {
+    const created: Goal = { ...goal, id: `goal-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` };
+    this.data.goals = [...this.data.goals, created];
+    this.logAudit('CRIAR', 'METAS', created.id, `Cadastro da meta ${created.nome}`, undefined, JSON.stringify(created));
+    this.persist({ ...this.data });
+    return created;
   }
 
   // Account operations
