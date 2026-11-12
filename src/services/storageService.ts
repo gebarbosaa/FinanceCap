@@ -52,10 +52,14 @@ export interface StorageData {
 
 class StorageService {
   private data: StorageData;
+  private lastPersistedData: StorageData | null = null;
   private listeners: Array<() => void> = [];
 
   constructor() {
     this.data = this.loadData();
+    if (!this.lastPersistedData) {
+      this.lastPersistedData = JSON.parse(JSON.stringify(this.data)) as StorageData;
+    }
   }
 
   private loadData(): StorageData {
@@ -92,12 +96,21 @@ class StorageService {
   }
 
   private persist(data: StorageData) {
-    this.data = data;
+    const serialized = JSON.stringify(data);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch (e) {
-      console.error('Failed to save to localStorage', e);
+      localStorage.setItem(STORAGE_KEY, serialized);
+    } catch (error) {
+      // Restore the last known durable snapshot; never report a failed write as success.
+      if (this.lastPersistedData) {
+        this.data = JSON.parse(JSON.stringify(this.lastPersistedData)) as StorageData;
+      }
+      console.error('Failed to save BF Finance data to localStorage', error);
+      throw new Error('Não foi possível salvar os dados neste navegador. Verifique o espaço disponível e tente novamente.');
     }
+
+    const durableSnapshot = JSON.parse(serialized) as StorageData;
+    this.lastPersistedData = JSON.parse(serialized) as StorageData;
+    this.data = durableSnapshot;
     this.notify();
   }
 
@@ -196,66 +209,106 @@ class StorageService {
     return true;
   }
 
-  // Invoice Payment (Liquidação sem duplicar despesa)
+  // Invoice Payment (atomic settlement without duplicating an expense)
   public payInvoice(
     invoiceId: string,
     contaBancariaId: string,
     valorPagoCentavos: number,
     formaPagamento: string = 'PIX Débito em Conta'
   ): { success: boolean; message: string } {
-    const inv = this.data.invoices.find((i) => i.id === invoiceId);
+    const inv = this.data.invoices.find((item) => item.id === invoiceId);
     if (!inv) return { success: false, message: 'Fatura não encontrada.' };
 
-    const conta = this.data.accounts.find((a) => a.id === contaBancariaId);
-    if (!conta || !conta.ativo) return { success: false, message: 'Conta bancária ativa para pagamento não encontrada.' };
-
+    const conta = this.data.accounts.find((account) => account.id === contaBancariaId);
+    if (!conta || !conta.ativo) {
+      return { success: false, message: 'Conta bancária ativa para pagamento não encontrada.' };
+    }
     if (!Number.isSafeInteger(valorPagoCentavos) || valorPagoCentavos <= 0) {
       return { success: false, message: 'O pagamento deve ser um valor positivo em centavos inteiros.' };
     }
-    if (inv.status === 'PAGA' || inv.status === 'CANCELADA' || valorPagoCentavos > inv.saldoRestanteCentavos) {
-      return { success: false, message: 'O pagamento não pode superar o saldo restante de uma fatura em aberto.' };
+    if (inv.status === 'PAGA' || inv.status === 'CANCELADA') {
+      return { success: false, message: 'Esta fatura não aceita novos pagamentos.' };
     }
 
-    const novoValorPago = inv.valorPagoCentavos + valorPagoCentavos;
-    const novoSaldoRestante = Math.max(0, inv.valorTotalCentavos - novoValorPago);
-    const novoStatus = novoSaldoRestante === 0 ? 'PAGA' : 'PARCIALMENTE_PAGA';
+    const saldoCorreto = Math.max(0, inv.valorTotalCentavos - inv.valorPagoCentavos);
+    if (!Number.isSafeInteger(saldoCorreto) || saldoCorreto <= 0 || valorPagoCentavos > saldoCorreto) {
+      return { success: false, message: 'O pagamento não pode superar o saldo restante válido da fatura.' };
+    }
 
-    // 1. Create a LIQUIDACAO transaction in bank account (reduces bank balance, NOT counted as new expense)
-    const card = this.data.cards.find((c) => c.id === inv.cartaoId);
+    const now = new Date().toISOString();
+    const transactionId = `tx-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const card = this.data.cards.find((item) => item.id === inv.cartaoId);
     const cardName = card ? card.nome : 'Cartão';
-    const txLiquidacao = this.addTransaction(
-      {
-        data: new Date().toISOString().split('T')[0],
-        competencia: inv.competencia,
-        descricao: `Pagamento Fatura ${cardName} (${inv.competencia})`,
-        tipo: 'LIQUIDACAO',
-        categoriaId: 'cat-desp-12', // Categoria de liquidação
-        contaId: contaBancariaId,
-        formaPagamento,
-        valorCentavos: valorPagoCentavos,
-        status: 'REALIZADO',
-        observacoes: `Liquidação de obrigação do cartão ${cardName}. Não duplica despesas já lançadas no cartão.`,
-        origem: 'SISTEMA',
-      },
-      `Pagamento de fatura ${inv.id}`
-    );
+    const newTransaction: Transaction = {
+      id: transactionId,
+      data: now.split('T')[0],
+      competencia: inv.competencia,
+      descricao: `Pagamento Fatura ${cardName} (${inv.competencia})`,
+      tipo: 'LIQUIDACAO',
+      categoriaId: 'cat-desp-12',
+      contaId: contaBancariaId,
+      formaPagamento,
+      valorCentavos: valorPagoCentavos,
+      status: 'REALIZADO',
+      observacoes: `Liquidação da fatura ${inv.id}. Não gera nova despesa.`,
+      origem: 'SISTEMA',
+      isDeleted: false,
+      createdAt: now,
+      updatedAt: now,
+    };
 
-    // 2. Update invoice status
-    inv.valorPagoCentavos = novoValorPago;
-    inv.saldoRestanteCentavos = novoSaldoRestante;
-    inv.status = novoStatus;
-    inv.pagamentoTransacaoId = txLiquidacao.id;
+    const updatedInvoice: Invoice = {
+      ...inv,
+      valorPagoCentavos: inv.valorPagoCentavos + valorPagoCentavos,
+      saldoRestanteCentavos: saldoCorreto - valorPagoCentavos,
+      status: saldoCorreto - valorPagoCentavos === 0 ? 'PAGA' : 'PARCIALMENTE_PAGA',
+      pagamentoTransacaoId: transactionId,
+    };
 
-    this.logAudit(
-      'PAGAMENTO_FATURA',
-      'FATURAS',
-      inv.id,
-      `Pagamento de fatura no valor de R$ ${(valorPagoCentavos / 100).toFixed(2)} via conta ${conta.nome}`,
-      undefined,
-      JSON.stringify(inv)
-    );
+    const makeAudit = (
+      entidade: string,
+      registroId: string,
+      acao: AuditLog['acao'],
+      motivo: string,
+      valorPosterior?: string
+    ): AuditLog => ({
+      id: `aud-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      timestamp: now,
+      usuario: this.data.settings.nomeProprietario,
+      acao,
+      entidade,
+      registroId,
+      valorPosterior,
+      motivo,
+      origem: 'SISTEMA_WEB',
+    });
 
-    this.persist({ ...this.data });
+    const nextData: StorageData = {
+      ...this.data,
+      transactions: [newTransaction, ...this.data.transactions],
+      invoices: this.data.invoices.map((item) => item.id === invoiceId ? updatedInvoice : item),
+      audit: [
+        makeAudit('LANÇAMENTOS', transactionId, 'CRIAR', `Liquidação da fatura ${invoiceId}`, JSON.stringify(newTransaction)),
+        makeAudit(
+          'FATURAS',
+          invoiceId,
+          'PAGAMENTO_FATURA',
+          `Pagamento de ${valorPagoCentavos} centavos pela conta ${conta.nome}`,
+          JSON.stringify(updatedInvoice)
+        ),
+        ...this.data.audit,
+      ],
+    };
+
+    try {
+      this.persist(nextData);
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Não foi possível salvar o pagamento. Nenhuma alteração foi confirmada.',
+      };
+    }
+
     return { success: true, message: 'Pagamento de fatura registrado com sucesso!' };
   }
 
