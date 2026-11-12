@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Tailwind v4: use the .dark class controlled by the app, not only OS preference. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 
 /* BF Finance OS — layout safety and responsive overflow guards */
 html,
