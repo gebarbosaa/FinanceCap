@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { parseToCentavos } from './currency';
 import { calculateAccountBalance, calculateCardLimits } from './financeEngine';
+import { runAll20MandatoryTests } from './testSuite';
 import type { Account, CreditCard, Invoice, InstallmentPlan, Transaction } from '../types/finance';
 
 test('parseToCentavos reads Brazilian thousands and decimal separators', () => {
@@ -137,4 +138,14 @@ test('calculateCardLimits safely handles a zero credit limit', () => {
   assert.equal(result.limiteTotalCentavos, 0);
   assert.equal(result.limiteDisponivelCentavos, 0);
   assert.equal(Number.isFinite(result.limiteUtilizadoCentavos), true);
+});
+
+test('all 21 in-app business-rule checks pass', () => {
+  const results = runAll20MandatoryTests();
+  const failures = results.filter((result) => !result.aprovado);
+  assert.equal(results.length, 21, 'the in-app test suite count should match its 21 checks');
+  assert.deepEqual(
+    failures.map((result) => ({ id: result.id, nome: result.nome, mensagem: result.mensagem })),
+    []
+  );
 });
