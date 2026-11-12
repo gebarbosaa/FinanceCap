@@ -44,6 +44,7 @@ interface SidebarProps {
   onTabChange: (tab: ActiveTab) => void;
   radarAlertCount: number;
   openInvoiceCount: number;
+  darkMode: boolean;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -51,6 +52,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onTabChange,
   radarAlertCount,
   openInvoiceCount,
+  darkMode,
 }) => {
   const menuItems: Array<{
     id: ActiveTab;
@@ -83,7 +85,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <aside className="w-16 lg:w-64 bg-[#0B2545] text-slate-200 border-r border-[#1F4E79] flex flex-col flex-shrink-0 h-[calc(100vh-4rem)] sticky top-16 overflow-y-auto overflow-x-hidden select-none">
+    <aside className={`w-16 lg:w-64 flex flex-col flex-shrink-0 h-[calc(100vh-4rem)] sticky top-16 overflow-y-auto overflow-x-hidden select-none border-r transition-colors duration-200 ${darkMode ? "bg-[#0B2545] text-slate-200 border-[#1F4E79]" : "bg-white text-slate-700 border-slate-200"}`}>
       <div className="py-4 px-3 space-y-6">
         {/* Navigation Sections */}
         {menuItems.map((item, index) => {
@@ -92,7 +94,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <React.Fragment key={item.id}>
               {item.section && (
                 <div className="hidden lg:block pt-2 px-3">
-                  <span className="text-[10px] font-bold tracking-wider text-blue-300/60 uppercase">
+                  <span className={`text-[10px] font-bold tracking-wider uppercase ${darkMode ? "text-blue-300/60" : "text-slate-400"}`}>
                     {item.section}
                   </span>
                 </div>
@@ -103,12 +105,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => onTabChange(item.id)}
                 className={`w-full flex items-center justify-center lg:justify-between px-2 lg:px-3 py-2.5 lg:py-2 rounded-lg text-xs font-semibold transition cursor-pointer group ${
                   isActive
-                    ? 'bg-[#1F4E79] text-white shadow-sm border-l-4 border-amber-400 pl-2'
-                    : 'text-slate-300 hover:bg-[#1F4E79]/50 hover:text-white'
+                    ? darkMode ? "bg-[#1F4E79] text-white shadow-sm border-l-4 border-amber-400 pl-2" : "bg-blue-50 text-blue-900 shadow-sm border-l-4 border-amber-500 pl-2"
+                    : darkMode ? "text-slate-300 hover:bg-[#1F4E79]/50 hover:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
                 }`}
               >
                 <div className="flex min-w-0 items-center justify-center lg:justify-start space-x-0 lg:space-x-2.5 truncate">
-                  <span className={`${isActive ? 'text-amber-400' : 'text-blue-300 group-hover:text-white'}`}>
+                  <span className={`${isActive ? "text-amber-500" : darkMode ? "text-blue-300 group-hover:text-white" : "text-slate-400 group-hover:text-blue-700"}`}>
                     {item.icon}
                   </span>
                   <span className="hidden lg:inline truncate">{item.label}</span>
