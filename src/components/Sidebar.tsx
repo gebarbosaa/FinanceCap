@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   Receipt,
   CreditCard as CardIcon,
+  Wallet,
   Layers,
   CalendarDays,
   Landmark,
@@ -24,6 +25,7 @@ export type ActiveTab =
   | 'dashboard'
   | 'transactions'
   | 'cards'
+  | 'accounts'
   | 'installments'
   | 'planning'
   | 'debts'
@@ -79,6 +81,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
     { section: 'OPERAÇÕES & CRÉDITO', id: 'transactions', label: 'Lançamentos', icon: <Receipt className="w-4 h-4" /> },
     { id: 'cards', label: 'Cartões & Faturas', icon: <CardIcon className="w-4 h-4" />, badge: openInvoiceCount > 0 ? `${openInvoiceCount} aberta` : undefined, badgeColor: 'bg-orange-500 text-white' },
+    { id: 'accounts', label: 'Contas bancárias', icon: <Wallet className="w-4 h-4" /> },
     { id: 'installments', label: 'Parcelamentos', icon: <Layers className="w-4 h-4" /> },
     { id: 'conciliation', label: 'Conciliação CSV', icon: <UploadCloud className="w-4 h-4" /> },
 
@@ -90,7 +93,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
     { section: 'DADOS & GOVERNANÇA', id: 'reports', label: '32 Abas & Relatórios', icon: <FileSpreadsheet className="w-4 h-4 text-orange-500" /> },
     { id: 'audit', label: 'Log de Auditoria', icon: <History className="w-4 h-4" /> },
-    { id: 'tests', label: 'Testes do Sistema (20)', icon: <CheckCircle2 className="w-4 h-4 text-orange-500" />, badge: '20/20', badgeColor: 'bg-orange-500/15 text-orange-500' },
+    { id: 'tests', label: 'Testes do Sistema (21)', icon: <CheckCircle2 className="w-4 h-4 text-orange-500" />, badge: '21 verificações', badgeColor: 'bg-orange-500/15 text-orange-500' },
     { id: 'categories', label: 'Categorias', icon: <Tags className="w-4 h-4" /> },
     { id: 'settings', label: 'Configurações', icon: <Settings className="w-4 h-4" /> },
   ];
