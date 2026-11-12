@@ -24,7 +24,7 @@ export function calculateAccountBalance(
   let balance = account.saldoInicialCentavos;
 
   for (const tx of transactions) {
-    if (tx.isDeleted || tx.status !== 'REALIZADO') {
+    if (tx.isDeleted || tx.status !== 'REALIZADO' || tx.data < account.dataSaldoInicial) {
       continue;
     }
 
@@ -61,42 +61,63 @@ export function calculateAccountBalance(
 export function calculateCardLimits(
   card: CreditCard,
   transactions: Transaction[],
-  installments: InstallmentPlan[]
+  installments: InstallmentPlan[],
+  invoices: Invoice[] = []
 ): { limiteTotalCentavos: number; limiteUtilizadoCentavos: number; limiteDisponivelCentavos: number } {
-  const limiteTotalCentavos = card.limiteTotalCentavos;
+  const limiteTotalCentavos = Math.max(0, card.limiteTotalCentavos || 0);
   let limiteUtilizadoCentavos = 0;
 
-  // 1. Transactions directly committed on card that are not yet liquidated through invoice
-  for (const tx of transactions) {
-    if (tx.isDeleted || tx.cartaoId !== card.id || tx.status === 'CANCELADO') continue;
+  const validInvoices = invoices.filter(
+    (invoice) => invoice.cartaoId === card.id && invoice.status !== 'CANCELADA'
+  );
+  const invoicedCompetencies = new Set(validInvoices.map((invoice) => invoice.competencia));
+  const validInvoiceIds = new Set(validInvoices.map((invoice) => invoice.id));
 
-    // Card expenses in current open cycle (not yet marked as liquidated or invoice paid)
-    if (tx.tipo === 'DESPESA' && !tx.parcelamentoId && tx.status === 'REALIZADO') {
+  // Open invoices reserve only their unpaid balance. Paid invoices release the limit.
+  for (const invoice of validInvoices) {
+    if (invoice.status === 'PAGA') continue;
+    const remaining = Number.isSafeInteger(invoice.saldoRestanteCentavos)
+      ? Math.max(0, invoice.saldoRestanteCentavos)
+      : 0;
+    limiteUtilizadoCentavos += remaining;
+  }
+
+  // Purchases not yet represented by an invoice reserve the limit once.
+  for (const tx of transactions) {
+    if (
+      tx.isDeleted ||
+      tx.cartaoId !== card.id ||
+      tx.tipo !== 'DESPESA' ||
+      tx.status === 'CANCELADO' ||
+      tx.status === 'ESTORNADO' ||
+      tx.parcelamentoId
+    ) continue;
+
+    const belongsToInvoice = tx.faturaId
+      ? validInvoiceIds.has(tx.faturaId)
+      : invoicedCompetencies.has(tx.competencia);
+    if (belongsToInvoice) continue;
+
+    if (
+      (tx.status === 'REALIZADO' || tx.status === 'PREVISTO' || tx.status === 'PENDENTE') &&
+      Number.isSafeInteger(tx.valorCentavos) &&
+      tx.valorCentavos > 0
+    ) {
       limiteUtilizadoCentavos += tx.valorCentavos;
     }
   }
 
-  // 2. Future unliquidated installments committed to this card
-  for (const inst of installments) {
-    if (inst.cartaoId === card.id) {
-      limiteUtilizadoCentavos += inst.saldoRestanteCentavos;
+  // Installment plans reserve only their unpaid future balance.
+  for (const installment of installments) {
+    if (installment.cartaoId === card.id && installment.parcelasFuturas > 0) {
+      limiteUtilizadoCentavos += Math.max(0, installment.saldoRestanteCentavos || 0);
     }
   }
 
   const limiteDisponivelCentavos = Math.max(0, limiteTotalCentavos - limiteUtilizadoCentavos);
-
-  return {
-    limiteTotalCentavos,
-    limiteUtilizadoCentavos,
-    limiteDisponivelCentavos,
-  };
+  return { limiteTotalCentavos, limiteUtilizadoCentavos, limiteDisponivelCentavos };
 }
 
-/**
- * Calculates executive financial summary with strict methodology:
- * Dinheiro disponível para gastar = Saldo Bancário Real - Despesas Pendentes do Mês - Faturas a Vencer - Reserva Bloqueada
- * Never sums predicted revenues into available spendable cash!
- */
 export function calculateFinancialSummary(
   accounts: Account[],
   cards: CreditCard[],
@@ -175,7 +196,7 @@ export function calculateFinancialSummary(
   let limiteUtilizadoCartoesCentavos = 0;
   for (const card of cards) {
     if (!card.ativo) continue;
-    const limits = calculateCardLimits(card, transactions, installments);
+    const limits = calculateCardLimits(card, transactions, installments, invoices);
     limiteTotalCartoesCentavos += limits.limiteTotalCentavos;
     limiteUtilizadoCartoesCentavos += limits.limiteUtilizadoCentavos;
   }
