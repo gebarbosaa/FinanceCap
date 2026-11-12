@@ -390,9 +390,25 @@ export async function syncDataToGoogleSheets(
   });
 
 
-  // Add presentation-only headers to tabs that otherwise would be created blank.
-  const emptyTabHeaders: Record<string, string[]> = {
+  // Ensure every one of the 32 tabs has a meaningful header row.
+  // Existing populated tabs keep their own data/header rows; only missing tabs receive defaults.
+  const headersBySheet: Record<string, string[]> = {
+    'CONFIGURAÇÕES': ['Parâmetro', 'Valor'],
+    'CADASTROS': ['Entidade', 'Tipo', 'Identificador', 'Descrição'],
+    'CONTAS': ['ID', 'Nome', 'Instituição', 'Tipo', 'Saldo Inicial', 'Data Inicial', 'Saldo Calculado', 'Situação', 'Observações'],
+    'LANÇAMENTOS': ['ID', 'Data', 'Competência', 'Descrição', 'Tipo', 'Categoria ID', 'Conta ID', 'Cartão ID', 'Forma Pagamento', 'Valor', 'Status', 'Origem', 'Observações'],
+    'CARTÕES': ['ID', 'Nome', 'Instituição', 'Bandeira', 'Limite Total', 'Dia Fechamento', 'Dia Vencimento', 'Situação'],
+    'FATURAS': ['ID', 'Cartão ID', 'Competência', 'Fechamento', 'Vencimento', 'Valor Total', 'Valor Pago', 'Saldo Restante', 'Status'],
+    'PARCELAMENTOS': ['ID', 'Descrição', 'Valor Total', 'Total Parcelas', 'Valor Parcela', 'Data Compra', 'Pagas', 'Futuras', 'Saldo Restante'],
+    'RECORRÊNCIAS': ['ID', 'Descrição', 'Valor', 'Tipo', 'Frequência', 'Dia Vencimento', 'Categoria', 'Ativo'],
+    'CATEGORIAS': ['ID', 'Nome', 'Tipo', 'Limite Mensal', 'É Grana Extra'],
+    'ORÇAMENTO': ['ID', 'Competência', 'Categoria ID', 'Valor Planejado', 'Alerta %'],
     'PLANEJAMENTO': ['ID', 'Competência', 'Categoria', 'Valor Planejado', 'Valor Realizado', 'Diferença', 'Status', 'Observações'],
+    'DÍVIDAS': ['ID', 'Credor', 'Tipo', 'Principal', 'Saldo Devedor', 'Juros a.m.', 'Parcelas Restantes', 'Valor Parcela', 'Status'],
+    'PATRIMÔNIO': ['ID', 'Tipo', 'Subtipo', 'Descrição', 'Valor Avaliação', 'Data Avaliação'],
+    'INVESTIMENTOS': ['ID', 'Instituição', 'Produto', 'Categoria', 'Valor Investido', 'Saldo Atual', 'Rentabilidade'],
+    'METAS': ['ID', 'Nome', 'Valor Alvo', 'Acumulado', 'Prazo', 'Prioridade', 'Aporte Mensal'],
+    'AUDITORIA': ['ID', 'Timestamp', 'Usuário', 'Ação', 'Entidade', 'Registro ID', 'Motivo'],
     'RELATÓRIOS': ['Relatório', 'Período', 'Indicador', 'Valor', 'Comparativo', 'Atualizado em'],
     'JANEIRO': ['Data', 'Descrição', 'Categoria', 'Tipo', 'Conta / Cartão', 'Valor', 'Status', 'Competência'],
     'FEVEREIRO': ['Data', 'Descrição', 'Categoria', 'Tipo', 'Conta / Cartão', 'Valor', 'Status', 'Competência'],
@@ -411,11 +427,15 @@ export async function syncDataToGoogleSheets(
     'INDICADORES ANUAIS': ['Indicador', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro', 'Total Anual'],
   };
 
-  if (initializeLayout) {
-    for (const [sheetName, headers] of Object.entries(emptyTabHeaders)) {
-      const lastColumn = String.fromCharCode(64 + headers.length);
-      valueRanges.push({ range: `'${sheetName}'!A1:${lastColumn}1`, values: [headers] });
-    }
+  const alreadyWrittenSheets = new Set(
+    valueRanges.map((item) => item.range.match(/^'(.+)'!/)?.[1]).filter(Boolean) as string[]
+  );
+  for (const sheetName of ALL_32_SHEET_NAMES) {
+    if (alreadyWrittenSheets.has(sheetName)) continue;
+    const headers = headersBySheet[sheetName];
+    if (!headers) throw new Error(`Cabeçalhos não definidos para a aba ${sheetName}`);
+    const lastColumn = String.fromCharCode(64 + headers.length);
+    valueRanges.push({ range: `'${sheetName}'!A1:${lastColumn}1`, values: [headers] });
   }
 
   // Execute batch update
