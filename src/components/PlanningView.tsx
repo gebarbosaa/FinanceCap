@@ -18,7 +18,7 @@ import {
   Debt,
   Recurrence,
 } from '../types/finance';
-import { formatCurrency } from '../services/currency';
+import { formatCurrency, parseToCentavos } from '../services/currency';
 import { generate12MonthProjection } from '../services/financeEngine';
 
 interface PlanningViewProps {
@@ -88,6 +88,17 @@ export const PlanningView: React.FC<PlanningViewProps> = ({
         isWarning,
       };
     });
+
+  const editBudgetLimit = (budget: Budget, categoryName: string) => {
+    const entered = window.prompt(`Novo limite mensal para ${categoryName} (R$):`, (budget.valorPlanejadoCentavos / 100).toFixed(2).replace('.', ','));
+    if (entered === null) return;
+    const valueCentavos = parseToCentavos(entered);
+    if (!Number.isInteger(valueCentavos) || valueCentavos <= 0) {
+      window.alert('Informe um limite maior que zero.');
+      return;
+    }
+    onUpdateBudget({ ...budget, valorPlanejadoCentavos: valueCentavos });
+  };
 
   // 12 Months Projection
   const projection = generate12MonthProjection(
@@ -222,6 +233,13 @@ export const PlanningView: React.FC<PlanningViewProps> = ({
                     {formatCurrency(item.diferencaCentavos)}
                   </span>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => editBudgetLimit(item, item.categoriaNome)}
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-600 px-3 py-2 text-xs font-semibold text-[#1F4E79] dark:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+                >
+                  Ajustar limite mensal
+                </button>
               </div>
             ))}
           </div>
