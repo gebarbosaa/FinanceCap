@@ -13,7 +13,7 @@ function tagValue(block: string, tag: string): string {
 }
 
 function ofxDate(value: string): string | null {
-  const match = value.match(/^(\\d{4})(\\d{2})(\\d{2})/);
+  const match = value.match(/^(\d{4})(\d{2})(\d{2})/);
   if (!match) return null;
   const [, year, month, day] = match;
   const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
@@ -29,14 +29,14 @@ function amountToCents(value: string, allowZero = false): number | null {
 }
 
 export function parseBankStatementOfx(source: string): OfxStatementResult {
-  const text = source.replace(/^\\uFEFF/, '').trim();
-  if (!text || !/<OFX[\\s>]/i.test(text)) {
+  const text = source.replace(/^\uFEFF/, '').trim();
+  if (!text || !/<OFX[\s>]/i.test(text)) {
     return { rows: [], errors: [{ lineNumber: 1, message: 'Arquivo OFX vazio ou cabeçalho OFX não encontrado.' }], delimiter: 'OFX' };
   }
 
   const rows: BankStatementRow[] = [];
   const errors: Array<{ lineNumber: number; message: string }> = [];
-  const blocks = [...text.matchAll(/<STMTTRN>([\\s\\S]*?)<\\/STMTTRN>/gi)];
+  const blocks = [...text.matchAll(/<STMTTRN>([\s\S]*?)<\/STMTTRN>/gi)];
   blocks.forEach((match, index) => {
     const block = match[1];
     const date = ofxDate(tagValue(block, 'DTPOSTED'));
@@ -56,7 +56,7 @@ export function parseBankStatementOfx(source: string): OfxStatementResult {
     } as BankStatementRow);
   });
 
-  const ledgerBlock = text.match(/<LEDGERBAL>([\\s\\S]*?)<\\/LEDGERBAL>/i)?.[1] || '';
+  const ledgerBlock = text.match(/<LEDGERBAL>([\s\S]*?)<\/LEDGERBAL>/i)?.[1] || '';
   const closingBalanceCentavos = amountToCents(tagValue(ledgerBlock, 'BALAMT'), true);
   const bankId = tagValue(text, 'BANKID');
   const accountId = tagValue(text, 'ACCTID');
