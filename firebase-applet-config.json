@@ -1,11 +1,9 @@
 {
-  "projectId": "gen-lang-client-0776933911",
-  "appId": "1:1028110890851:web:c529a5bbe4338d4653c556",
-  "apiKey": "AIzaSyDl44It0nfXYhEZ3iCRNIKUWySJ2AdFTBE",
-  "authDomain": "gen-lang-client-0776933911.firebaseapp.com",
-  "storageBucket": "gen-lang-client-0776933911.firebasestorage.app",
-  "messagingSenderId": "1028110890851",
-  "measurementId": "",
-  "oAuthClientId": "1028110890851-50at4a25hfmsoa35q0jcj05l3trffaht.apps.googleusercontent.com",
-  "recaptchaSiteKey": ""
+  "apiKey": "AIzaSyCgSj-2lRSm2Ntuy9G_tdd_7trN5Z0MNRE",
+  "authDomain": "bf-finance-os-prod-2026.firebaseapp.com",
+  "projectId": "bf-finance-os-prod-2026",
+  "storageBucket": "bf-finance-os-prod-2026.firebasestorage.app",
+  "messagingSenderId": "557238667034",
+  "appId": "1:557238667034:web:8bc04aa149bf768db5cea3",
+  "measurementId": "G-9TB63D2VYB"
 }
