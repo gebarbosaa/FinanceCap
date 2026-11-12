@@ -33,7 +33,10 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [currentCompetencia, setCurrentCompetencia] = useState<string>(() => getCurrentCompetencia());
   const [darkMode, setDarkMode] = useState<boolean>(() => {
-    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const savedTheme = localStorage.getItem('bf-finance-theme');
+    if (savedTheme === 'dark') return true;
+    if (savedTheme === 'light') return false;
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
   });
 
   // Modals state
@@ -62,13 +65,11 @@ export default function App() {
     };
   }, []);
 
-  // Sync dark mode class
+  // Apply and persist the user's explicit theme choice.
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    document.documentElement.classList.toggle('dark', darkMode);
+    document.documentElement.style.colorScheme = darkMode ? 'dark' : 'light';
+    localStorage.setItem('bf-finance-theme', darkMode ? 'dark' : 'light');
   }, [darkMode]);
 
   const handleLogin = async () => {
