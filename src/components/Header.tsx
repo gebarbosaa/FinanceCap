@@ -127,8 +127,10 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Dark Mode Toggle */}
             <button
               onClick={onToggleDarkMode}
-              className="hidden sm:flex p-2 text-blue-200 hover:text-white hover:bg-[#1F4E79] rounded-lg transition cursor-pointer"
+              className="flex p-2 text-blue-200 hover:text-white hover:bg-[#1F4E79] rounded-lg transition cursor-pointer"
               title={darkMode ? 'Mudar para Tema Claro' : 'Mudar para Tema Escuro'}
+              aria-label={darkMode ? 'Ativar tema claro' : 'Ativar tema escuro'}
+              aria-pressed={darkMode}
             >
               {darkMode ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4" />}
             </button>
