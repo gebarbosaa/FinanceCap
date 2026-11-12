@@ -45,6 +45,9 @@ export default function App() {
 
   // Auth state
   const [user, setUser] = useState<User | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [cloudReady, setCloudReady] = useState(false);
+  const [cloudError, setCloudError] = useState<string | null>(null);
 
   // Subscribe to storage changes
   useEffect(() => {
@@ -57,8 +60,25 @@ export default function App() {
   // Initialize Firebase Auth listener
   useEffect(() => {
     const unsubAuth = initAuth(
-      (currentUser) => setUser(currentUser),
-      () => setUser(null)
+      (currentUser) => {
+        setUser(currentUser);
+        setAuthReady(true);
+        setCloudReady(false);
+        setCloudError(null);
+        void storageService.connectCloud(currentUser.uid)
+          .then(() => setCloudReady(true))
+          .catch((error: unknown) => {
+            setCloudError(error instanceof Error ? error.message : 'Não foi possível conectar ao Firestore.');
+            setCloudReady(false);
+          });
+      },
+      () => {
+        storageService.disconnectCloud();
+        setUser(null);
+        setAuthReady(true);
+        setCloudReady(false);
+        setCloudError(null);
+      }
     );
     return () => {
       if (typeof unsubAuth === 'function') unsubAuth();
@@ -77,6 +97,7 @@ export default function App() {
       const res = await googleSignIn();
       if (res?.user) {
         setUser(res.user);
+        setCloudReady(false);
       }
     } catch (err) {
       console.error('Erro no login Google:', err);
@@ -86,7 +107,9 @@ export default function App() {
   const handleLogout = async () => {
     try {
       await logout();
+      storageService.disconnectCloud();
       setUser(null);
+      setCloudReady(false);
     } catch (err) {
       console.error('Erro no logout:', err);
     }
@@ -118,6 +141,43 @@ export default function App() {
   const openInvoicesCount = data.invoices.filter(
     (i) => i.status === 'ABERTA' || i.status === 'PARCIALMENTE_PAGA'
   ).length;
+
+  if (!authReady || (user && !cloudReady && !cloudError)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-6">
+        <div className="text-center space-y-3">
+          <div className="mx-auto h-9 w-9 rounded-full border-4 border-orange-500 border-t-transparent animate-spin" />
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Conectando ao BF Finance OS...</p>
+          <p className="text-xs text-slate-500">Verificando sua conta e sincronizando seus dados.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || !cloudReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-6">
+        <div className="w-full max-w-md rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-xl space-y-5 text-center">
+          <div className="mx-auto h-14 w-14 rounded-2xl bg-orange-500 text-white flex items-center justify-center text-2xl font-black">BF</div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-black text-slate-900 dark:text-white">BF Finance OS</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Entre com sua conta Google para acessar e sincronizar seus dados financeiros com segurança.</p>
+          </div>
+          {cloudError && (
+            <div className="rounded-xl border border-rose-200 bg-rose-50 dark:bg-rose-950/30 dark:border-rose-900 p-3 text-left text-xs text-rose-700 dark:text-rose-300">
+              <strong>Não foi possível conectar ao banco de dados.</strong>
+              <p className="mt-1 break-words">{cloudError}</p>
+              <p className="mt-2">Confirme se o Cloud Firestore foi criado no projeto Firebase correto e se o provedor Google está habilitado em Authentication.</p>
+            </div>
+          )}
+          <button onClick={handleLogin} className="w-full rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-orange-500 dark:hover:bg-orange-600 text-white py-3 px-4 text-sm font-bold transition">
+            Continuar com Google
+          </button>
+          <p className="text-[11px] text-slate-400">Seus lançamentos serão associados ao seu usuário Google e sincronizados entre seus dispositivos.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`bf-app min-h-screen flex flex-col font-sans transition-colors duration-200`}>
