@@ -208,7 +208,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* 2. Dinheiro Disponível para Gastar (Special BF Indicator) */}
-        <div className="bg-white dark:bg-[#141414] p-5 rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm relative overflow-hidden">
+        <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-1.5">
               <span className="text-xs font-bold text-slate-700 dark:text-white uppercase tracking-wider">
