@@ -93,9 +93,8 @@ export function calculateCardLimits(
       tx.parcelamentoId
     ) continue;
 
-    const belongsToInvoice = tx.faturaId
-      ? validInvoiceIds.has(tx.faturaId)
-      : invoicedCompetencies.has(tx.competencia);
+    const belongsToInvoice = (tx.faturaId ? validInvoiceIds.has(tx.faturaId) : false) ||
+      invoicedCompetencies.has(tx.competencia);
     if (belongsToInvoice) continue;
 
     if (
@@ -107,11 +106,25 @@ export function calculateCardLimits(
     }
   }
 
-  // Installment plans reserve only their unpaid future balance.
+  // Reserve future installments, but do not reserve a competence already represented
+  // by an invoice (open invoices are counted above; paid invoices have released the limit).
   for (const installment of installments) {
-    if (installment.cartaoId === card.id && installment.parcelasFuturas > 0) {
-      limiteUtilizadoCentavos += Math.max(0, installment.saldoRestanteCentavos || 0);
+    if (installment.cartaoId !== card.id || installment.parcelasFuturas <= 0) continue;
+
+    let invoiceCoveredInstallments = 0;
+    for (let index = 0; index < installment.parcelasFuturas; index++) {
+      const competence = addMonthsToCompetencia(
+        installment.primeiraCompetencia,
+        installment.parcelasPagas + index
+      );
+      if (validInvoices.some((invoice) => invoice.competencia === competence)) {
+        invoiceCoveredInstallments++;
+      }
     }
+
+    const coveredValue = invoiceCoveredInstallments * installment.valorParcelaCentavos;
+    const futureBalance = Math.max(0, (installment.saldoRestanteCentavos || 0) - coveredValue);
+    limiteUtilizadoCentavos += futureBalance;
   }
 
   const limiteDisponivelCentavos = Math.max(0, limiteTotalCentavos - limiteUtilizadoCentavos);
