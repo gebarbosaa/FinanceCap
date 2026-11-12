@@ -34,14 +34,14 @@ export const TestsRunnerView: React.FC = () => {
         <div>
           <div className="flex items-center space-x-2">
             <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-              Suíte de 20 Testes Obrigatórios
+              Suíte de 21 Testes Internos
             </h2>
             <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
               {totalPassed} / {results.length} Aprovados
             </span>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Validação automatizada das 20 regras de integridade matemática e fluxos de caixa exigidos no Prompt Mestre.
+            Validação automatizada das 21 verificações de integridade matemática e fluxos de caixa exigidos no Prompt Mestre.
           </p>
         </div>
 
@@ -51,7 +51,7 @@ export const TestsRunnerView: React.FC = () => {
           className="flex items-center space-x-2 px-5 py-2.5 bg-[#0B2545] hover:bg-[#1F4E79] text-white text-xs font-bold rounded-xl shadow cursor-pointer transition disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 ${isRunning ? 'animate-spin' : ''}`} />
-          <span>Executar 20 Testes Novamente</span>
+          <span>Executar 21 Testes Novamente</span>
         </button>
       </div>
 
