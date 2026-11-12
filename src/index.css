@@ -325,3 +325,76 @@ html, body {
 .bf-app [class~="border-blue-200"],.bf-app [class~="border-indigo-200"]{border-color:#f3c49f!important}
 .dark .bf-app [class~="border-blue-900"],.dark .bf-app [class~="border-indigo-900"]{border-color:rgba(255,121,0,.35)!important}
 .bf-sidebar button[class*="bg-blue-50"],.dark .bf-sidebar button[class*="bg-[#1F4E79]"]{background:var(--bf-accent-soft)!important;color:var(--bf-accent)!important;border-left-color:var(--bf-accent)!important}
+
+
+/* Complete BF brand pass — shared surfaces and navigation in both themes. */
+.bf-app [class*="bg-blue-"], .bf-app [class*="bg-indigo-"] {
+  background-color: var(--bf-accent-soft) !important;
+}
+.dark .bf-app [class*="bg-blue-"], .dark .bf-app [class*="bg-indigo-"] {
+  background-color: rgba(255,121,0,.14) !important;
+}
+.bf-app [class*="text-blue-"], .bf-app [class*="text-indigo-"] {
+  color: #e86f00 !important;
+}
+.dark .bf-app [class*="text-blue-"], .dark .bf-app [class*="text-indigo-"] {
+  color: #ff9a3d !important;
+}
+.bf-app [class*="border-blue-"], .bf-app [class*="border-indigo-"] {
+  border-color: color-mix(in srgb, var(--bf-accent) 32%, var(--bf-border)) !important;
+}
+.bf-app [class*="bg-slate-800"], .bf-app [class*="bg-slate-900"],
+.bf-app [class*="bg-gray-800"], .bf-app [class*="bg-gray-900"] {
+  background-color: var(--bf-surface) !important;
+}
+.dark .bf-app [class*="bg-slate-700"], .dark .bf-app [class*="bg-slate-800"],
+.dark .bf-app [class*="bg-slate-900"], .dark .bf-app [class*="bg-gray-700"],
+.dark .bf-app [class*="bg-gray-800"], .dark .bf-app [class*="bg-gray-900"] {
+  background-color: var(--bf-surface-muted) !important;
+}
+.bf-app [class*="border-slate-"], .bf-app [class*="border-gray-"] {
+  border-color: var(--bf-border) !important;
+}
+.bf-sidebar {
+  background: var(--bf-sidebar) !important;
+  color: var(--bf-text-soft) !important;
+  border-color: var(--bf-border) !important;
+}
+.bf-sidebar > div:last-child {
+  border-color: var(--bf-border) !important;
+}
+.bf-sidebar button {
+  color: var(--bf-text-soft);
+}
+.bf-sidebar button:hover {
+  background-color: var(--bf-accent-soft) !important;
+  color: var(--bf-accent) !important;
+}
+.bf-sidebar button[aria-label="Dashboard Geral"],
+.bf-sidebar button[aria-current="page"] {
+  background: var(--bf-accent-soft) !important;
+  color: var(--bf-accent) !important;
+}
+.dark .bf-sidebar button {
+  color: #c8c8c8;
+}
+.dark .bf-sidebar button:hover,
+.dark .bf-sidebar button[aria-current="page"] {
+  background: rgba(255,121,0,.16) !important;
+  color: #ff9a3d !important;
+}
+.bf-sidebar .bf-sidebar-label,
+.bf-sidebar [class*="text-slate-"] {
+  color: inherit;
+}
+.bf-sidebar button [class*="text-amber-"],
+.bf-sidebar button [class*="text-blue-"] {
+  color: var(--bf-accent) !important;
+}
+.bf-sidebar [class*="from-blue-"],
+.bf-sidebar [class*="to-slate-"] {
+  background-image: none !important;
+}
+.bf-sidebar button:focus-visible {
+  outline-color: var(--bf-accent) !important;
+}

@@ -78,7 +78,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'radar', label: 'Radar de Gastos', icon: <Radar className="w-4 h-4 text-rose-400" />, badge: radarAlertCount > 0 ? radarAlertCount : undefined, badgeColor: 'bg-rose-500 text-white' },
 
     { section: 'OPERAÇÕES & CRÉDITO', id: 'transactions', label: 'Lançamentos', icon: <Receipt className="w-4 h-4" /> },
-    { id: 'cards', label: 'Cartões & Faturas', icon: <CardIcon className="w-4 h-4" />, badge: openInvoiceCount > 0 ? `${openInvoiceCount} aberta` : undefined, badgeColor: 'bg-blue-600 text-white' },
+    { id: 'cards', label: 'Cartões & Faturas', icon: <CardIcon className="w-4 h-4" />, badge: openInvoiceCount > 0 ? `${openInvoiceCount} aberta` : undefined, badgeColor: 'bg-orange-500 text-white' },
     { id: 'installments', label: 'Parcelamentos', icon: <Layers className="w-4 h-4" /> },
     { id: 'conciliation', label: 'Conciliação CSV', icon: <UploadCloud className="w-4 h-4" /> },
 
@@ -131,7 +131,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   {item.badge && (
                     <span
                       className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                        item.badgeColor || 'bg-blue-600 text-white'
+                        item.badgeColor || 'bg-orange-500 text-white'
                       }`}
                     >
                       {item.badge}
@@ -157,7 +157,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   className="w-8 h-8 rounded-full border border-emerald-500"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-orange-500 text-white font-bold text-xs flex items-center justify-center">
                   {user.displayName?.charAt(0) || user.email?.charAt(0) || 'G'}
                 </div>
               )}
@@ -184,7 +184,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </div>
         ) : (
-          <div className="hidden lg:block p-3 rounded-xl bg-gradient-to-br from-blue-50/70 to-slate-50 dark:from-slate-800 dark:to-slate-800/80 border border-blue-100 dark:border-slate-700 text-center space-y-2">
+          <div className="hidden lg:block p-3 rounded-xl bg-gradient-to-br from-orange-50 to-white dark:from-[#17120d] dark:to-[#141414] border border-orange-200 dark:border-orange-900/50 text-center space-y-2">
             <div className="flex items-center justify-center space-x-1.5">
               <GoogleLogo className="w-4 h-4" />
               <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
