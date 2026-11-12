@@ -122,7 +122,7 @@ export interface Transaction {
   parcelaNumero?: number;
   totalParcelas?: number;
   observacoes?: string;
-  origem: 'MANUAL' | 'CSV_IMPORT' | 'RECORRENCIA' | 'PARCELAMENTO' | 'SISTEMA';
+  origem: 'MANUAL' | 'CSV_IMPORT' | 'OFX_IMPORT' | 'RECORRENCIA' | 'PARCELAMENTO' | 'SISTEMA';
   idExterno?: string;
   isDeleted?: boolean; // logical deletion
   createdAt: string;
