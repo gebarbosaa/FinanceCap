@@ -142,6 +142,7 @@ export default function App() {
           onTabChange={setActiveTab}
           radarAlertCount={radarAlerts.length}
           openInvoiceCount={openInvoicesCount}
+          darkMode={darkMode}
         />
 
         {/* Main Content Area */}
