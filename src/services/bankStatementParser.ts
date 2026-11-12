@@ -3,6 +3,7 @@ export interface BankStatementRow {
   data: string;
   descricao: string;
   valorCentavos: number;
+  idExterno?: string;
 }
 
 export interface BankStatementParseResult {
