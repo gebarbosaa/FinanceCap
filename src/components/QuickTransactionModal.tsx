@@ -50,6 +50,8 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({
 
   if (!isOpen) return null;
 
+  const availableCategories = categories.filter((category) => category.ativo !== false && category.tipo === (tipo === 'RECEITA' ? 'RECEITA' : 'DESPESA'));
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const centavos = parseToCentavos(valorStr);
@@ -298,13 +300,11 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({
                 Categoria:
               </label>
               <select
-                value={categoriaId}
+                value={availableCategories.some((category) => category.id === categoriaId) ? categoriaId : (availableCategories[0]?.id || '')}
                 onChange={(e) => setCategoriaId(e.target.value)}
                 className="w-full p-2.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl font-medium"
               >
-                {categories
-                  .filter((c) => (tipo === 'RECEITA' ? c.tipo === 'RECEITA' : c.tipo === 'DESPESA'))
-                  .map((cat) => (
+                {availableCategories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
                       {cat.nome} {cat.isGranaExtra ? '(Grana Extra)' : ''}
                     </option>
