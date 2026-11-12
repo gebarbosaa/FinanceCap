@@ -54,7 +54,7 @@ export const Header: React.FC<HeaderProps> = ({
   ];
 
   return (
-    <header className="sticky top-0 z-30 bg-[#0B2545] text-white border-b border-[#1F4E79] shadow-md">
+    <header className={`sticky top-0 z-30 border-b shadow-md transition-colors duration-200 ${darkMode ? "bg-[#0B2545] text-white border-[#1F4E79]" : "bg-white text-slate-900 border-slate-200"}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex min-h-16 flex-wrap items-center justify-between gap-3 py-2.5">
           {/* Logo and System Title */}
@@ -64,14 +64,14 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
             <div className="min-w-0">
               <div className="flex min-w-0 items-center space-x-2">
-                <span className="truncate font-bold tracking-tight text-sm sm:text-base text-white">
+                <span className={`truncate font-bold tracking-tight text-sm sm:text-base ${darkMode ? "text-white" : "text-slate-900"}`}>
                   BARBOSA FERNANDES
                 </span>
                 <span className="hidden lg:inline-flex bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider">
                   BF Finance OS
                 </span>
               </div>
-              <div className="hidden sm:flex text-xs text-blue-200/70 items-center space-x-1.5">
+              <div className={`hidden sm:flex text-xs items-center space-x-1.5 ${darkMode ? "text-blue-200/70" : "text-slate-500"}`}>
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Gestão Executiva Patrimonial & Sincronização Google Sheets</span>
               </div>
@@ -127,8 +127,10 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Dark Mode Toggle */}
             <button
               onClick={onToggleDarkMode}
-              className="flex p-2 text-blue-200 hover:text-white hover:bg-[#1F4E79] rounded-lg transition cursor-pointer"
+              className={`flex p-2 rounded-lg transition cursor-pointer ${darkMode ? "text-blue-200 hover:text-white hover:bg-[#1F4E79]" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"}`}
               title={darkMode ? 'Mudar para Tema Claro' : 'Mudar para Tema Escuro'}
+              aria-label={darkMode ? 'Ativar tema claro' : 'Ativar tema escuro'}
+              aria-pressed={darkMode}
               aria-label={darkMode ? 'Ativar tema claro' : 'Ativar tema escuro'}
               aria-pressed={darkMode}
             >
