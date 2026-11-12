@@ -445,3 +445,142 @@ html, body {
 .bf-app [class*="ring-emerald-"], .bf-app [class*="ring-indigo-"] {
   --tw-ring-color: color-mix(in srgb, var(--bf-accent) 45%, transparent) !important;
 }
+
+
+/* BF Finance OS — canonical palette normalization (single source of truth). */
+:root {
+  --bf-bg: #ffffff;
+  --bf-surface: #ffffff;
+  --bf-surface-muted: #fff8f1;
+  --bf-surface-raised: #ffffff;
+  --bf-border: #eadfd5;
+  --bf-border-strong: #d9c5b4;
+  --bf-text: #171717;
+  --bf-text-soft: #625b55;
+  --bf-text-muted: #8b8179;
+  --bf-accent: #ff7900;
+  --bf-accent-soft: #fff0e2;
+  --bf-primary: #ff7900;
+  --bf-sidebar: #ffffff;
+  --bf-shadow: 0 8px 28px rgba(30, 20, 12, .055);
+  --bf-shadow-hover: 0 14px 34px rgba(30, 20, 12, .09);
+}
+html.dark {
+  --bf-bg: #090909;
+  --bf-surface: #141414;
+  --bf-surface-muted: #1c1c1c;
+  --bf-surface-raised: #242424;
+  --bf-border: #303030;
+  --bf-border-strong: #45403b;
+  --bf-text: #f5f5f5;
+  --bf-text-soft: #b8b2ac;
+  --bf-text-muted: #89827b;
+  --bf-accent: #ff7900;
+  --bf-accent-soft: rgba(255, 121, 0, .15);
+  --bf-primary: #ff7900;
+  --bf-sidebar: #101010;
+  --bf-shadow: 0 10px 30px rgba(0, 0, 0, .24);
+  --bf-shadow-hover: 0 16px 38px rgba(0, 0, 0, .32);
+}
+
+/* Surfaces, borders and typography use only the theme neutrals. */
+.bf-app [class~="bg-white"], .bf-app [class*="bg-slate-50"],
+.bf-app [class*="bg-gray-50"], .bf-app [class*="bg-neutral-50"] {
+  background-color: var(--bf-surface) !important;
+}
+.dark .bf-app [class*="bg-slate-"], .dark .bf-app [class*="bg-gray-"],
+.dark .bf-app [class*="bg-neutral-"] {
+  background-color: var(--bf-surface-muted) !important;
+}
+.bf-app [class*="border-slate-"], .bf-app [class*="border-gray-"],
+.bf-app [class*="border-neutral-"] {
+  border-color: var(--bf-border) !important;
+}
+.bf-app [class*="text-slate-"], .bf-app [class*="text-gray-"],
+.bf-app [class*="text-neutral-"] {
+  color: var(--bf-text-soft) !important;
+}
+.bf-app [class*="shadow-"] {
+  --tw-shadow-color: rgba(20, 15, 10, .06);
+}
+.dark .bf-app [class*="shadow-"] { --tw-shadow-color: rgba(0, 0, 0, .28); }
+
+/* One brand accent: legacy blue/green/cyan/teal/purple and extra amber shades
+   are mapped to BF orange. Red remains reserved for destructive/critical alerts. */
+.bf-app [class*="bg-blue-"], .bf-app [class*="bg-indigo-"],
+.bf-app [class*="bg-green-"], .bf-app [class*="bg-emerald-"],
+.bf-app [class*="bg-teal-"], .bf-app [class*="bg-cyan-"],
+.bf-app [class*="bg-lime-"], .bf-app [class*="bg-purple-"],
+.bf-app [class*="bg-violet-"], .bf-app [class*="bg-amber-"],
+.bf-app [class*="bg-yellow-"] {
+  background-color: var(--bf-accent-soft) !important;
+}
+.dark .bf-app [class*="bg-blue-"], .dark .bf-app [class*="bg-indigo-"],
+.dark .bf-app [class*="bg-green-"], .dark .bf-app [class*="bg-emerald-"],
+.dark .bf-app [class*="bg-teal-"], .dark .bf-app [class*="bg-cyan-"],
+.dark .bf-app [class*="bg-lime-"], .dark .bf-app [class*="bg-purple-"],
+.dark .bf-app [class*="bg-violet-"], .dark .bf-app [class*="bg-amber-"],
+.dark .bf-app [class*="bg-yellow-"] {
+  background-color: rgba(255, 121, 0, .15) !important;
+}
+.bf-app [class*="text-blue-"], .bf-app [class*="text-indigo-"],
+.bf-app [class*="text-green-"], .bf-app [class*="text-emerald-"],
+.bf-app [class*="text-teal-"], .bf-app [class*="text-cyan-"],
+.bf-app [class*="text-lime-"], .bf-app [class*="text-purple-"],
+.bf-app [class*="text-violet-"], .bf-app [class*="text-amber-"],
+.bf-app [class*="text-yellow-"] {
+  color: #e86f00 !important;
+}
+.dark .bf-app [class*="text-blue-"], .dark .bf-app [class*="text-indigo-"],
+.dark .bf-app [class*="text-green-"], .dark .bf-app [class*="text-emerald-"],
+.dark .bf-app [class*="text-teal-"], .dark .bf-app [class*="text-cyan-"],
+.dark .bf-app [class*="text-lime-"], .dark .bf-app [class*="text-purple-"],
+.dark .bf-app [class*="text-violet-"], .dark .bf-app [class*="text-amber-"],
+.dark .bf-app [class*="text-yellow-"] {
+  color: #ff9a3d !important;
+}
+.bf-app [class*="border-blue-"], .bf-app [class*="border-indigo-"],
+.bf-app [class*="border-green-"], .bf-app [class*="border-emerald-"],
+.bf-app [class*="border-teal-"], .bf-app [class*="border-cyan-"],
+.bf-app [class*="border-lime-"], .bf-app [class*="border-purple-"],
+.bf-app [class*="border-violet-"], .bf-app [class*="border-amber-"],
+.bf-app [class*="border-yellow-"] {
+  border-color: color-mix(in srgb, var(--bf-accent) 34%, var(--bf-border)) !important;
+}
+.bf-app [class*="from-blue-"], .bf-app [class*="to-blue-"],
+.bf-app [class*="via-blue-"], .bf-app [class*="from-green-"],
+.bf-app [class*="to-green-"], .bf-app [class*="via-green-"],
+.bf-app [class*="from-emerald-"], .bf-app [class*="to-emerald-"],
+.bf-app [class*="via-emerald-"], .bf-app [class*="from-indigo-"],
+.bf-app [class*="to-indigo-"], .bf-app [class*="via-indigo-"],
+.bf-app [class*="from-purple-"], .bf-app [class*="to-purple-"],
+.bf-app [class*="from-violet-"], .bf-app [class*="to-violet-"] {
+  --tw-gradient-from: var(--bf-accent-soft) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: transparent var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+.bf-app [class*="ring-blue-"], .bf-app [class*="ring-green-"],
+.bf-app [class*="ring-emerald-"], .bf-app [class*="ring-indigo-"],
+.bf-app [class*="ring-purple-"] {
+  --tw-ring-color: color-mix(in srgb, var(--bf-accent) 45%, transparent) !important;
+}
+
+/* Consistent interactive states across navigation, buttons and fields. */
+.bf-app button[class*="bg-orange-"], .bf-app a[class*="bg-orange-"],
+.bf-app [class*="bg-blue-600"], .bf-app [class*="bg-green-600"],
+.bf-app [class*="bg-emerald-600"], .bf-app [class*="bg-indigo-600"] {
+  background-color: var(--bf-accent) !important;
+  color: #fff !important;
+}
+.bf-app button:hover, .bf-app a:hover {
+  transition: background-color .16s ease, color .16s ease, border-color .16s ease;
+}
+.bf-app input:focus, .bf-app select:focus, .bf-app textarea:focus {
+  border-color: var(--bf-accent) !important;
+  box-shadow: 0 0 0 3px rgba(255, 121, 0, .16) !important;
+}
+.bf-app ::selection { background: rgba(255, 121, 0, .24); }
+.bf-header, .bf-sidebar { border-color: var(--bf-border) !important; }
+.bf-hero {
+  border-color: color-mix(in srgb, var(--bf-accent) 20%, var(--bf-border)) !important;
+}
