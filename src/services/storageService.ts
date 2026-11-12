@@ -91,21 +91,22 @@ class StorageService {
       console.warn('Could not parse stored BF Finance data, initializing defaults', e);
     }
 
+    // A first-run installation must never present fabricated balances as real personal finances.
     const defaultData: StorageData = {
       settings: INITIAL_SETTINGS,
-      accounts: INITIAL_ACCOUNTS,
+      accounts: [],
       categories: INITIAL_CATEGORIES,
-      cards: INITIAL_CARDS,
-      transactions: INITIAL_TRANSACTIONS,
-      invoices: INITIAL_INVOICES,
-      installments: INITIAL_INSTALLMENTS,
-      recurrences: INITIAL_RECURRENCES,
-      budgets: INITIAL_BUDGETS,
-      debts: INITIAL_DEBTS,
-      patrimony: INITIAL_PATRIMONY,
-      investments: INITIAL_INVESTMENTS,
-      goals: INITIAL_GOALS,
-      audit: INITIAL_AUDIT,
+      cards: [],
+      transactions: [],
+      invoices: [],
+      installments: [],
+      recurrences: [],
+      budgets: [],
+      debts: [],
+      patrimony: [],
+      investments: [],
+      goals: [],
+      audit: [],
     };
     this.persist(defaultData);
     return defaultData;
