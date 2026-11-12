@@ -16,6 +16,7 @@ import {
   Account,
   InstallmentPlan,
   Debt,
+  Recurrence,
 } from '../types/finance';
 import { formatCurrency } from '../services/currency';
 import { generate12MonthProjection } from '../services/financeEngine';
@@ -27,6 +28,7 @@ interface PlanningViewProps {
   accounts: Account[];
   installments: InstallmentPlan[];
   debts: Debt[];
+  recurrences: Recurrence[];
   currentCompetencia: string;
   onUpdateBudget: (budget: Budget) => void;
 }
@@ -38,6 +40,7 @@ export const PlanningView: React.FC<PlanningViewProps> = ({
   accounts,
   installments,
   debts,
+  recurrences,
   currentCompetencia,
   onUpdateBudget,
 }) => {
@@ -46,16 +49,31 @@ export const PlanningView: React.FC<PlanningViewProps> = ({
   // Compute budget execution for current competence
   const catMap = new Map<string, Category>(categories.map((c) => [c.id, c]));
 
-  const budgetExecution = budgets
-    .filter((b) => b.competencia === currentCompetencia)
-    .map((b) => {
+  const explicitBudgets = budgets.filter((b) => b.competencia === currentCompetencia);
+  const budgetByCategory = new Map(explicitBudgets.map((budget) => [budget.categoriaId, budget]));
+  const effectiveBudgets = categories
+    .filter((category) => category.tipo === 'DESPESA' && category.ativo !== false)
+    .flatMap((category) => {
+      const saved = budgetByCategory.get(category.id);
+      const limit = saved?.valorPlanejadoCentavos ?? category.limiteMensalCentavos;
+      if (!limit || limit <= 0) return [];
+      return [{
+        id: saved?.id ?? `budget-${currentCompetencia}-${category.id}`,
+        competencia: currentCompetencia,
+        categoriaId: category.id,
+        valorPlanejadoCentavos: limit,
+        alertaPercentual: saved?.alertaPercentual ?? 80,
+      }];
+    });
+
+  const budgetExecution = effectiveBudgets.map((b) => {
       const cat = catMap.get(b.categoriaId);
       const spent = transactions
         .filter((t) => !t.isDeleted && t.categoriaId === b.categoriaId && t.competencia === currentCompetencia && t.status === 'REALIZADO')
         .reduce((sum, t) => sum + t.valorCentavos, 0);
 
       const diff = b.valorPlanejadoCentavos - spent;
-      const pct = (spent / b.valorPlanejadoCentavos) * 100;
+      const pct = b.valorPlanejadoCentavos > 0 ? (spent / b.valorPlanejadoCentavos) * 100 : 0;
       const isOver = spent > b.valorPlanejadoCentavos;
       const isWarning = pct >= b.alertaPercentual && !isOver;
 
@@ -77,7 +95,8 @@ export const PlanningView: React.FC<PlanningViewProps> = ({
     transactions,
     installments,
     debts,
-    currentCompetencia
+    currentCompetencia,
+    recurrences
   );
 
   return (
