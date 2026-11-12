@@ -133,7 +133,7 @@ export const ConciliationView: React.FC<ConciliationViewProps> = ({
     });
 
     setParseErrors(parsed.errors);
-    if (sourceFormat === 'OFX' && 'closingBalanceCentavos' in parsed && parsed.closingBalanceCentavos !== undefined) {
+    if (sourceFormat === 'OFX' && 'closingBalanceCentavos' in parsed && parsed.closingBalanceCentavos != null) {
       setClosingBalance((parsed.closingBalanceCentavos / 100).toFixed(2).replace('.', ','));
     }
     if (rows.length === 0) {
