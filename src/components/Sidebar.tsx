@@ -129,19 +129,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         })}
       </div>
 
-      {/* Footer Info */}
-      <div className="hidden lg:block mt-auto p-3 m-3 bg-[#1F4E79]/30 rounded-lg border border-[#1F4E79] text-[11px] text-blue-200/80">
-        <div className="flex items-center justify-between mb-1">
-          <span className="font-semibold text-white">Status da Base:</span>
-          <span className="flex items-center space-x-1 text-emerald-400 font-bold">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>Íntegra</span>
-          </span>
-        </div>
-        <p className="text-[10px] text-blue-300/60 leading-tight">
-          Cálculos em centavos inteiros • 32 Abas padronizadas • Auditado
-        </p>
-      </div>
     </aside>
   );
 };
