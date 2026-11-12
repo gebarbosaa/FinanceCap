@@ -77,18 +77,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
           <div>
-            <div className="flex items-center space-x-2 mb-1">
-              <span className="px-2.5 py-0.5 text-[11px] font-bold bg-amber-500 text-slate-950 rounded-full uppercase tracking-wider">
-                Painel Executivo
-              </span>
+            <div className="mb-1">
               <span className="text-xs text-blue-200">Competência {currentCompetencia}</span>
             </div>
             <h1 className="text-2xl font-extrabold tracking-tight">
               Visão Patrimonial e Fluxo de Caixa
             </h1>
-            <p className="text-xs sm:text-sm text-blue-100/80 mt-1 max-w-2xl">
-              Sistema Barbosa Fernandes operando com precisão absoluta em centavos inteiros, sem duplicação de despesas e integrado a 32 abas de governança.
-            </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -342,12 +336,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <h3 className="font-bold text-slate-900 dark:text-white text-base">
                   15 Maiores Despesas do Mês
                 </h3>
-                <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 rounded-md border border-amber-300 dark:border-amber-700">
-                  Regra BF: Exclui Grana Extra
-                </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Classificação ordenada pelo maior desembolso financeiro
+                Ordenadas pelo maior valor
               </p>
             </div>
             <button
