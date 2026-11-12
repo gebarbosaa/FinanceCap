@@ -66,9 +66,25 @@ class StorageService {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed && parsed.accounts && parsed.transactions) {
-          return parsed;
+        const parsed = JSON.parse(stored) as Partial<StorageData>;
+        if (parsed && Array.isArray(parsed.accounts) && Array.isArray(parsed.transactions)) {
+          const normalized: StorageData = {
+            settings: { ...INITIAL_SETTINGS, ...(parsed.settings || {}) },
+            accounts: parsed.accounts,
+            categories: Array.isArray(parsed.categories) ? parsed.categories : [],
+            cards: Array.isArray(parsed.cards) ? parsed.cards : [],
+            transactions: parsed.transactions,
+            invoices: Array.isArray(parsed.invoices) ? parsed.invoices : [],
+            installments: Array.isArray(parsed.installments) ? parsed.installments : [],
+            recurrences: Array.isArray(parsed.recurrences) ? parsed.recurrences : [],
+            budgets: Array.isArray(parsed.budgets) ? parsed.budgets : [],
+            debts: Array.isArray(parsed.debts) ? parsed.debts : [],
+            patrimony: Array.isArray(parsed.patrimony) ? parsed.patrimony : [],
+            investments: Array.isArray(parsed.investments) ? parsed.investments : [],
+            goals: Array.isArray(parsed.goals) ? parsed.goals : [],
+            audit: Array.isArray(parsed.audit) ? parsed.audit : [],
+          };
+          return normalized;
         }
       }
     } catch (e) {
@@ -479,11 +495,35 @@ class StorageService {
     this.persist(defaultData);
   }
 
-  // Full Import
+  // Full Import: validate the complete backup before replacing the active data.
   public importData(imported: StorageData, reason: string = 'Restauração de Backup') {
-    this.data = imported;
-    this.logAudit('CRIAR', 'SISTEMA', 'backup-restore', reason);
-    this.persist(imported);
+    if (!imported || typeof imported !== 'object' || !imported.settings || typeof imported.settings !== 'object') {
+      throw new Error('Backup inválido: configurações não encontradas.');
+    }
+
+    const requiredCollections: Array<keyof Omit<StorageData, 'settings'>> = [
+      'accounts', 'categories', 'cards', 'transactions', 'invoices', 'installments',
+      'recurrences', 'budgets', 'debts', 'patrimony', 'investments', 'goals', 'audit',
+    ];
+    const missing = requiredCollections.filter((key) => !Array.isArray(imported[key]));
+    if (missing.length > 0) {
+      throw new Error(`Backup inválido: coleções ausentes ou inválidas (${missing.join(', ')}).`);
+    }
+
+    const candidate = JSON.parse(JSON.stringify(imported)) as StorageData;
+    const timestamp = new Date().toISOString();
+    const restoreAudit: AuditLog = {
+      id: `aud-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      timestamp,
+      usuario: candidate.settings.nomeProprietario || INITIAL_SETTINGS.nomeProprietario,
+      acao: 'CRIAR',
+      entidade: 'SISTEMA',
+      registroId: 'backup-restore',
+      motivo: reason,
+      origem: 'SISTEMA_WEB',
+    };
+
+    this.persist({ ...candidate, audit: [restoreAudit, ...candidate.audit] });
   }
 }
 
