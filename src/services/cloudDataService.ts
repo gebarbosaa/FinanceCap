@@ -9,6 +9,9 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebaseApp';
 import type { StorageData } from './storageService';
+import { INITIAL_SETTINGS, INITIAL_CATEGORIES } from './initialData';
+
+const OWNER_KEY = 'BF_FINANCE_OS_OWNER_UID';
 
 const ARRAY_FIELDS = [
   'accounts', 'categories', 'cards', 'transactions', 'invoices', 'installments',
@@ -31,6 +34,16 @@ function records(data: StorageData, field: ArrayField): CloudRecord[] {
 }
 
 export async function loadUserFinance(uid: string, localData: StorageData): Promise<StorageData> {
+  const previousOwner = localStorage.getItem(OWNER_KEY);
+  const safeLocalData: StorageData = previousOwner && previousOwner !== uid
+    ? {
+        settings: INITIAL_SETTINGS,
+        accounts: [], categories: INITIAL_CATEGORIES, cards: [], transactions: [],
+        invoices: [], installments: [], recurrences: [], budgets: [], debts: [],
+        patrimony: [], investments: [], goals: [], audit: [],
+      }
+    : localData;
+
   const settingsRef = doc(db, 'users', uid, 'private', 'settings');
   const settingsSnap = await getDoc(settingsRef);
   const loaded = {} as Pick<StorageData, ArrayField>;
@@ -48,10 +61,11 @@ export async function loadUserFinance(uid: string, localData: StorageData): Prom
 
   if (!settingsSnap.exists() && remoteCount === 0) {
     // First Google sign-in: migrate the current browser data exactly once.
-    await saveUserFinance(uid, localData);
-    cloudCache = clone(localData);
+    await saveUserFinance(uid, safeLocalData);
+    localStorage.setItem(OWNER_KEY, uid);
+    cloudCache = clone(safeLocalData);
     activeUid = uid;
-    return clone(localData);
+    return clone(safeLocalData);
   }
 
   const cloudData = {
@@ -61,6 +75,7 @@ export async function loadUserFinance(uid: string, localData: StorageData): Prom
   } as StorageData;
 
   activeUid = uid;
+  localStorage.setItem(OWNER_KEY, uid);
   cloudCache = clone(cloudData);
   return cloudData;
 }
