@@ -292,6 +292,33 @@ class StorageService {
     return true;
   }
 
+  // Persist budget changes by competence/category without creating duplicates.
+  public upsertBudget(budget: Budget): Budget {
+    if (!Number.isInteger(budget.valorPlanejadoCentavos) || budget.valorPlanejadoCentavos <= 0) {
+      throw new Error('O limite do orçamento deve ser um valor positivo em centavos.');
+    }
+    const existingIndex = this.data.budgets.findIndex(
+      (item) => item.competencia === budget.competencia && item.categoriaId === budget.categoriaId
+    );
+    const previous = existingIndex >= 0 ? this.data.budgets[existingIndex] : undefined;
+    const saved: Budget = { ...budget, id: previous?.id ?? budget.id ?? `budget-${Date.now()}` };
+    if (existingIndex >= 0) {
+      this.data.budgets[existingIndex] = saved;
+    } else {
+      this.data.budgets = [...this.data.budgets, saved];
+    }
+    this.logAudit(
+      previous ? 'EDITAR' : 'CRIAR',
+      'ORÇAMENTOS',
+      saved.id,
+      `Orçamento atualizado para ${saved.competencia}`,
+      previous ? JSON.stringify(previous) : undefined,
+      JSON.stringify(saved)
+    );
+    this.persist({ ...this.data });
+    return saved;
+  }
+
   // Account operations
   public addAccount(acc: Omit<Account, 'id'>): Account {
     const newAcc: Account = {
