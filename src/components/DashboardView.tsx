@@ -22,6 +22,8 @@ import { FinancialSummary, Category, Transaction, Invoice, Debt, CreditCard as I
 import { formatCurrency, formatDateBR } from '../services/currency';
 import { getTop15Expenses } from '../services/financeEngine';
 import { RadarAlert } from '../services/radarService';
+import { User } from 'firebase/auth';
+import { GoogleLogo, GoogleAuthButton } from './GoogleAuthButton';
 
 interface DashboardViewProps {
   summary: FinancialSummary;
@@ -34,6 +36,9 @@ interface DashboardViewProps {
   currentCompetencia: string;
   onNavigate: (tab: any) => void;
   onQuickTx: () => void;
+  user?: User | null;
+  onLogin?: () => void;
+  onOpenSheetsSync?: () => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -47,8 +52,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   currentCompetencia,
   onNavigate,
   onQuickTx,
+  user = null,
+  onLogin,
+  onOpenSheetsSync,
 }) => {
   const [showMethodologyModal, setShowMethodologyModal] = useState(false);
+  const [dismissAuthBanner, setDismissAuthBanner] = useState(false);
 
   // Top 15 Expenses excluding GRANA EXTRA
   const top15 = getTop15Expenses(transactions, categories, currentCompetencia);
@@ -83,6 +92,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <h1 className="text-2xl font-extrabold tracking-tight">
               Visão Patrimonial e Fluxo de Caixa
             </h1>
+            {user ? (
+              <div className="flex items-center space-x-1.5 mt-1.5 text-xs text-emerald-300 font-medium">
+                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>Google Workspace Ativo ({user.email})</span>
+              </div>
+            ) : (
+              <p className="text-xs text-blue-200/80 mt-1">
+                Barbosa Fernandes Finance OS • Gestão Patrimonial Executiva
+              </p>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -103,6 +122,41 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Google Authentication Connect Banner (if not logged in) */}
+      {!user && !dismissAuthBanner && onLogin && (
+        <div className="bg-gradient-to-r from-blue-50 via-white to-slate-50 dark:from-slate-800 dark:via-slate-850 dark:to-slate-900 border border-blue-200 dark:border-blue-900/60 p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+          <div className="flex items-start space-x-3.5">
+            <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 flex items-center justify-center flex-shrink-0 shadow-sm mt-0.5">
+              <GoogleLogo className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Conecte sua Conta Google ao BF Finance OS
+                </h3>
+                <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
+                  Google Workspace
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 max-w-2xl">
+                Habilite a criação e sincronização em tempo real da sua planilha oficial de 32 abas no Google Sheets e realize backups automáticos no Google Drive.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2.5 w-full sm:w-auto justify-end flex-shrink-0">
+            <GoogleAuthButton onLogin={onLogin} label="Entrar com Google" size="sm" />
+            <button
+              onClick={() => setDismissAuthBanner(true)}
+              className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 transition cursor-pointer"
+              title="Dispensar aviso"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Radar Urgent Alerts Banner (if any) */}
       {radarAlerts.length > 0 && (

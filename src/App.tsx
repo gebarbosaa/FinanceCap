@@ -100,8 +100,13 @@ export default function App() {
         setUser(res.user);
         setCloudReady(false);
       }
-    } catch (err) {
+    } catch (err: unknown) {
+      const code = (err as { code?: string })?.code;
+      if (code === 'auth/popup-closed-by-user') {
+        return;
+      }
       console.error('Erro no login Google:', err);
+      alert('Falha ao autenticar com a conta Google. Por favor, tente novamente.');
     }
   };
 
@@ -210,6 +215,10 @@ export default function App() {
           radarAlertCount={radarAlerts.length}
           openInvoiceCount={openInvoicesCount}
           darkMode={darkMode}
+          user={user}
+          onLogin={handleLogin}
+          onLogout={handleLogout}
+          onOpenSheetsSync={() => setIsSheetsSyncOpen(true)}
         />
 
         {/* Main Content Area */}
@@ -226,6 +235,9 @@ export default function App() {
               currentCompetencia={currentCompetencia}
               onNavigate={setActiveTab}
               onQuickTx={() => setIsQuickTxOpen(true)}
+              user={user}
+              onLogin={handleLogin}
+              onOpenSheetsSync={() => setIsSheetsSyncOpen(true)}
             />
           )}
 
@@ -385,6 +397,10 @@ export default function App() {
               data={data}
               onUpdateSettings={(newSettings) => storageService.updateSettings(newSettings)}
               onResetData={() => storageService.resetToDefault()}
+              user={user}
+              onLogin={handleLogin}
+              onLogout={handleLogout}
+              onOpenSheetsSync={() => setIsSheetsSyncOpen(true)}
             />
           )}
         </main>

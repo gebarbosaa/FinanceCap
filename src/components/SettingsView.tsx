@@ -13,11 +13,18 @@ import { SystemSettings } from '../types/finance';
 import { formatCurrency } from '../services/currency';
 import { storageService, StorageData } from '../services/storageService';
 
+import { User } from 'firebase/auth';
+import { GoogleAccountCard } from './GoogleAuthButton';
+
 interface SettingsViewProps {
   settings: SystemSettings;
   data: StorageData;
   onUpdateSettings: (settings: Partial<SystemSettings>) => void;
   onResetData: () => void;
+  user?: User | null;
+  onLogin?: () => void;
+  onLogout?: () => void;
+  onOpenSheetsSync?: () => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -25,6 +32,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   data,
   onUpdateSettings,
   onResetData,
+  user = null,
+  onLogin = () => {},
+  onLogout = () => {},
+  onOpenSheetsSync = () => {},
 }) => {
   const [formData, setFormData] = useState<SystemSettings>({ ...settings });
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -94,6 +105,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </span>
         )}
       </div>
+
+      {/* Google Authentication & Workspace Integration Card */}
+      <GoogleAccountCard
+        user={user}
+        onLogin={onLogin}
+        onLogout={onLogout}
+        onOpenSheetsSync={onOpenSheetsSync}
+      />
 
       {/* Settings Form */}
       <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
