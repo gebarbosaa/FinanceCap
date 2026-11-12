@@ -301,6 +301,7 @@ export default function App() {
 
           {activeTab === 'patrimony' && (
             <PatrimonyView
+              initialTab="BALANCO"
               patrimony={data.patrimony}
               investments={data.investments}
               goals={data.goals}
@@ -319,6 +320,7 @@ export default function App() {
 
           {activeTab === 'goals' && (
             <PatrimonyView
+              initialTab="METAS"
               patrimony={data.patrimony}
               investments={data.investments}
               goals={data.goals}
