@@ -91,7 +91,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <button
               onClick={() => onNavigate('intelligence')}
               className="flex items-center space-x-2 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-4 py-2.5 rounded-xl border border-white/20 transition cursor-pointer backdrop-blur"
@@ -150,7 +150,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <Wallet className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+          <div className="break-words text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
             {formatCurrency(summary.saldoTotalBancosCentavos)}
           </div>
           <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 flex items-center justify-between">
@@ -178,7 +178,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               R$
             </div>
           </div>
-          <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
+          <div className="break-words text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
             {formatCurrency(summary.dinheiroDisponivelGastarCentavos)}
           </div>
           <div className="text-[11px] text-emerald-700/80 dark:text-emerald-300/80 mt-2 flex items-center justify-between">
@@ -336,7 +336,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* TOP 15 EXPENSES (EXCLUDING GRANA EXTRA) */}
         <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
             <div>
               <div className="flex items-center space-x-2">
                 <h3 className="font-bold text-slate-900 dark:text-white text-base">
