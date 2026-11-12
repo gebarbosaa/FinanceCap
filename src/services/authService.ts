@@ -19,7 +19,6 @@ provider.addScope('https://www.googleapis.com/auth/drive.file');
 
 // In-memory access token cache (MANDATORY: Never store in localStorage)
 let cachedAccessToken: string | null = null;
-let isSigningIn = false;
 
 export const initAuth = (
   onAuthSuccess?: (user: User, token: string) => void,
@@ -38,7 +37,6 @@ export const initAuth = (
 
 export const googleSignIn = async (): Promise<{ user: User; accessToken: string } | null> => {
   try {
-    isSigningIn = true;
     const result = await signInWithPopup(auth, provider);
     const credential = GoogleAuthProvider.credentialFromResult(result);
     // Firestore uses the Firebase session; the Workspace token is optional and only
@@ -48,8 +46,6 @@ export const googleSignIn = async (): Promise<{ user: User; accessToken: string 
   } catch (error: unknown) {
     console.error('Erro na autenticação com Google:', error);
     throw error;
-  } finally {
-    isSigningIn = false;
   }
 };
 
