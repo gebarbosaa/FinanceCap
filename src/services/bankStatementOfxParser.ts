@@ -21,11 +21,11 @@ function ofxDate(value: string): string | null {
   return year + '-' + month + '-' + day;
 }
 
-function amountToCents(value: string): number | null {
+function amountToCents(value: string, allowZero = false): number | null {
   const amount = Number(value.trim().replace(',', '.'));
-  if (!Number.isFinite(amount) || amount === 0) return null;
+  if (!Number.isFinite(amount) || (!allowZero && amount === 0)) return null;
   const cents = Math.round(amount * 100);
-  return Number.isSafeInteger(cents) && cents !== 0 ? cents : null;
+  return Number.isSafeInteger(cents) && (allowZero || cents !== 0) ? cents : null;
 }
 
 export function parseBankStatementOfx(source: string): OfxStatementResult {
@@ -57,7 +57,7 @@ export function parseBankStatementOfx(source: string): OfxStatementResult {
   });
 
   const ledgerBlock = text.match(/<LEDGERBAL>([\\s\\S]*?)<\\/LEDGERBAL>/i)?.[1] || '';
-  const closingBalanceCentavos = amountToCents(tagValue(ledgerBlock, 'BALAMT'));
+  const closingBalanceCentavos = amountToCents(tagValue(ledgerBlock, 'BALAMT'), true);
   const bankId = tagValue(text, 'BANKID');
   const accountId = tagValue(text, 'ACCTID');
   const currency = tagValue(text, 'CURDEF') || 'BRL';
