@@ -10,6 +10,7 @@ import {
   Investment,
   FinancialSummary,
   SystemSettings,
+  Recurrence,
 } from '../types/finance';
 import { addMonthsToCompetencia, getCurrentCompetencia } from './currency';
 
@@ -265,7 +266,8 @@ export function generate12MonthProjection(
   transactions: Transaction[],
   installments: InstallmentPlan[],
   debts: Debt[],
-  startCompetencia: string = getCurrentCompetencia()
+  startCompetencia: string = getCurrentCompetencia(),
+  recurrences: Recurrence[] = []
 ): Array<{
   competencia: string;
   mesDescricao: string;
@@ -276,54 +278,98 @@ export function generate12MonthProjection(
   saldoProjetadoMesCentavos: number;
   saldoAcumuladoCentavos: number;
 }> {
-  let acumulado = 0;
-  for (const acc of accounts) {
-    if (acc.ativo) acumulado += calculateAccountBalance(acc, transactions);
-  }
+  let acumulado = accounts
+    .filter((account) => account.ativo)
+    .reduce((sum, account) => sum + calculateAccountBalance(account, transactions), 0);
 
-  const result = [];
   const monthNames = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
   ];
-
-  // Base recurrent estimates
-  const baseRevenuesCentavos = 2500000; // R$ 25.000,00 pro-labore
-  const baseFixedExpensesCentavos = 590990; // Fixed recurrent bills
+  const result = [];
 
   for (let i = 0; i < 12; i++) {
-    const comp = addMonthsToCompetencia(startCompetencia, i);
-    const [, mStr] = comp.split('-');
-    const mIdx = parseInt(mStr, 10) - 1;
-    const mesDescricao = `${monthNames[mIdx]} ${comp.split('-')[0]}`;
-
-    // Calculate installment commitment in this month
+    const competencia = addMonthsToCompetencia(startCompetencia, i);
+    const monthIndex = Number(competencia.slice(5, 7)) - 1;
+    const mesDescricao = `${monthNames[monthIndex]} ${competencia.slice(0, 4)}`;
+    let receitasEsperadasCentavos = 0;
+    let despesasFixasCentavos = 0;
     let parcelasFuturasCentavos = 0;
-    for (const inst of installments) {
-      if (inst.parcelasFuturas > 0 && i < inst.parcelasFuturas) {
-        parcelasFuturasCentavos += inst.valorParcelaCentavos;
+    let dividasParcelasCentavos = 0;
+
+    // Include only future planned transactions; realized expenses are already reflected in bank balances.
+    for (const tx of transactions) {
+      if (tx.isDeleted || tx.competencia !== competencia || (tx.status !== 'PREVISTO' && tx.status !== 'PENDENTE')) continue;
+      if (tx.tipo === 'RECEITA') receitasEsperadasCentavos += tx.valorCentavos;
+      if (tx.tipo === 'DESPESA') despesasFixasCentavos += tx.valorCentavos;
+    }
+
+    // Project active recurrences using their actual configured values and cadence.
+    for (const recurrence of recurrences) {
+      if (!recurrence.ativo) continue;
+      const anchor = recurrence.ultimaGeracaoCompetencia || addMonthsToCompetencia(startCompetencia, -1);
+      const elapsedMonths = monthDiff(anchor, competencia);
+      if (elapsedMonths < 0) continue;
+      let due = false;
+      switch (recurrence.frequencia) {
+        case 'DIARIA':
+          due = true;
+          if (recurrence.tipo === 'RECEITA') receitasEsperadasCentavos += recurrence.valorCentavos * 30;
+          else despesasFixasCentavos += recurrence.valorCentavos * 30;
+          break;
+        case 'SEMANAL':
+          due = true;
+          if (recurrence.tipo === 'RECEITA') receitasEsperadasCentavos += Math.round(recurrence.valorCentavos * 4.33);
+          else despesasFixasCentavos += Math.round(recurrence.valorCentavos * 4.33);
+          break;
+        case 'MENSAL':
+          due = elapsedMonths >= 0;
+          break;
+        case 'TRIMESTRAL':
+          due = elapsedMonths >= 0 && elapsedMonths % 3 === 0;
+          break;
+        case 'SEMESTRAL':
+          due = elapsedMonths >= 0 && elapsedMonths % 6 === 0;
+          break;
+        case 'ANUAL':
+          due = elapsedMonths >= 0 && elapsedMonths % 12 === 0;
+          break;
+      }
+      if (due && recurrence.frequencia !== 'DIARIA' && recurrence.frequencia !== 'SEMANAL') {
+        if (recurrence.tipo === 'RECEITA') receitasEsperadasCentavos += recurrence.valorCentavos;
+        else despesasFixasCentavos += recurrence.valorCentavos;
       }
     }
 
-    // Debts commitment in this month
-    let dividasParcelasCentavos = 0;
+    // Count each remaining installment only in its actual future competence.
+    for (const installment of installments) {
+      if (installment.parcelasFuturas <= 0) continue;
+      const firstUnpaidCompetencia = addMonthsToCompetencia(installment.primeiraCompetencia, installment.parcelasPagas);
+      const installmentIndex = monthDiff(firstUnpaidCompetencia, competencia);
+      if (installmentIndex >= 0 && installmentIndex < installment.parcelasFuturas) {
+        parcelasFuturasCentavos += installment.valorParcelaCentavos;
+      }
+    }
+
+    // Debt installments start at the recorded next due date.
     for (const debt of debts) {
-      if (debt.status !== 'QUITADO' && i < debt.parcelasRestantes) {
+      if (debt.status === 'QUITADO' || debt.parcelasRestantes <= 0 || !debt.proximoVencimento) continue;
+      const firstDueCompetencia = debt.proximoVencimento.slice(0, 7);
+      const debtMonthIndex = monthDiff(firstDueCompetencia, competencia);
+      if (debtMonthIndex >= 0 && debtMonthIndex < debt.parcelasRestantes) {
         dividasParcelasCentavos += debt.valorParcelaCentavos;
       }
     }
 
-    const receitasEsperadasCentavos = baseRevenuesCentavos;
-    const despesasTotalMes = baseFixedExpensesCentavos + parcelasFuturasCentavos + dividasParcelasCentavos;
-    const saldoProjetadoMesCentavos = receitasEsperadasCentavos - despesasTotalMes;
-
+    const saldoProjetadoMesCentavos =
+      receitasEsperadasCentavos - despesasFixasCentavos - parcelasFuturasCentavos - dividasParcelasCentavos;
     acumulado += saldoProjetadoMesCentavos;
 
     result.push({
-      competencia: comp,
+      competencia,
       mesDescricao,
       receitasEsperadasCentavos,
-      despesasFixasCentavos: baseFixedExpensesCentavos,
+      despesasFixasCentavos,
       parcelasFuturasCentavos,
       dividasParcelasCentavos,
       saldoProjetadoMesCentavos,
