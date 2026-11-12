@@ -63,32 +63,47 @@ export function runSpendingRadar(
     }
   }
 
-  for (const bgt of budgets) {
-    if (bgt.competencia === currentComp) {
-      const spent = catExpensesMap.get(bgt.categoriaId) || 0;
-      const cat = categories.find((c) => c.id === bgt.categoriaId);
-      const catName = cat ? cat.nome : 'Categoria';
-      const pct = (spent / bgt.valorPlanejadoCentavos) * 100;
+  const savedBudgets = new Map(
+    budgets.filter((budget) => budget.competencia === currentComp).map((budget) => [budget.categoriaId, budget])
+  );
+  const effectiveBudgets = categories
+    .filter((category) => category.tipo === 'DESPESA' && category.ativo !== false)
+    .flatMap((category) => {
+      const saved = savedBudgets.get(category.id);
+      const limit = saved?.valorPlanejadoCentavos ?? category.limiteMensalCentavos;
+      if (!limit || limit <= 0) return [];
+      return [{
+        id: saved?.id ?? `auto-${currentComp}-${category.id}`,
+        categoriaId: category.id,
+        valorPlanejadoCentavos: limit,
+        alertaPercentual: saved?.alertaPercentual ?? 80,
+      }];
+    });
 
-      if (spent > bgt.valorPlanejadoCentavos) {
-        alerts.push({
-          id: `bgt-over-${bgt.id}`,
-          tipo: 'ORCAMENTO_ESTOURADO',
-          nivel: 'URGENTE',
-          titulo: `Orçamento Estourado: ${catName}`,
-          mensagem: `Gasto realizado de ${formatCurrency(spent)} ultrapassou o teto planejado de ${formatCurrency(bgt.valorPlanejadoCentavos)} (${pct.toFixed(1)}%).`,
-          valorCentavos: spent - bgt.valorPlanejadoCentavos,
-        });
-      } else if (pct >= bgt.alertaPercentual) {
-        alerts.push({
-          id: `bgt-warn-${bgt.id}`,
-          tipo: 'ORCAMENTO_ESTOURADO',
-          nivel: 'ALERTA',
-          titulo: `Atenção ao Limite: ${catName}`,
-          mensagem: `Você atingiu ${pct.toFixed(1)}% do orçamento (${formatCurrency(spent)} de ${formatCurrency(bgt.valorPlanejadoCentavos)}).`,
-          valorCentavos: spent,
-        });
-      }
+  for (const bgt of effectiveBudgets) {
+    const spent = catExpensesMap.get(bgt.categoriaId) || 0;
+    const cat = categories.find((c) => c.id === bgt.categoriaId);
+    const catName = cat ? cat.nome : 'Categoria';
+    const pct = (spent / bgt.valorPlanejadoCentavos) * 100;
+
+    if (spent > bgt.valorPlanejadoCentavos) {
+      alerts.push({
+        id: `bgt-over-${bgt.id}`,
+        tipo: 'ORCAMENTO_ESTOURADO',
+        nivel: 'URGENTE',
+        titulo: `Orçamento Estourado: ${catName}`,
+        mensagem: `Gasto realizado de ${formatCurrency(spent)} ultrapassou o teto planejado de ${formatCurrency(bgt.valorPlanejadoCentavos)} (${pct.toFixed(1)}%).`,
+        valorCentavos: spent - bgt.valorPlanejadoCentavos,
+      });
+    } else if (pct >= bgt.alertaPercentual) {
+      alerts.push({
+        id: `bgt-warn-${bgt.id}`,
+        tipo: 'ORCAMENTO_ESTOURADO',
+        nivel: 'ALERTA',
+        titulo: `Atenção ao Limite: ${catName}`,
+        mensagem: `Você atingiu ${pct.toFixed(1)}% do orçamento (${formatCurrency(spent)} de ${formatCurrency(bgt.valorPlanejadoCentavos)}).`,
+        valorCentavos: spent,
+      });
     }
   }
 
