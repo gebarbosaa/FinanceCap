@@ -80,7 +80,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <aside className="w-64 bg-[#0B2545] text-slate-200 border-r border-[#1F4E79] flex flex-col flex-shrink-0 h-[calc(100vh-4rem)] sticky top-16 overflow-y-auto select-none">
+    <aside className="w-16 lg:w-64 bg-[#0B2545] text-slate-200 border-r border-[#1F4E79] flex flex-col flex-shrink-0 h-[calc(100vh-4rem)] sticky top-16 overflow-y-auto overflow-x-hidden select-none">
       <div className="py-4 px-3 space-y-6">
         {/* Navigation Sections */}
         {menuItems.map((item, index) => {
@@ -88,7 +88,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           return (
             <React.Fragment key={item.id}>
               {item.section && (
-                <div className="pt-2 px-3">
+                <div className="hidden lg:block pt-2 px-3">
                   <span className="text-[10px] font-bold tracking-wider text-blue-300/60 uppercase">
                     {item.section}
                   </span>
@@ -96,20 +96,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
               )}
               <button
                 onClick={() => onTabChange(item.id)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition cursor-pointer group ${
+                className={`w-full flex items-center justify-center lg:justify-between px-2 lg:px-3 py-2.5 lg:py-2 rounded-lg text-xs font-semibold transition cursor-pointer group ${
                   isActive
                     ? 'bg-[#1F4E79] text-white shadow-sm border-l-4 border-amber-400 pl-2'
                     : 'text-slate-300 hover:bg-[#1F4E79]/50 hover:text-white'
                 }`}
               >
-                <div className="flex items-center space-x-2.5 truncate">
+                <div className="flex min-w-0 items-center justify-center lg:justify-start space-x-0 lg:space-x-2.5 truncate">
                   <span className={`${isActive ? 'text-amber-400' : 'text-blue-300 group-hover:text-white'}`}>
                     {item.icon}
                   </span>
-                  <span className="truncate">{item.label}</span>
+                  <span className="hidden lg:inline truncate">{item.label}</span>
                 </div>
 
-                <div className="flex items-center space-x-1.5 flex-shrink-0">
+                <div className="hidden lg:flex items-center space-x-1.5 flex-shrink-0">
                   {item.badge && (
                     <span
                       className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
@@ -119,7 +119,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       {item.badge}
                     </span>
                   )}
-                  {isActive && <ChevronRight className="w-3.5 h-3.5 text-amber-400" />}
+                  {isActive && <ChevronRight className="hidden lg:block w-3.5 h-3.5 text-amber-400" />}
                 </div>
               </button>
             </React.Fragment>
@@ -128,7 +128,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Footer Info */}
-      <div className="mt-auto p-3 m-3 bg-[#1F4E79]/30 rounded-lg border border-[#1F4E79] text-[11px] text-blue-200/80">
+      <div className="hidden lg:block mt-auto p-3 m-3 bg-[#1F4E79]/30 rounded-lg border border-[#1F4E79] text-[11px] text-blue-200/80">
         <div className="flex items-center justify-between mb-1">
           <span className="font-semibold text-white">Status da Base:</span>
           <span className="flex items-center space-x-1 text-emerald-400 font-bold">
