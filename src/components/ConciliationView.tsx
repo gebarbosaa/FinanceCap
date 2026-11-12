@@ -285,7 +285,7 @@ export const ConciliationView: React.FC<ConciliationViewProps> = ({
               <h3 className="font-extrabold text-slate-900 dark:text-white text-base">Revisão do extrato ({parsedRows.length} registros)</h3>
               <p className="text-xs text-slate-500">Conta: {selectedAccount?.nome || '—'} · {format} · Nada será gravado até sua confirmação.</p>
             </div>
-            <button onClick={() => setStep('INPUT')} className="text-xs text-slate-500 hover:text-slate-700 font-semibold cursor-pointer">Voltar / editar</button>
+            <button onClick={() => setStep('INPUT')} className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-semibold cursor-pointer">Voltar / editar</button>
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -335,7 +335,7 @@ export const ConciliationView: React.FC<ConciliationViewProps> = ({
           </div>
           {hasDuplicates && <p className="text-xs text-amber-700">Duplicados foram desmarcados automaticamente. Você pode revisar cada linha antes de confirmar.</p>}
           <div className="flex flex-wrap justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-700">
-            <button onClick={() => { setStep('INPUT'); setAllowMismatch(false); }} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl cursor-pointer">Cancelar</button>
+            <button onClick={() => { setStep('INPUT'); setAllowMismatch(false); }} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-100 text-xs font-semibold rounded-xl cursor-pointer">Cancelar</button>
             <button onClick={handleConfirmImport} disabled={selectedCount === 0 || difference === null || (difference !== 0 && !allowMismatch)}
               className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow cursor-pointer transition">
               Confirmar e gravar {selectedCount} lançamentos
