@@ -133,7 +133,7 @@ export default function App() {
         onToggleDarkMode={() => setDarkMode(!darkMode)}
       />
 
-      <div className="flex flex-1">
+      <div className="flex min-w-0 flex-1">
         {/* Sidebar */}
         <Sidebar
           activeTab={activeTab}
@@ -143,7 +143,7 @@ export default function App() {
         />
 
         {/* Main Content Area */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full overflow-y-auto">
+        <main className="min-w-0 flex-1 p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full overflow-y-auto overflow-x-hidden">
           {activeTab === 'dashboard' && (
             <DashboardView
               summary={summary}
