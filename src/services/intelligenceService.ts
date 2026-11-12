@@ -54,7 +54,7 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
   }
 
   // 2. Quanto posso gastar hoje? (Dinheiro disponível para gastar)
-  if (cleanQuery.includes('posso gastar') || cleanQuery.includes('disponível') || cleanQuery.includes('dinheiro disponivel')) {
+  if (cleanQuery.includes('posso gastar') || cleanQuery.includes('disponivel') || cleanQuery.includes('dinheiro disponivel')) {
     return {
       pergunta: 'Quanto posso gastar hoje?',
       resposta: `Você tem ${formatCurrency(summary.dinheiroDisponivelGastarCentavos)} de dinheiro realmente livre para gastar com segurança.`,
@@ -74,7 +74,7 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
   }
 
   // 3. Quanto gastei este mês?
-  if (cleanQuery.includes('gastei este mês') || cleanQuery.includes('gastos do mês') || cleanQuery.includes('despesas do mês')) {
+  if (cleanQuery.includes('gastei este mes') || cleanQuery.includes('gastos do mes') || cleanQuery.includes('despesas do mes')) {
     return {
       pergunta: 'Quanto gastei este mês?',
       resposta: `Nesta competência (${currentComp}), você realizou ${formatCurrency(summary.despesasMesCentavos)} em despesas efetivadas, com mais ${formatCurrency(summary.despesasPendentesMesCentavos)} previstas/pendentes até o fim do ciclo.`,
@@ -135,7 +135,7 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
   }
 
   // 6. Qual cartão está mais comprometido?
-  if (cleanQuery.includes('cartão') || cleanQuery.includes('cartao') || cleanQuery.includes('limite')) {
+  if (cleanQuery.includes('cartao') || cleanQuery.includes('cartao') || cleanQuery.includes('limite')) {
     if (data.cards.length === 0) {
       return { pergunta: 'Qual cartão está mais comprometido?', resposta: 'Ainda não há cartões cadastrados para comparar os limites.', tipoDado: 'DADO_REAL', origemRastreavel: ['Nenhum cartão foi encontrado na base atual.'] };
     }
@@ -184,7 +184,7 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
   }
 
   // 8. Quanto devo? (Dívidas totais)
-  if (cleanQuery.includes('devo') || cleanQuery.includes('dívida') || cleanQuery.includes('divida') || cleanQuery.includes('financiamento')) {
+  if (cleanQuery.includes('devo') || cleanQuery.includes('divida') || cleanQuery.includes('divida') || cleanQuery.includes('financiamento')) {
     const dividasDesc = data.debts.map(
       (d) => `${d.credor} (${d.tipo}): Saldo devedor de ${formatCurrency(d.saldoDevedorCentavos)} com ${d.parcelasRestantes} parcelas restantes`
     );
@@ -201,7 +201,7 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
   }
 
   // 9. Qual meu patrimônio líquido?
-  if (cleanQuery.includes('patrimônio') || cleanQuery.includes('patrimonio') || cleanQuery.includes('riqueza') || cleanQuery.includes('bens')) {
+  if (cleanQuery.includes('patrimonio') || cleanQuery.includes('patrimonio') || cleanQuery.includes('riqueza') || cleanQuery.includes('bens')) {
     return {
       pergunta: 'Qual meu patrimônio líquido?',
       resposta: `Seu Patrimônio Líquido avaliado hoje é de ${formatCurrency(summary.patrimonioLiquidoCentavos)}.`,
@@ -216,7 +216,7 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
   }
 
   // 10. Quanto sobrará no fim do mês?
-  if (cleanQuery.includes('sobrará') || cleanQuery.includes('sobrar') || cleanQuery.includes('fim do mês') || cleanQuery.includes('projecao')) {
+  if (cleanQuery.includes('sobrara') || cleanQuery.includes('sobrar') || cleanQuery.includes('fim do mes') || cleanQuery.includes('projecao')) {
     const projecao = summary.receitasMesCentavos + summary.receitasPrevistasMesCentavos - (summary.despesasMesCentavos + summary.despesasPendentesMesCentavos + summary.faturasAbertasCentavos);
     return {
       pergunta: 'Quanto sobrará no fim do mês?',
