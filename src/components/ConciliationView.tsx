@@ -168,7 +168,11 @@ export const ConciliationView: React.FC<ConciliationViewProps> = ({
       alert('Nenhuma linha selecionada para importação.');
       return;
     }
-    if (difference === null) {\n      alert('Informe o saldo inicial e o saldo final para concluir a conciliação.');\n      return;\n    }\n    if (difference !== 0 && !allowMismatch) {
+    if (difference === null) {
+      alert('Informe o saldo inicial e o saldo final para concluir a conciliação.');
+      return;
+    }
+    if (difference !== 0 && !allowMismatch) {
       alert('O saldo final não confere. Marque a confirmação de divergência para prosseguir conscientemente.');
       return;
     }
