@@ -74,7 +74,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     section?: string;
   }> = [
     { section: 'VISÃO EXECUTIVA', id: 'dashboard', label: 'Dashboard Geral', icon: <LayoutDashboard className="w-4 h-4" /> },
-    { id: 'intelligence', label: 'BF Intelligence', icon: <Sparkles className="w-4 h-4 text-amber-400" />, badge: 'IA Real', badgeColor: 'bg-amber-500/20 text-amber-300' },
+    { id: 'intelligence', label: 'BF Intelligence', icon: <Sparkles className="w-4 h-4 text-orange-500" />, badge: 'IA Real', badgeColor: 'bg-amber-500/20 text-amber-300' },
     { id: 'radar', label: 'Radar de Gastos', icon: <Radar className="w-4 h-4 text-rose-400" />, badge: radarAlertCount > 0 ? radarAlertCount : undefined, badgeColor: 'bg-rose-500 text-white' },
 
     { section: 'OPERAÇÕES & CRÉDITO', id: 'transactions', label: 'Lançamentos', icon: <Receipt className="w-4 h-4" /> },
@@ -88,9 +88,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'patrimony', label: 'Patrimônio & Invest.', icon: <PiggyBank className="w-4 h-4" /> },
     { id: 'goals', label: 'Metas Financeiras', icon: <Target className="w-4 h-4" /> },
 
-    { section: 'DADOS & GOVERNANÇA', id: 'reports', label: '32 Abas & Relatórios', icon: <FileSpreadsheet className="w-4 h-4 text-emerald-400" /> },
+    { section: 'DADOS & GOVERNANÇA', id: 'reports', label: '32 Abas & Relatórios', icon: <FileSpreadsheet className="w-4 h-4 text-orange-500" /> },
     { id: 'audit', label: 'Log de Auditoria', icon: <History className="w-4 h-4" /> },
-    { id: 'tests', label: 'Testes do Sistema (20)', icon: <CheckCircle2 className="w-4 h-4 text-emerald-400" />, badge: '20/20', badgeColor: 'bg-emerald-500/20 text-emerald-300' },
+    { id: 'tests', label: 'Testes do Sistema (20)', icon: <CheckCircle2 className="w-4 h-4 text-orange-500" />, badge: '20/20', badgeColor: 'bg-emerald-500/20 text-emerald-300' },
     { id: 'categories', label: 'Categorias', icon: <Tags className="w-4 h-4" /> },
     { id: 'settings', label: 'Configurações', icon: <Settings className="w-4 h-4" /> },
   ];
@@ -105,7 +105,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <React.Fragment key={item.id}>
               {item.section && (
                 <div className="hidden lg:block pt-2 px-3">
-                  <span className={`text-[10px] font-bold tracking-wider uppercase ${darkMode ? "text-blue-300/60" : "text-slate-400"}`}>
+                  <span className={`text-[10px] font-bold tracking-wider uppercase ${darkMode ? "text-white/55" : "text-black/55"}`}>
                     {item.section}
                   </span>
                 </div>
@@ -116,12 +116,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => onTabChange(item.id)}
                 className={`w-full flex items-center justify-center lg:justify-between px-2 lg:px-3 py-2.5 lg:py-2 rounded-lg text-xs font-semibold transition cursor-pointer group ${
                   isActive
-                    ? darkMode ? "bg-[#1F4E79] text-white shadow-sm border-l-4 border-amber-400 pl-2" : "bg-blue-50 text-blue-900 shadow-sm border-l-4 border-amber-500 pl-2"
-                    : darkMode ? "text-slate-300 hover:bg-[#1F4E79]/50 hover:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+                    ? darkMode ? "bg-white/10 text-white shadow-sm border-l-4 border-orange-500 pl-2" : "bg-black/5 text-black shadow-sm border-l-4 border-orange-500 pl-2"
+                    : darkMode ? "text-white/80 hover:bg-white/10 hover:text-white" : "text-black/75 hover:bg-black/5 hover:text-black"
                 }`}
               >
                 <div className="flex min-w-0 items-center justify-center lg:justify-start space-x-0 lg:space-x-2.5 truncate">
-                  <span className={`${isActive ? "text-amber-500" : darkMode ? "text-blue-300 group-hover:text-white" : "text-slate-400 group-hover:text-blue-700"}`}>
+                  <span className={`${isActive ? "text-amber-500" : darkMode ? "text-white/70 group-hover:text-orange-400" : "text-black/55 group-hover:text-orange-600"}`}>
                     {item.icon}
                   </span>
                   <span className="hidden lg:inline truncate">{item.label}</span>
@@ -154,7 +154,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <img
                   src={user.photoURL}
                   alt={user.displayName || 'Google User'}
-                  className="w-8 h-8 rounded-full border border-emerald-500"
+                  className="w-8 h-8 rounded-full border border-orange-500"
                 />
               ) : (
                 <div className="w-8 h-8 rounded-full bg-orange-500 text-white font-bold text-xs flex items-center justify-center">
@@ -177,7 +177,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 type="button"
                 onClick={onOpenSheetsSync}
-                className="w-full mt-2 py-1 text-[11px] font-semibold text-center rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-900/50 transition cursor-pointer"
+                className="w-full mt-2 py-1 text-[11px] font-semibold text-center rounded-lg bg-orange-500 hover:bg-orange-600 text-white dark:bg-orange-500 dark:hover:bg-orange-600 transition cursor-pointer"
               >
                 Sincronizar Sheets
               </button>
@@ -212,12 +212,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {user ? (
             <div
               title={`Conectado: ${user.email}`}
-              className="w-8 h-8 rounded-full border-2 border-emerald-500 overflow-hidden"
+              className="w-8 h-8 rounded-full border-2 border-orange-500 overflow-hidden"
             >
               {user.photoURL ? (
                 <img src={user.photoURL} alt="Google" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center">
+                <div className="w-full h-full bg-orange-500 text-white font-bold text-xs flex items-center justify-center">
                   G
                 </div>
               )}
