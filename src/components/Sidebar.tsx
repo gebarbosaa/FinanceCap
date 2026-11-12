@@ -86,7 +86,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside className={`bf-sidebar w-16 lg:w-64 flex flex-col flex-shrink-0 h-[calc(100vh-4rem)] sticky top-16 overflow-y-auto overflow-x-hidden select-none border-r transition-colors duration-200 ${darkMode ? "text-slate-200" : "text-slate-700"}`}>
-      <div className="py-4 px-3 space-y-6">
+      <div className="bf-sidebar-items py-4 px-3 space-y-6">
         {/* Navigation Sections */}
         {menuItems.map((item, index) => {
           const isActive = activeTab === item.id;
@@ -113,7 +113,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <span className={`${isActive ? "text-amber-500" : darkMode ? "text-blue-300 group-hover:text-white" : "text-slate-400 group-hover:text-blue-700"}`}>
                     {item.icon}
                   </span>
-                  <span className="hidden lg:inline truncate">{item.label}</span>
+                  <span className="bf-sidebar-label hidden lg:inline truncate">{item.label}</span>
                 </div>
 
                 <div className="hidden lg:flex items-center space-x-1.5 flex-shrink-0">
