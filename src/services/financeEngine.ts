@@ -299,7 +299,7 @@ export function generate12MonthProjection(
 
     // Include only future planned transactions; realized expenses are already reflected in bank balances.
     for (const tx of transactions) {
-      if (tx.isDeleted || tx.competencia !== competencia || (tx.status !== 'PREVISTO' && tx.status !== 'PENDENTE')) continue;
+      if (tx.isDeleted || tx.parcelamentoId || tx.competencia !== competencia || (tx.status !== 'PREVISTO' && tx.status !== 'PENDENTE')) continue;
       if (tx.tipo === 'RECEITA') receitasEsperadasCentavos += tx.valorCentavos;
       if (tx.tipo === 'DESPESA') despesasFixasCentavos += tx.valorCentavos;
     }
@@ -309,11 +309,11 @@ export function generate12MonthProjection(
       if (!recurrence.ativo) continue;
       const anchor = recurrence.ultimaGeracaoCompetencia || addMonthsToCompetencia(startCompetencia, -1);
       const elapsedMonths = monthDiff(anchor, competencia);
-      if (elapsedMonths < 0) continue;
+      if (elapsedMonths <= 0) continue;
       let due = false;
       switch (recurrence.frequencia) {
         case 'DIARIA':
-          due = true;
+          due = elapsedMonths > 0;
           if (recurrence.tipo === 'RECEITA') receitasEsperadasCentavos += recurrence.valorCentavos * 30;
           else despesasFixasCentavos += recurrence.valorCentavos * 30;
           break;
@@ -323,16 +323,16 @@ export function generate12MonthProjection(
           else despesasFixasCentavos += Math.round(recurrence.valorCentavos * 4.33);
           break;
         case 'MENSAL':
-          due = elapsedMonths >= 0;
+          due = elapsedMonths > 0;
           break;
         case 'TRIMESTRAL':
-          due = elapsedMonths >= 0 && elapsedMonths % 3 === 0;
+          due = elapsedMonths > 0 && elapsedMonths % 3 === 0;
           break;
         case 'SEMESTRAL':
-          due = elapsedMonths >= 0 && elapsedMonths % 6 === 0;
+          due = elapsedMonths > 0 && elapsedMonths % 6 === 0;
           break;
         case 'ANUAL':
-          due = elapsedMonths >= 0 && elapsedMonths % 12 === 0;
+          due = elapsedMonths > 0 && elapsedMonths % 12 === 0;
           break;
       }
       if (due && recurrence.frequencia !== 'DIARIA' && recurrence.frequencia !== 'SEMANAL') {
