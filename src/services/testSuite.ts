@@ -1,4 +1,5 @@
 import { parseBankStatementCsv } from './bankStatementParser';
+import { parseBankStatementOfx } from './bankStatementOfxParser';
 import {
   calculateAccountBalance,
   calculateCardLimits,
@@ -594,6 +595,35 @@ export function runAll20MandatoryTests(): TestCaseResult[] {
         first?.valorCentavos === -123456 &&
         second?.valorCentavos === 500000,
       mensagem: 'Parser preservou descrição entre aspas e converteu valores brasileiros para centavos inteiros.',
+      detalhes: JSON.stringify(parsed),
+    };
+  });
+
+  // Test OFX: leitura de FITID, valor e saldo final
+  record(21, 'Importação OFX', 'Valida transação OFX, identificador externo e saldo final em centavos', () => {
+    const ofx = `<OFX>
+<BANKID>341
+<ACCTID>123456
+<CURDEF>BRL
+<STMTTRN>
+<TRNTYPE>DEBIT
+<DTPOSTED>20261108120000
+<TRNAMT>-12.34
+<FITID>FIT-001
+<NAME>Mercado Central
+</STMTTRN>
+<LEDGERBAL>
+<BALAMT>87.66
+<DTASOF>20261108120000
+</LEDGERBAL>
+</OFX>`;
+    const parsed = parseBankStatementOfx(ofx);
+    return {
+      aprovado: parsed.rows.length === 1 &&
+        parsed.rows[0]?.valorCentavos === -1234 &&
+        parsed.rows[0]?.idExterno === 'FIT-001' &&
+        parsed.closingBalanceCentavos === 8766,
+      mensagem: 'OFX interpretado com FITID, movimento assinado e saldo final exato em centavos.',
       detalhes: JSON.stringify(parsed),
     };
   });
