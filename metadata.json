@@ -1,0 +1,6 @@
+{
+  "name": "Financeiro Barbosa Fernandes",
+  "description": "Sistema de gestão financeira pessoal e empresarial BF Finance OS com sincronização em Google Sheets, controle de contas, cartões, faturas, patrimônio e inteligência financeira.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
