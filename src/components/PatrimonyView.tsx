@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Building2,
   Car,
@@ -18,6 +18,7 @@ import {
 import { formatCurrency, formatDateBR } from '../services/currency';
 
 interface PatrimonyViewProps {
+  initialTab?: 'BALANCO' | 'INVESTIMENTOS' | 'METAS';
   patrimony: PatrimonyItem[];
   investments: Investment[];
   goals: Goal[];
@@ -28,25 +29,30 @@ interface PatrimonyViewProps {
 }
 
 export const PatrimonyView: React.FC<PatrimonyViewProps> = ({
+  initialTab = 'BALANCO',
   patrimony,
   investments,
   goals,
   summary,
 }) => {
-  const [activeTab, setActiveTab] = useState<'BALANCO' | 'INVESTIMENTOS' | 'METAS'>('BALANCO');
+  const [activeTab, setActiveTab] = useState<'BALANCO' | 'INVESTIMENTOS' | 'METAS'>(initialTab);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   const totalInvestments = investments.reduce((sum, inv) => sum + inv.saldoAtualCentavos, 0);
 
   return (
     <div className="space-y-6">
       {/* Sub Tabs */}
-      <div className="flex space-x-2 border-b border-slate-200 dark:border-slate-700 pb-2">
+      <div className="flex flex-wrap gap-2 border-b border-slate-200 dark:border-slate-700 pb-3">
         <button
           onClick={() => setActiveTab('BALANCO')}
           className={`px-4 py-2 text-xs font-bold rounded-xl transition cursor-pointer flex items-center space-x-2 ${
             activeTab === 'BALANCO'
-              ? 'bg-[#0B2545] text-white shadow'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+              ? 'bg-blue-900 text-white shadow-sm'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
           }`}
         >
           <Building2 className="w-4 h-4" />
@@ -57,8 +63,8 @@ export const PatrimonyView: React.FC<PatrimonyViewProps> = ({
           onClick={() => setActiveTab('INVESTIMENTOS')}
           className={`px-4 py-2 text-xs font-bold rounded-xl transition cursor-pointer flex items-center space-x-2 ${
             activeTab === 'INVESTIMENTOS'
-              ? 'bg-[#0B2545] text-white shadow'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+              ? 'bg-blue-900 text-white shadow-sm'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
           }`}
         >
           <TrendingUp className="w-4 h-4" />
@@ -69,8 +75,8 @@ export const PatrimonyView: React.FC<PatrimonyViewProps> = ({
           onClick={() => setActiveTab('METAS')}
           className={`px-4 py-2 text-xs font-bold rounded-xl transition cursor-pointer flex items-center space-x-2 ${
             activeTab === 'METAS'
-              ? 'bg-[#0B2545] text-white shadow'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+              ? 'bg-blue-900 text-white shadow-sm'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
           }`}
         >
           <Target className="w-4 h-4" />
