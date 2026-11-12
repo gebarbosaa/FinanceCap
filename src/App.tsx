@@ -190,7 +190,7 @@ export default function App() {
               transactions={data.transactions}
               installments={data.installments}
               onPayInvoice={(invoiceId, contaId, valor) => {
-                storageService.payInvoice(invoiceId, contaId, valor);
+                return storageService.payInvoice(invoiceId, contaId, valor);
               }}
               onAddCard={(card) => {
                 storageService.addCard(card);
