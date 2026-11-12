@@ -120,7 +120,7 @@ export default function App() {
   ).length;
 
   return (
-    <div className={`min-h-screen bg-[#EEF0F5] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200`}>
+    <div className={`bf-app min-h-screen flex flex-col font-sans transition-colors duration-200`}>
       {/* Executive Header */}
       <Header
         summary={summary}
@@ -146,7 +146,7 @@ export default function App() {
         />
 
         {/* Main Content Area */}
-        <main className="min-w-0 flex-1 p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full overflow-y-auto overflow-x-hidden">
+        <main className="bf-main min-w-0 flex-1 p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full overflow-y-auto overflow-x-hidden">
           {activeTab === 'dashboard' && (
             <DashboardView
               summary={summary}
