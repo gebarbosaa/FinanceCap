@@ -260,7 +260,7 @@ export const SheetsSyncModal: React.FC<SheetsSyncModalProps> = ({
             <div className="flex justify-end space-x-2 pt-1">
               <button
                 onClick={() => setConfirmSyncDialog(false)}
-                className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-lg"
+                className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-100 text-xs font-semibold rounded-lg"
               >
                 Cancelar
               </button>
