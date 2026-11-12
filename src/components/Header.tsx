@@ -62,8 +62,8 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#1F4E79] to-[#0B2545] border border-[#3B82F6]/30 flex items-center justify-center shadow-inner">
               <Wallet className="w-6 h-6 text-amber-400" />
             </div>
-            <div>
-              <div className="flex items-center space-x-2">
+            <div className="min-w-0">
+              <div className="flex min-w-0 items-center space-x-2">
                 <span className="truncate font-bold tracking-tight text-sm sm:text-base text-white">
                   BARBOSA FERNANDES
                 </span>
