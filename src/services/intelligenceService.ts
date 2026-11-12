@@ -41,7 +41,7 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
 
     return {
       pergunta: 'Qual meu saldo atual?',
-      resposta: `Seu saldo bancário consolidado hoje é de **${formatCurrency(summary.saldoTotalBancosCentavos)}**.`,
+      resposta: `Seu saldo bancário consolidado hoje é de ${formatCurrency(summary.saldoTotalBancosCentavos)}.`,
       tipoDado: 'DADO_REAL',
       origemRastreavel: [
         `Soma aritmética dos saldos calculados das ${data.accounts.length} contas bancárias ativas.`,
@@ -57,7 +57,7 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
   if (cleanQuery.includes('posso gastar') || cleanQuery.includes('disponível') || cleanQuery.includes('dinheiro disponivel')) {
     return {
       pergunta: 'Quanto posso gastar hoje?',
-      resposta: `Você tem **${formatCurrency(summary.dinheiroDisponivelGastarCentavos)}** de dinheiro realmente livre para gastar com segurança.`,
+      resposta: `Você tem ${formatCurrency(summary.dinheiroDisponivelGastarCentavos)} de dinheiro realmente livre para gastar com segurança.`,
       tipoDado: 'DADO_REAL',
       origemRastreavel: [
         `Metodologia estrita Barbosa Fernandes:`,
@@ -77,7 +77,7 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
   if (cleanQuery.includes('gastei este mês') || cleanQuery.includes('gastos do mês') || cleanQuery.includes('despesas do mês')) {
     return {
       pergunta: 'Quanto gastei este mês?',
-      resposta: `Nesta competência (${currentComp}), você realizou **${formatCurrency(summary.despesasMesCentavos)}** em despesas efetivadas, com mais **${formatCurrency(summary.despesasPendentesMesCentavos)}** previstas/pendentes até o fim do ciclo.`,
+      resposta: `Nesta competência (${currentComp}), você realizou ${formatCurrency(summary.despesasMesCentavos)} em despesas efetivadas, com mais ${formatCurrency(summary.despesasPendentesMesCentavos)} previstas/pendentes até o fim do ciclo.`,
       tipoDado: 'DADO_REAL',
       origemRastreavel: [
         `Lançamentos do tipo DESPESA com competência ${currentComp} e status REALIZADO.`,
@@ -92,7 +92,7 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
   if (cleanQuery.includes('recebi') || cleanQuery.includes('receitas') || cleanQuery.includes('renda')) {
     return {
       pergunta: 'Quanto recebi este mês?',
-      resposta: `Você já recebeu **${formatCurrency(summary.receitasMesCentavos)}** de receitas confirmadas na competência atual.`,
+      resposta: `Você já recebeu ${formatCurrency(summary.receitasMesCentavos)} de receitas confirmadas na competência atual.`,
       tipoDado: 'DADO_REAL',
       origemRastreavel: [
         `Lançamentos do tipo RECEITA com status REALIZADO.`,
@@ -124,7 +124,7 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
 
     return {
       pergunta: 'Qual minha maior categoria de despesas?',
-      resposta: `Sua maior categoria de despesas neste mês é **${catNome}**, totalizando **${formatCurrency(topVal)}**.`,
+      resposta: `Sua maior categoria de despesas neste mês é ${catNome}, totalizando ${formatCurrency(topVal)}.`,
       tipoDado: 'DADO_REAL',
       origemRastreavel: [
         `Consolidação de transações de saída agrupadas por categoria na competência ${currentComp}.`,
@@ -152,7 +152,7 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
 
     return {
       pergunta: 'Qual cartão está mais comprometido?',
-      resposta: `O cartão mais comprometido é o **${worstCard.nome}**, com **${highestPct.toFixed(1)}%** do limite total utilizado (${formatCurrency(usedVal)} de ${formatCurrency(worstCard.limiteTotalCentavos)}).`,
+      resposta: `O cartão mais comprometido é o ${worstCard.nome}, com ${highestPct.toFixed(1)}% do limite total utilizado (${formatCurrency(usedVal)} de ${formatCurrency(worstCard.limiteTotalCentavos)}).`,
       tipoDado: 'DADO_REAL',
       origemRastreavel: [
         `Cálculo: (Faturas abertas no ciclo atual + saldo devedor de parcelas futuras do cartão) / Limite Total`,
@@ -173,7 +173,7 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
 
     return {
       pergunta: 'Quanto tenho em parcelas futuras?',
-      resposta: `Você possui um total de **${formatCurrency(totalParcelasFuturas)}** em parcelas futuras a vencer distribuídas em ${data.installments.length} compras parceladas ativas.`,
+      resposta: `Você possui um total de ${formatCurrency(totalParcelasFuturas)} em parcelas futuras a vencer distribuídas em ${data.installments.length} compras parceladas ativas.`,
       tipoDado: 'DADO_REAL',
       origemRastreavel: descricoes,
       destaque: formatCurrency(totalParcelasFuturas),
@@ -188,7 +188,7 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
 
     return {
       pergunta: 'Quanto devo?',
-      resposta: `Seu endividamento total estruturado é de **${formatCurrency(summary.totalDividasCentavos)}** (principalmente financiamento imobiliário Caixa com taxa de juros subsidiada).`,
+      resposta: `Seu endividamento total estruturado é de ${formatCurrency(summary.totalDividasCentavos)} (principalmente financiamento imobiliário Caixa com taxa de juros subsidiada).`,
       tipoDado: 'DADO_REAL',
       origemRastreavel: dividasDesc,
       recomendacao:
@@ -201,7 +201,7 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
   if (cleanQuery.includes('patrimônio') || cleanQuery.includes('patrimonio') || cleanQuery.includes('riqueza') || cleanQuery.includes('bens')) {
     return {
       pergunta: 'Qual meu patrimônio líquido?',
-      resposta: `Seu Patrimônio Líquido avaliado hoje é de **${formatCurrency(summary.patrimonioLiquidoCentavos)}**.`,
+      resposta: `Seu Patrimônio Líquido avaliado hoje é de ${formatCurrency(summary.patrimonioLiquidoCentavos)}.`,
       tipoDado: 'DADO_REAL',
       origemRastreavel: [
         `Total de Ativos: ${formatCurrency(summary.totalAtivosCentavos)} (Imóvel + Veículo + Contas Bancárias + Investimentos)`,
@@ -217,7 +217,7 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
     const projecao = summary.receitasMesCentavos + summary.receitasPrevistasMesCentavos - (summary.despesasMesCentavos + summary.despesasPendentesMesCentavos + summary.faturasAbertasCentavos);
     return {
       pergunta: 'Quanto sobrará no fim do mês?',
-      resposta: `A projeção estimada para o fechamento deste mês indica uma sobra de **${formatCurrency(projecao)}** no fluxo de caixa líquido.`,
+      resposta: `A projeção estimada para o fechamento deste mês indica uma sobra de ${formatCurrency(projecao)} no fluxo de caixa líquido.`,
       tipoDado: 'DADO_PREVISTO',
       origemRastreavel: [
         `Receitas confirmadas + previstas: ${formatCurrency(summary.receitasMesCentavos + summary.receitasPrevistasMesCentavos)}`,
@@ -234,7 +234,7 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
   const topExpenses = getTop15Expenses(data.transactions, data.categories, currentComp);
   return {
     pergunta: pergunta,
-    resposta: `Com base na base financeira Barbosa Fernandes: seu saldo em contas é de **${formatCurrency(summary.saldoTotalBancosCentavos)}**, com **${formatCurrency(summary.dinheiroDisponivelGastarCentavos)}** livre para gastos hoje. Seu patrimônio líquido é de **${formatCurrency(summary.patrimonioLiquidoCentavos)}** e sua maior despesa regular do mês foi **${topExpenses[0]?.descricao || 'N/A'}** (${formatCurrency(topExpenses[0]?.valorCentavos || 0)}).`,
+    resposta: `Com base na base financeira Barbosa Fernandes: seu saldo em contas é de ${formatCurrency(summary.saldoTotalBancosCentavos)}, com ${formatCurrency(summary.dinheiroDisponivelGastarCentavos)} livre para gastos hoje. Seu patrimônio líquido é de ${formatCurrency(summary.patrimonioLiquidoCentavos)} e sua maior despesa regular do mês foi ${topExpenses[0]?.descricao || 'N/A'} (${formatCurrency(topExpenses[0]?.valorCentavos || 0)}).`,
     tipoDado: 'DADO_REAL',
     origemRastreavel: [
       `Cálculo integrado do motor financeiro Barbosa Fernandes (centavos inteiros).`,
