@@ -56,22 +56,22 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="sticky top-0 z-30 bg-[#0B2545] text-white border-b border-[#1F4E79] shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex min-h-16 flex-wrap items-center justify-between gap-3 py-2.5">
           {/* Logo and System Title */}
-          <div className="flex items-center space-x-3">
+          <div className="flex min-w-0 flex-1 items-center space-x-3">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#1F4E79] to-[#0B2545] border border-[#3B82F6]/30 flex items-center justify-center shadow-inner">
               <Wallet className="w-6 h-6 text-amber-400" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-bold tracking-tight text-lg text-white">
+                <span className="truncate font-bold tracking-tight text-sm sm:text-base text-white">
                   BARBOSA FERNANDES
                 </span>
-                <span className="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                <span className="hidden lg:inline-flex bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider">
                   BF Finance OS
                 </span>
               </div>
-              <div className="text-xs text-blue-200/70 flex items-center space-x-1.5">
+              <div className="hidden sm:flex text-xs text-blue-200/70 items-center space-x-1.5">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Gestão Executiva Patrimonial & Sincronização Google Sheets</span>
               </div>
@@ -79,7 +79,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Center Competence Selector */}
-          <div className="hidden md:flex items-center space-x-2 bg-[#1F4E79]/50 border border-[#1F4E79] px-3 py-1.5 rounded-lg">
+          <div className="hidden xl:flex shrink-0 items-center space-x-2 bg-[#1F4E79]/50 border border-[#1F4E79] px-3 py-1.5 rounded-lg">
             <span className="text-xs font-medium text-blue-200">Competência:</span>
             <select
               value={currentCompetencia}
@@ -96,9 +96,9 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Quick Metrics & Actions */}
-          <div className="flex items-center space-x-3">
+          <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
             {/* Quick Available Cash Pill */}
-            <div className="hidden lg:flex flex-col items-end px-3 py-1 bg-[#1F4E79]/40 rounded-lg border border-blue-400/20">
+            <div className="hidden 2xl:flex flex-col items-end px-3 py-1 bg-[#1F4E79]/40 rounded-lg border border-blue-400/20">
               <span className="text-[10px] text-blue-200 uppercase tracking-wider">Disponível p/ Gastar</span>
               <span className="text-sm font-bold text-emerald-400">
                 {formatCurrency(summary.dinheiroDisponivelGastarCentavos)}
@@ -111,13 +111,13 @@ export const Header: React.FC<HeaderProps> = ({
               className="flex items-center space-x-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs sm:text-sm px-3.5 py-2 rounded-lg shadow-md hover:shadow-lg transition cursor-pointer active:scale-95"
             >
               <PlusCircle className="w-4 h-4" />
-              <span>Novo Lançamento</span>
+              <span className="hidden sm:inline">Novo Lançamento</span>
             </button>
 
             {/* Google Sheets Sync Trigger */}
             <button
               onClick={onOpenSheetsSync}
-              className="flex items-center space-x-1.5 bg-[#1F4E79] hover:bg-[#286399] text-white text-xs font-semibold px-3 py-2 rounded-lg border border-blue-400/30 transition cursor-pointer"
+              className="hidden lg:flex items-center space-x-1.5 bg-[#1F4E79] hover:bg-[#286399] text-white text-xs font-semibold px-3 py-2 rounded-lg border border-blue-400/30 transition cursor-pointer"
               title="Sincronizar com Google Sheets e Google Drive"
             >
               <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
@@ -127,7 +127,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Dark Mode Toggle */}
             <button
               onClick={onToggleDarkMode}
-              className="p-2 text-blue-200 hover:text-white hover:bg-[#1F4E79] rounded-lg transition cursor-pointer"
+              className="hidden sm:flex p-2 text-blue-200 hover:text-white hover:bg-[#1F4E79] rounded-lg transition cursor-pointer"
               title={darkMode ? 'Mudar para Tema Claro' : 'Mudar para Tema Escuro'}
             >
               {darkMode ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4" />}
