@@ -90,7 +90,7 @@ test('calculateCardLimits counts unpaid invoices once and releases paid invoices
   const installment: InstallmentPlan = {
     id: 'installment-test',
     descricao: 'Compra parcelada',
-    valorTotalCentavos: 200000,
+    valorTotalCentavos: 250000,
     totalParcelas: 5,
     valorParcelaCentavos: 50000,
     dataCompra: '2026-09-10',
