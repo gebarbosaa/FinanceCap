@@ -5,7 +5,7 @@ import {
   calculateFinancialSummary,
   getTop15Expenses,
 } from './financeEngine';
-import { formatCurrency, formatDateBR, getCurrentCompetencia } from './currency';
+import { formatCurrency, getCurrentCompetencia } from './currency';
 
 export interface IntelligenceAnswer {
   pergunta: string;
@@ -31,7 +31,7 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
     currentComp
   );
 
-  const cleanQuery = pergunta.toLowerCase().trim();
+  const cleanQuery = pergunta.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().trim();
 
   // 1. Qual meu saldo atual?
   if (cleanQuery.includes('saldo atual') || cleanQuery.includes('quanto tenho')) {
@@ -44,7 +44,7 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
       resposta: `Seu saldo bancário consolidado hoje é de ${formatCurrency(summary.saldoTotalBancosCentavos)}.`,
       tipoDado: 'DADO_REAL',
       origemRastreavel: [
-        `Soma aritmética dos saldos calculados das ${data.accounts.length} contas bancárias ativas.`,
+        `Soma dos saldos calculados das ${data.accounts.filter((a) => a.ativo).length} contas bancárias ativas.`,
         ...contasDetalhes,
       ],
       recomendacao:
@@ -65,7 +65,7 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
         `(-) Despesas Pendentes do Mês: ${formatCurrency(summary.despesasPendentesMesCentavos)}`,
         `(-) Faturas Abertas a Vencer: ${formatCurrency(summary.faturasAbertasCentavos)}`,
         `(=) Dinheiro Seguro Disponível: ${formatCurrency(summary.dinheiroDisponivelGastarCentavos)}`,
-        `*Nota de integridade: Receitas previstas NÃO são somadas para evitar comprometimento ilusório.`,
+        `Nota de integridade: receitas previstas não são somadas para evitar superestimar o dinheiro disponível.`,
       ],
       recomendacao:
         'Se você tiver novas despesas não essenciais, limite-se a este montante disponível para não entrar em juros de rotativo ou cheque especial.',
@@ -96,7 +96,7 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
       tipoDado: 'DADO_REAL',
       origemRastreavel: [
         `Lançamentos do tipo RECEITA com status REALIZADO.`,
-        `Pró-labore Barbosa Fernandes e rendimentos auferidos no período.`,
+        `Valores identificados como receitas realizadas na competência ${currentComp}.`,
       ],
       destaque: formatCurrency(summary.receitasMesCentavos),
     };
@@ -129,7 +129,7 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
       origemRastreavel: [
         `Consolidação de transações de saída agrupadas por categoria na competência ${currentComp}.`,
       ],
-      recomendacao: `Monitore o orçamento de ${catNome} para evitar estouro em relação ao limite planejado.`,
+      recomendacao: topVal > 0 ? `Acompanhe os próximos lançamentos de ${catNome} e compare o total com o orçamento definido.` : undefined,
       destaque: catNome,
     };
   }
@@ -142,7 +142,7 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
 
     for (const c of data.cards) {
       const limits = calculateCardLimits(c, data.transactions, data.installments);
-      const pct = (limits.limiteUtilizadoCentavos / limits.limiteTotalCentavos) * 100;
+      const pct = limits.limiteTotalCentavos > 0 ? (limits.limiteUtilizadoCentavos / limits.limiteTotalCentavos) * 100 : 0;
       if (pct > highestPct) {
         highestPct = pct;
         worstCard = c;
@@ -188,11 +188,11 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
 
     return {
       pergunta: 'Quanto devo?',
-      resposta: `Seu endividamento total estruturado é de ${formatCurrency(summary.totalDividasCentavos)} (principalmente financiamento imobiliário Caixa com taxa de juros subsidiada).`,
+      resposta: `Seu endividamento total estruturado é de ${formatCurrency(summary.totalDividasCentavos)} com base nos saldos de dívidas cadastrados.`,
       tipoDado: 'DADO_REAL',
       origemRastreavel: dividasDesc,
       recomendacao:
-        'O custo efetivo total está sob controle. Se houver liquidez excedente extraordinária, simule amortizações no prazo para economizar juros futuros compostos.',
+        'Antes de antecipar pagamentos, compare o custo efetivo da dívida com o rendimento líquido das suas reservas e preserve sua liquidez.' ,
       destaque: formatCurrency(summary.totalDividasCentavos),
     };
   }
@@ -204,8 +204,8 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
       resposta: `Seu Patrimônio Líquido avaliado hoje é de ${formatCurrency(summary.patrimonioLiquidoCentavos)}.`,
       tipoDado: 'DADO_REAL',
       origemRastreavel: [
-        `Total de Ativos: ${formatCurrency(summary.totalAtivosCentavos)} (Imóvel + Veículo + Contas Bancárias + Investimentos)`,
-        `Total de Passivos: ${formatCurrency(summary.totalPassivosCentavos)} (Saldo Financiamento Caixa + Faturas)`,
+        `Total de ativos registrados: ${formatCurrency(summary.totalAtivosCentavos)}`,
+        `Total de passivos registrados: ${formatCurrency(summary.totalPassivosCentavos)}`,
         `Patrimônio Líquido = Ativos (${formatCurrency(summary.totalAtivosCentavos)}) - Passivos (${formatCurrency(summary.totalPassivosCentavos)})`,
       ],
       destaque: formatCurrency(summary.patrimonioLiquidoCentavos),
@@ -234,11 +234,11 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
   const topExpenses = getTop15Expenses(data.transactions, data.categories, currentComp);
   return {
     pergunta: pergunta,
-    resposta: `Com base na base financeira Barbosa Fernandes: seu saldo em contas é de ${formatCurrency(summary.saldoTotalBancosCentavos)}, com ${formatCurrency(summary.dinheiroDisponivelGastarCentavos)} livre para gastos hoje. Seu patrimônio líquido é de ${formatCurrency(summary.patrimonioLiquidoCentavos)} e sua maior despesa regular do mês foi ${topExpenses[0]?.descricao || 'N/A'} (${formatCurrency(topExpenses[0]?.valorCentavos || 0)}).`,
+    resposta: `Posso apresentar um resumo da sua situação financeira: saldo bancário de ${formatCurrency(summary.saldoTotalBancosCentavos)}, disponibilidade calculada de ${formatCurrency(summary.dinheiroDisponivelGastarCentavos)} e patrimônio líquido registrado de ${formatCurrency(summary.patrimonioLiquidoCentavos)}. Para responder à pergunta específica, preciso de mais detalhes.`, 
     tipoDado: 'DADO_REAL',
     origemRastreavel: [
       `Cálculo integrado do motor financeiro Barbosa Fernandes (centavos inteiros).`,
-      `Base rastreável: 4 contas ativas, 2 cartões, ${data.transactions.length} lançamentos processados.`,
+      `Base rastreável: ${data.accounts.filter((a) => a.ativo).length} contas ativas, ${data.cards.filter((c) => c.ativo).length} cartões ativos e ${data.transactions.filter((tx) => !tx.isDeleted).length} lançamentos não excluídos.`, 
     ],
     destaque: formatCurrency(summary.dinheiroDisponivelGastarCentavos),
   };
