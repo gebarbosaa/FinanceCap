@@ -24,7 +24,7 @@ export function calculateAccountBalance(
   let balance = account.saldoInicialCentavos;
 
   for (const tx of transactions) {
-    if (tx.isDeleted || tx.status === 'CANCELADO' || tx.status === 'PREVISTO') {
+    if (tx.isDeleted || tx.status !== 'REALIZADO') {
       continue;
     }
 
@@ -109,11 +109,16 @@ export function calculateFinancialSummary(
   settings: SystemSettings,
   currentCompetencia: string = getCurrentCompetencia()
 ): FinancialSummary {
-  // 1. Bank balances
+  // 1. Bank balances and operational cash (reserves/investments are not spendable).
   let saldoTotalBancosCentavos = 0;
+  let saldoContasOperacionaisCentavos = 0;
   for (const acc of accounts) {
     if (!acc.ativo) continue;
-    saldoTotalBancosCentavos += calculateAccountBalance(acc, transactions);
+    const accountBalance = calculateAccountBalance(acc, transactions);
+    saldoTotalBancosCentavos += accountBalance;
+    if (acc.tipo !== 'INVESTIMENTO' && acc.tipo !== 'RESERVA') {
+      saldoContasOperacionaisCentavos += accountBalance;
+    }
   }
 
   // 2. Month revenues and expenses
@@ -179,7 +184,7 @@ export function calculateFinancialSummary(
   // Considers: Real bank balances - Pending expenses - Open/due invoices
   const dinheiroDisponivelGastarCentavos = Math.max(
     0,
-    saldoTotalBancosCentavos - despesasPendentesMesCentavos - faturasAbertasCentavos
+    saldoContasOperacionaisCentavos - despesasPendentesMesCentavos - faturasAbertasCentavos
   );
 
   // 7. Net Worth (Patrimônio Líquido)
@@ -206,6 +211,7 @@ export function calculateFinancialSummary(
 
   return {
     saldoTotalBancosCentavos,
+    saldoContasOperacionaisCentavos,
     dinheiroDisponivelGastarCentavos,
     receitasMesCentavos,
     receitasPrevistasMesCentavos,
