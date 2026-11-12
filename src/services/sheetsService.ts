@@ -1,6 +1,7 @@
 import { getAccessToken } from './authService';
 import { StorageData } from './storageService';
 import { formatCurrency, formatDateBR } from './currency';
+import { calculateAccountBalance } from './financeEngine';
 
 export const ALL_32_SHEET_NAMES = [
   'CONFIGURAÇÕES',
@@ -138,7 +139,7 @@ export async function syncDataToGoogleSheets(
       acc.tipo,
       formatCurrency(acc.saldoInicialCentavos),
       formatDateBR(acc.dataSaldoInicial),
-      formatCurrency(acc.saldoInicialCentavos), // Will be updated
+      formatCurrency(calculateAccountBalance(acc, data.transactions)),
       acc.ativo ? 'ATIVA' : 'INATIVA',
       acc.observacoes || '',
     ]),
