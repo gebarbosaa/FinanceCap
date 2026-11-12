@@ -136,6 +136,9 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
 
   // 6. Qual cartão está mais comprometido?
   if (cleanQuery.includes('cartão') || cleanQuery.includes('cartao') || cleanQuery.includes('limite')) {
+    if (data.cards.length === 0) {
+      return { pergunta: 'Qual cartão está mais comprometido?', resposta: 'Ainda não há cartões cadastrados para comparar os limites.', tipoDado: 'DADO_REAL', origemRastreavel: ['Nenhum cartão foi encontrado na base atual.'] };
+    }
     let worstCard = data.cards[0];
     let highestPct = -1;
     let usedVal = 0;
