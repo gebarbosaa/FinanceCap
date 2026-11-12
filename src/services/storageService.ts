@@ -17,6 +17,8 @@ import {
 import { INITIAL_SETTINGS, INITIAL_CATEGORIES } from './initialData';
 
 import { addMonthsToCompetencia } from './currency';
+import { clearCloudSession, loadUserFinance, saveUserFinance, watchUserFinance } from './cloudDataService';
+import type { Unsubscribe } from 'firebase/firestore';
 
 const STORAGE_KEY = 'BF_FINANCE_OS_DATA_V1';
 
@@ -41,6 +43,9 @@ class StorageService {
   private data: StorageData;
   private lastPersistedData: StorageData | null = null;
   private listeners: Array<() => void> = [];
+  private cloudUid: string | null = null;
+  private cloudUnsubscribe: Unsubscribe | null = null;
+  private cloudSyncError: string | null = null;
 
   constructor() {
     this.data = this.loadData();
@@ -116,6 +121,16 @@ class StorageService {
     this.lastPersistedData = JSON.parse(serialized) as StorageData;
     this.data = durableSnapshot;
     this.notify();
+    if (this.cloudUid) {
+      void saveUserFinance(this.cloudUid, durableSnapshot).then(() => {
+        this.cloudSyncError = null;
+        this.notify();
+      }).catch((error: unknown) => {
+        this.cloudSyncError = error instanceof Error ? error.message : 'Falha ao sincronizar com a nuvem.';
+        console.error('BF Finance OS Firestore sync failed:', error);
+        this.notify();
+      });
+    }
   }
 
   public subscribe(listener: () => void): () => void {
@@ -133,6 +148,51 @@ class StorageService {
 
   public getData(): StorageData {
     return this.data;
+  }
+
+  public getCloudSyncError(): string | null {
+    return this.cloudSyncError;
+  }
+
+  public async connectCloud(uid: string): Promise<void> {
+    if (this.cloudUid === uid && this.cloudUnsubscribe) return;
+    this.cloudUnsubscribe?.();
+    this.cloudUnsubscribe = null;
+    this.cloudUid = uid;
+    this.cloudSyncError = null;
+
+    try {
+      const cloudData = await loadUserFinance(uid, this.data);
+      this.data = JSON.parse(JSON.stringify(cloudData)) as StorageData;
+      this.lastPersistedData = JSON.parse(JSON.stringify(cloudData)) as StorageData;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudData));
+      this.cloudUnsubscribe = watchUserFinance(uid, (remoteData) => {
+        if (this.cloudUid !== uid) return;
+        this.data = JSON.parse(JSON.stringify(remoteData)) as StorageData;
+        this.lastPersistedData = JSON.parse(JSON.stringify(remoteData)) as StorageData;
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteData));
+        } catch (error) {
+          console.warn('Could not update local cache from Firestore:', error);
+        }
+        this.notify();
+      }, cloudData);
+      this.notify();
+    } catch (error) {
+      this.cloudUid = null;
+      this.cloudSyncError = error instanceof Error ? error.message : 'Não foi possível conectar ao banco de dados.';
+      this.notify();
+      throw error;
+    }
+  }
+
+  public disconnectCloud(): void {
+    this.cloudUnsubscribe?.();
+    this.cloudUnsubscribe = null;
+    this.cloudUid = null;
+    this.cloudSyncError = null;
+    clearCloudSession();
+    this.notify();
   }
 
   // Log an audit entry
