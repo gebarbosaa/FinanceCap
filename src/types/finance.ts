@@ -262,6 +262,7 @@ export interface SystemSettings {
 
 export interface FinancialSummary {
   saldoTotalBancosCentavos: number;
+  saldoContasOperacionaisCentavos: number;
   dinheiroDisponivelGastarCentavos: number;
   receitasMesCentavos: number;
   receitasPrevistasMesCentavos: number;
