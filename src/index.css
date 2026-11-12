@@ -78,8 +78,8 @@ table {
   --bf-text: #172235;
   --bf-text-soft: #64748b;
   --bf-text-muted: #8b98aa;
-  --bf-accent: #d97706;
-  --bf-accent-soft: #fff4df;
+  --bf-accent: #3b82f6;
+  --bf-accent-soft: #eff6ff;
   --bf-primary: #243b5a;
   --bf-sidebar: #ffffff;
   --bf-shadow: 0 8px 28px rgba(20, 34, 54, .055);
@@ -96,8 +96,8 @@ html.dark {
   --bf-text: #edf3fb;
   --bf-text-soft: #a6b5c8;
   --bf-text-muted: #8192a8;
-  --bf-accent: #f3a63b;
-  --bf-accent-soft: rgba(243, 166, 59, .13);
+  --bf-accent: #60a5fa;
+  --bf-accent-soft: rgba(59, 130, 246, .14);
   --bf-primary: #17283e;
   --bf-sidebar: #101a28;
   --bf-shadow: 0 10px 30px rgba(0, 0, 0, .22);
