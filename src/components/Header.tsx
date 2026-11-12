@@ -79,13 +79,13 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Center Competence Selector */}
-          <div className={`hidden xl:flex shrink-0 items-center space-x-2 px-3 py-1.5 rounded-lg border ${darkMode ? "bg-[#141414] border-white/10" : "bg-white border-black/10"}`}>
+          <div className={`hidden xl:flex shrink-0 items-center space-x-2 px-3 py-1.5 rounded-lg border ${darkMode ? "bg-orange-500 border-orange-500" : "bg-orange-500 border-orange-500"}`}>
             <span className={`text-xs font-medium ${darkMode ? "text-white" : "text-black"}`}>Competência:</span>
             <select
               value={currentCompetencia}
               onChange={(e) => onCompetenciaChange(e.target.value)}
               aria-label="Selecionar competência"
-              className={`text-xs font-semibold rounded px-2.5 py-1 border focus:outline-none focus:ring-1 focus:ring-orange-400 cursor-pointer ${darkMode ? "bg-[#141414] text-white border-orange-500/40" : "bg-white text-black border-orange-300"}`}
+              className={`text-xs font-semibold rounded px-2.5 py-1 border focus:outline-none focus:ring-1 focus:ring-orange-400 cursor-pointer ${darkMode ? "bg-orange-600 text-white border-orange-400" : "bg-orange-600 text-white border-orange-500"}`}
             >
               {competencies.map((c) => (
                 <option key={c} value={c}>
@@ -120,7 +120,7 @@ export const Header: React.FC<HeaderProps> = ({
               className={`hidden lg:flex items-center space-x-1.5 text-xs font-semibold px-3 py-2 rounded-lg border transition cursor-pointer ${darkMode ? "bg-orange-500 hover:bg-orange-600 text-white border-orange-500" : "bg-orange-500 hover:bg-orange-600 text-white border-orange-500"}`}
               title="Sincronizar com Google Sheets e Google Drive"
             >
-              <FileSpreadsheet className="w-4 h-4 text-orange-500" />
+              <FileSpreadsheet className="w-4 h-4 text-white" />
               <span className="hidden sm:inline">Google Sheets</span>
             </button>
 
