@@ -91,14 +91,14 @@ test('calculateCardLimits counts unpaid invoices once and releases paid invoices
     id: 'installment-test',
     descricao: 'Compra parcelada',
     valorTotalCentavos: 200000,
-    totalParcelas: 4,
+    totalParcelas: 5,
     valorParcelaCentavos: 50000,
     dataCompra: '2026-09-10',
     primeiraCompetencia: '2026-10',
     cartaoId: card.id,
-    parcelasPagas: 2,
-    parcelasFuturas: 2,
-    saldoRestanteCentavos: 100000,
+    parcelasPagas: 0,
+    parcelasFuturas: 3,
+    saldoRestanteCentavos: 150000,
   };
 
   const result = calculateCardLimits(
@@ -117,8 +117,8 @@ test('calculateCardLimits counts unpaid invoices once and releases paid invoices
     ]
   );
 
-  assert.equal(result.limiteUtilizadoCentavos, 160000);
-  assert.equal(result.limiteDisponivelCentavos, 840000);
+  assert.equal(result.limiteUtilizadoCentavos, 110000);
+  assert.equal(result.limiteDisponivelCentavos, 890000);
 });
 
 test('calculateCardLimits safely handles a zero credit limit', () => {
