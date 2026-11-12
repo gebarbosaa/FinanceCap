@@ -133,8 +133,9 @@ export const ConciliationView: React.FC<ConciliationViewProps> = ({
     });
 
     setParseErrors(parsed.errors);
-    if (sourceFormat === 'OFX' && 'closingBalanceCentavos' in parsed && parsed.closingBalanceCentavos != null) {
-      setClosingBalance((parsed.closingBalanceCentavos / 100).toFixed(2).replace('.', ','));
+    const ofxResult = sourceFormat === 'OFX' ? parsed as ReturnType<typeof parseBankStatementOfx> : null;
+    if (ofxResult?.closingBalanceCentavos != null) {
+      setClosingBalance((ofxResult.closingBalanceCentavos / 100).toFixed(2).replace('.', ','));
     }
     if (rows.length === 0) {
       alert(parsed.errors.length
