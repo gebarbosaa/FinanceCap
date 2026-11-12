@@ -584,3 +584,44 @@ html.dark {
 .bf-hero {
   border-color: color-mix(in srgb, var(--bf-accent) 20%, var(--bf-border)) !important;
 }
+
+
+/* Final explicit BF rules: one background family, neutral typography, orange actions. */
+:root { --bf-sidebar: #ffffff; }
+html.dark { --bf-sidebar: #090909; }
+.bf-sidebar { background: var(--bf-bg) !important; }
+.bf-sidebar button { background-color: transparent; }
+.bf-sidebar button:hover {
+  background-color: rgba(255,121,0,.07) !important;
+  color: var(--bf-text) !important;
+}
+.dark .bf-sidebar button:hover { background-color: rgba(255,121,0,.12) !important; }
+.bf-sidebar button[aria-current="page"],
+.bf-sidebar button[aria-label="Dashboard Geral"] {
+  background-color: rgba(255,121,0,.10) !important;
+  color: var(--bf-text) !important;
+}
+.dark .bf-sidebar button[aria-current="page"],
+.dark .bf-sidebar button[aria-label="Dashboard Geral"] {
+  background-color: rgba(255,121,0,.14) !important;
+  color: var(--bf-text) !important;
+}
+
+/* Every legacy semantic text tone follows the selected theme, not old blue/green shades. */
+.bf-app [class*="text-slate-"], .bf-app [class*="text-gray-"],
+.bf-app [class*="text-neutral-"], .bf-app [class*="text-blue-"],
+.bf-app [class*="text-indigo-"], .bf-app [class*="text-green-"],
+.bf-app [class*="text-emerald-"], .bf-app [class*="text-teal-"],
+.bf-app [class*="text-cyan-"], .bf-app [class*="text-lime-"],
+.bf-app [class*="text-purple-"], .bf-app [class*="text-violet-"],
+.bf-app [class*="text-amber-"], .bf-app [class*="text-yellow-"],
+.bf-app [class*="text-rose-"], .bf-app [class*="text-red-"] {
+  color: var(--bf-text) !important;
+}
+.bf-app button[class*="bg-orange-"],
+.bf-app a[class*="bg-orange-"] { color: #ffffff !important; }
+.bf-app button[class*="bg-orange-"] [class*="text-"],
+.bf-app a[class*="bg-orange-"] [class*="text-"] { color: #ffffff !important; }
+.bf-app svg[class*="text-orange-"] { color: var(--bf-accent) !important; }
+
+/* Match the available-to-spend metric to the same card surface as its peers. */
