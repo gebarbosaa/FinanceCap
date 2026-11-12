@@ -26,7 +26,7 @@ interface CardsViewProps {
   accounts: Account[];
   transactions: Transaction[];
   installments: InstallmentPlan[];
-  onPayInvoice: (invoiceId: string, contaId: string, valorCentavos: number) => void;
+  onPayInvoice: (invoiceId: string, contaId: string, valorCentavos: number) => { success: boolean; message: string };
   onAddCard: (card: Omit<CreditCard, 'id'>) => void;
 }
 
@@ -66,7 +66,11 @@ export const CardsView: React.FC<CardsViewProps> = ({
       return;
     }
 
-    onPayInvoice(selectedInvoice.id, payAccountId, amountToPay);
+    const result = onPayInvoice(selectedInvoice.id, payAccountId, amountToPay);
+    if (!result.success) {
+      alert(result.message);
+      return;
+    }
     setSelectedInvoice(null);
     setCustomPayAmount('');
   };
