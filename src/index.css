@@ -1,1 +1,60 @@
 @import "tailwindcss";
+
+
+/* BF Finance OS — layout safety and responsive overflow guards */
+html,
+body,
+#root {
+  min-height: 100%;
+  width: 100%;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+}
+
+#root {
+  min-width: 0;
+  overflow-x: clip;
+}
+
+button,
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+
+table {
+  max-width: 100%;
+}
+
+/* Keep dialogs fully visible on short screens without changing their behavior. */
+.fixed.inset-0.z-50 {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.fixed.inset-0.z-50 > div {
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 639px) {
+  .fixed.inset-0.z-50 {
+    align-items: flex-start;
+  }
+
+  .fixed.inset-0.z-50 > div {
+    margin-top: auto;
+    margin-bottom: auto;
+  }
+}
