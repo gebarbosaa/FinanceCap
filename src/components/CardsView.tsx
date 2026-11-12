@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import {
   CreditCard,
+  CardFlag,
   Invoice,
   Account,
   Transaction,
@@ -47,6 +48,30 @@ export const CardsView: React.FC<CardsViewProps> = ({
   const [payAccountId, setPayAccountId] = useState(accounts[0]?.id || '');
   const [payAmountType, setPayAmountType] = useState<'INTEGRAL' | 'PARCIAL'>('INTEGRAL');
   const [customPayAmount, setCustomPayAmount] = useState('');
+  const [showCardForm, setShowCardForm] = useState(false);
+  const [cardName, setCardName] = useState('');
+  const [cardInstitution, setCardInstitution] = useState('');
+  const [cardFlag, setCardFlag] = useState<CardFlag>('VISA');
+  const [cardLimit, setCardLimit] = useState('');
+  const [closingDay, setClosingDay] = useState('25');
+  const [dueDay, setDueDay] = useState('5');
+  const [paymentAccount, setPaymentAccount] = useState(accounts[0]?.id || '');
+  const [cardError, setCardError] = useState('');
+
+  const handleAddCard = (event: React.FormEvent) => {
+    event.preventDefault();
+    const limit = parseToCentavos(cardLimit);
+    const close = Number(closingDay);
+    const due = Number(dueDay);
+    if (!cardName.trim() || !cardInstitution.trim()) return setCardError('Informe o nome do cartão e a instituição.');
+    if (!Number.isSafeInteger(limit) || limit <= 0) return setCardError('Informe um limite válido maior que zero.');
+    if (!Number.isInteger(close) || close < 1 || close > 31 || !Number.isInteger(due) || due < 1 || due > 31) return setCardError('Os dias de fechamento e vencimento devem estar entre 1 e 31.');
+    if (!paymentAccount || !accounts.some((account) => account.id === paymentAccount && account.ativo)) return setCardError('Cadastre e selecione uma conta bancária ativa para pagamento.');
+    try {
+      onAddCard({ nome: cardName.trim(), instituicao: cardInstitution.trim(), bandeira: cardFlag, limiteTotalCentavos: limit, diaFechamento: close, diaVencimento: due, contaPagamentoId: paymentAccount, cor: '#FF7900', ativo: true });
+      setCardName(''); setCardInstitution(''); setCardFlag('VISA'); setCardLimit(''); setCardError(''); setShowCardForm(false);
+    } catch (error) { setCardError(error instanceof Error ? error.message : 'Não foi possível cadastrar o cartão.'); }
+  };
 
   const handleConfirmPayment = () => {
     if (!selectedInvoice) return;
@@ -98,6 +123,30 @@ export const CardsView: React.FC<CardsViewProps> = ({
           <span>Regra de Ouro: Pagamento de fatura não gera nova despesa</span>
         </div>
       </div>
+
+      <div className="flex justify-end">
+        <button type="button" onClick={() => { setCardError(''); setShowCardForm((value) => !value); }}
+          className="rounded-xl bg-orange-500 px-4 py-2.5 text-xs font-bold text-white hover:bg-orange-600">
+          {showCardForm ? 'Fechar cadastro' : '+ Adicionar cartão'}
+        </button>
+      </div>
+
+      {showCardForm && (
+        <form onSubmit={handleAddCard} className="rounded-2xl border border-orange-200 dark:border-orange-900/60 bg-white dark:bg-slate-800 p-5 space-y-4">
+          <h3 className="font-bold text-slate-900 dark:text-white">Cadastrar cartão de crédito</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <label className="text-xs font-semibold">Nome do cartão<input required value={cardName} onChange={(e) => setCardName(e.target.value)} placeholder="Ex.: Itaú Black" className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent px-3 py-2 text-sm" /></label>
+            <label className="text-xs font-semibold">Instituição<input required value={cardInstitution} onChange={(e) => setCardInstitution(e.target.value)} placeholder="Ex.: Itaú" className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent px-3 py-2 text-sm" /></label>
+            <label className="text-xs font-semibold">Bandeira<select value={cardFlag} onChange={(e) => setCardFlag(e.target.value as CardFlag)} className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent px-3 py-2 text-sm">{(['VISA','MASTERCARD','ELO','AMEX','HIPERCARD','OUTRA'] as CardFlag[]).map((flag) => <option key={flag} value={flag}>{flag}</option>)}</select></label>
+            <label className="text-xs font-semibold">Limite total (R$)<input required value={cardLimit} onChange={(e) => setCardLimit(e.target.value)} inputMode="decimal" placeholder="0,00" className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent px-3 py-2 text-sm" /></label>
+            <label className="text-xs font-semibold">Dia de fechamento<input required type="number" min="1" max="31" value={closingDay} onChange={(e) => setClosingDay(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent px-3 py-2 text-sm" /></label>
+            <label className="text-xs font-semibold">Dia de vencimento<input required type="number" min="1" max="31" value={dueDay} onChange={(e) => setDueDay(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent px-3 py-2 text-sm" /></label>
+            <label className="text-xs font-semibold sm:col-span-2 lg:col-span-3">Conta usada para pagar a fatura<select required value={paymentAccount} onChange={(e) => setPaymentAccount(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent px-3 py-2 text-sm"><option value="">Selecione uma conta ativa</option>{accounts.filter((account) => account.ativo).map((account) => <option key={account.id} value={account.id}>{account.nome} • {account.instituicao}</option>)}</select></label>
+          </div>
+          {cardError && <p role="alert" className="text-xs text-rose-600">{cardError}</p>}
+          <div className="flex justify-end gap-2"><button type="button" onClick={() => setShowCardForm(false)} className="rounded-lg border border-slate-300 dark:border-slate-600 px-4 py-2 text-xs font-semibold">Cancelar</button><button type="submit" className="rounded-lg bg-orange-500 px-4 py-2 text-xs font-bold text-white hover:bg-orange-600">Salvar cartão</button></div>
+        </form>
+      )}
 
       {/* Credit Cards Visual Display */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
