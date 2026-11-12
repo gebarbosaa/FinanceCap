@@ -36,7 +36,7 @@ export function parseBankStatementOfx(source: string): OfxStatementResult {
 
   const rows: BankStatementRow[] = [];
   const errors: Array<{ lineNumber: number; message: string }> = [];
-  const blocks = [...text.matchAll(/<STMTTRN>([\s\S]*?)<\/STMTTRN>/gi)];
+  const blocks = [...text.matchAll(/<STMTTRN>([\s\S]*?)<[/]STMTTRN>/gi)];
   blocks.forEach((match, index) => {
     const block = match[1];
     const date = ofxDate(tagValue(block, 'DTPOSTED'));
@@ -56,7 +56,7 @@ export function parseBankStatementOfx(source: string): OfxStatementResult {
     } as BankStatementRow);
   });
 
-  const ledgerBlock = text.match(/<LEDGERBAL>([\s\S]*?)<\/LEDGERBAL>/i)?.[1] || '';
+  const ledgerBlock = text.match(/<LEDGERBAL>([\s\S]*?)<[/]LEDGERBAL>/i)?.[1] || '';
   const closingBalanceCentavos = amountToCents(tagValue(ledgerBlock, 'BALAMT'), true);
   const bankId = tagValue(text, 'BANKID');
   const accountId = tagValue(text, 'ACCTID');
