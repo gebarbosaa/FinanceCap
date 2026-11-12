@@ -16,6 +16,27 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ data, onOpenSheetsSync
   const coreTabs = ALL_32_SHEET_NAMES.slice(0, 17);
   const monthlyTabs = ALL_32_SHEET_NAMES.slice(17, 29);
   const consolidationTabs = ALL_32_SHEET_NAMES.slice(29);
+  const reportYear = String(data.settings.anoReferencia);
+  const yearTransactions = data.transactions.filter((tx) => !tx.isDeleted && tx.competencia.startsWith(reportYear) && tx.status === 'REALIZADO');
+  const annualIncome = yearTransactions.filter((tx) => tx.tipo === 'RECEITA').reduce((sum, tx) => sum + tx.valorCentavos, 0);
+  const annualExpenses = yearTransactions.filter((tx) => tx.tipo === 'DESPESA').reduce((sum, tx) => sum + tx.valorCentavos, 0);
+  const savingsRate = annualIncome > 0 ? ((annualIncome - annualExpenses) / annualIncome) * 100 : null;
+  const totalDebt = data.debts.filter((debt) => debt.status !== 'QUITADO').reduce((sum, debt) => sum + debt.saldoDevedorCentavos, 0);
+  const registeredAssets = data.patrimony.filter((item) => item.tipo === 'ATIVO').reduce((sum, item) => sum + item.valorAvaliacaoCentavos, 0);
+  const debtToAssets = registeredAssets > 0 ? (totalDebt / registeredAssets) * 100 : null;
+  const investedPrincipal = data.investments.reduce((sum, item) => sum + item.valorInvestidoCentavos, 0);
+  const weightedReturn = investedPrincipal > 0
+    ? data.investments.reduce((sum, item) => sum + item.valorInvestidoCentavos * item.rentabilidadeHistoricaPercentual, 0) / investedPrincipal
+    : null;
+  const averageMonthlyExpense = annualExpenses / 12;
+  const cashLiquidity = averageMonthlyExpense > 0
+    ? data.accounts.filter((account) => account.ativo).reduce((sum, account) => sum + account.saldoInicialCentavos, 0) / averageMonthlyExpense
+    : null;
+  const monthIndex = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'].indexOf(selectedSheet);
+  const monthlyRows = monthIndex >= 0
+    ? data.transactions.filter((tx) => !tx.isDeleted && tx.competencia === `${reportYear}-${String(monthIndex + 1).padStart(2, '0')}`).sort((a, b) => a.data.localeCompare(b.data))
+    : [];
+
 
   return (
     <div className="space-y-6">
@@ -160,30 +181,42 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ data, onOpenSheetsSync
           <div className="space-y-3 text-xs">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200">
-                <span className="text-emerald-800 text-[10px] uppercase font-bold block">Taxa de Poupança Média</span>
-                <span className="text-base font-black text-emerald-600">38.5% da Renda</span>
+                <span className="text-emerald-800 text-[10px] uppercase font-bold block">Taxa de poupança no ano</span>
+                <span className="text-base font-black text-emerald-600">{savingsRate === null ? 'Sem dados' : `${savingsRate.toFixed(1)}% da renda`}</span>
               </div>
               <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200">
-                <span className="text-blue-800 text-[10px] uppercase font-bold block">Índice de Liquidez</span>
-                <span className="text-base font-black text-blue-600">4.2x Despesas Fixas</span>
+                <span className="text-blue-800 text-[10px] uppercase font-bold block">Liquidez em meses de despesa média</span>
+                <span className="text-base font-black text-blue-600">{cashLiquidity === null ? 'Sem dados' : `${cashLiquidity.toFixed(1)} meses`}</span>
               </div>
               <div className="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200">
-                <span className="text-indigo-800 text-[10px] uppercase font-bold block">Grau de Endividamento</span>
-                <span className="text-base font-black text-indigo-600">24.8% do Patrimônio</span>
+                <span className="text-indigo-800 text-[10px] uppercase font-bold block">Dívida sobre ativos cadastrados</span>
+                <span className="text-base font-black text-indigo-600">{debtToAssets === null ? 'Sem dados' : `${debtToAssets.toFixed(1)}% dos ativos`}</span>
               </div>
               <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200">
-                <span className="text-amber-800 text-[10px] uppercase font-bold block">Rentabilidade Média</span>
-                <span className="text-base font-black text-amber-600">14.2% a.a.</span>
+                <span className="text-amber-800 text-[10px] uppercase font-bold block">Rentabilidade histórica ponderada</span>
+                <span className="text-base font-black text-amber-600">{weightedReturn === null ? 'Sem dados' : `${weightedReturn.toFixed(1)}% histórico`}</span>
               </div>
             </div>
           </div>
         )}
 
-        {selectedSheet !== 'CONSOLIDAÇÃO' && selectedSheet !== 'INDICADORES ANUAIS' && (
-          <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl text-xs space-y-2 font-mono">
-            <div><strong>Aba Selecionada:</strong> {selectedSheet}</div>
-            <div><strong>Status:</strong> Mapeada com cabeçalho padronizado e ID único.</div>
-            <div><strong>Alimentação:</strong> Automática a partir dos lançamentos centrais (sem duplicação).</div>
+        {monthIndex >= 0 && (
+          <div className="space-y-3">
+            <p className="text-xs text-slate-500">Lançamentos registrados em {selectedSheet} de {reportYear}.</p>
+            {monthlyRows.length === 0 ? <p className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-6 text-center text-xs text-slate-500">Nenhum lançamento encontrado para esta competência.</p> : (
+              <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 dark:bg-slate-700/50"><tr><th className="p-3">Data</th><th className="p-3">Descrição</th><th className="p-3">Tipo</th><th className="p-3">Status</th><th className="p-3 text-right">Valor</th></tr></thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-700">{monthlyRows.map((tx) => <tr key={tx.id}><td className="p-3 whitespace-nowrap">{formatDateBR(tx.data)}</td><td className="p-3">{tx.descricao}</td><td className="p-3">{tx.tipo}</td><td className="p-3">{tx.status}</td><td className="p-3 text-right font-semibold">{formatCurrency(tx.valorCentavos)}</td></tr>)}</tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+        {selectedSheet !== 'CONSOLIDAÇÃO' && selectedSheet !== 'INDICADORES ANUAIS' && monthIndex < 0 && (
+          <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-5 text-xs text-slate-600 dark:text-slate-300">
+            <strong>{selectedSheet}</strong>: a visualização detalhada desta aba ainda não foi implementada no painel. Não exibiremos dados fictícios. Use a sincronização para abrir a planilha correspondente no Google Sheets.
+            <div className="mt-3"><button type="button" onClick={onOpenSheetsSync} className="rounded-lg bg-orange-500 px-3 py-2 font-bold text-white">Abrir sincronização do Sheets</button></div>
           </div>
         )}
       </div>
