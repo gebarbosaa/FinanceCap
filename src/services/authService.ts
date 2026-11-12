@@ -1,4 +1,3 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
 import {
   getAuth,
   signInWithPopup,
@@ -7,11 +6,11 @@ import {
   User,
   signOut,
 } from 'firebase/auth';
-import firebaseConfig from '../../firebase-applet-config.json';
 
-// Initialize Firebase App singleton
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-export const auth = getAuth(app);
+import { firebaseApp } from './firebaseApp';
+
+// Firebase Authentication and Firestore share the same project instance.
+export const auth = getAuth(firebaseApp);
 
 // Configure Google Provider with requested Workspace Scopes
 export const provider = new GoogleAuthProvider();
@@ -28,12 +27,8 @@ export const initAuth = (
 ) => {
   return onAuthStateChanged(auth, async (user: User | null) => {
     if (user) {
-      if (cachedAccessToken) {
-        if (onAuthSuccess) onAuthSuccess(user, cachedAccessToken);
-      } else if (!isSigningIn) {
-        cachedAccessToken = null;
-        if (onAuthFailure) onAuthFailure();
-      }
+      // Firebase ID-token authentication is independent from optional Google Workspace scopes.
+      if (onAuthSuccess) onAuthSuccess(user, cachedAccessToken || '');
     } else {
       cachedAccessToken = null;
       if (onAuthFailure) onAuthFailure();
@@ -46,12 +41,10 @@ export const googleSignIn = async (): Promise<{ user: User; accessToken: string 
     isSigningIn = true;
     const result = await signInWithPopup(auth, provider);
     const credential = GoogleAuthProvider.credentialFromResult(result);
-    if (!credential?.accessToken) {
-      throw new Error('Falha ao obter token de acesso do Google Workspace');
-    }
-
-    cachedAccessToken = credential.accessToken;
-    return { user: result.user, accessToken: cachedAccessToken };
+    // Firestore uses the Firebase session; the Workspace token is optional and only
+    // needed for Drive/Sheets actions. Do not block a valid Google sign-in without it.
+    cachedAccessToken = credential?.accessToken || null;
+    return { user: result.user, accessToken: cachedAccessToken || '' };
   } catch (error: unknown) {
     console.error('Erro na autenticação com Google:', error);
     throw error;
