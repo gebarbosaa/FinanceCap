@@ -17,7 +17,7 @@ import {
   Transaction,
   InstallmentPlan,
 } from '../types/finance';
-import { formatCurrency, formatDateBR } from '../services/currency';
+import { formatCurrency, formatDateBR, parseToCentavos } from '../services/currency';
 import { calculateCardLimits } from '../services/financeEngine';
 
 interface CardsViewProps {
@@ -49,15 +49,20 @@ export const CardsView: React.FC<CardsViewProps> = ({
     const amountToPay =
       payAmountType === 'INTEGRAL'
         ? selectedInvoice.saldoRestanteCentavos
-        : Math.round(parseFloat(customPayAmount.replace(',', '.')) * 100);
+        : parseToCentavos(customPayAmount);
 
-    if (isNaN(amountToPay) || amountToPay <= 0) {
+    if (!Number.isSafeInteger(amountToPay) || amountToPay <= 0) {
       alert('Informe um valor de pagamento válido.');
       return;
     }
 
     if (amountToPay > selectedInvoice.saldoRestanteCentavos) {
       alert('O valor de pagamento não pode superar o saldo restante da fatura.');
+      return;
+    }
+
+    if (!payAccountId || !accounts.some((account) => account.id === payAccountId && account.ativo)) {
+      alert('Selecione uma conta bancária ativa para realizar o pagamento.');
       return;
     }
 
@@ -89,8 +94,10 @@ export const CardsView: React.FC<CardsViewProps> = ({
       {/* Credit Cards Visual Display */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {cards.map((card) => {
-          const limits = calculateCardLimits(card, transactions, installments);
-          const pct = (limits.limiteUtilizadoCentavos / limits.limiteTotalCentavos) * 100;
+          const limits = calculateCardLimits(card, transactions, installments, invoices);
+          const pct = limits.limiteTotalCentavos > 0
+            ? (limits.limiteUtilizadoCentavos / limits.limiteTotalCentavos) * 100
+            : 0;
           const openInvoices = invoices.filter((i) => i.cartaoId === card.id && i.status !== 'PAGA');
 
           return (
