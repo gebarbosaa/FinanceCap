@@ -89,7 +89,8 @@ export async function createFull32TabSpreadsheet(
  */
 export async function syncDataToGoogleSheets(
   spreadsheetId: string,
-  data: StorageData
+  data: StorageData,
+  initializeLayout: boolean = false
 ): Promise<void> {
   const token = await getAccessToken();
   if (!token) throw new Error('Token de acesso expirado ou não disponível');
@@ -410,9 +411,11 @@ export async function syncDataToGoogleSheets(
     'INDICADORES ANUAIS': ['Indicador', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro', 'Total Anual'],
   };
 
-  for (const [sheetName, headers] of Object.entries(emptyTabHeaders)) {
-    const lastColumn = String.fromCharCode(64 + headers.length);
-    valueRanges.push({ range: `'${sheetName}'!A1:${lastColumn}1`, values: [headers] });
+  if (initializeLayout) {
+    for (const [sheetName, headers] of Object.entries(emptyTabHeaders)) {
+      const lastColumn = String.fromCharCode(64 + headers.length);
+      valueRanges.push({ range: `'${sheetName}'!A1:${lastColumn}1`, values: [headers] });
+    }
   }
 
   // Execute batch update
