@@ -193,7 +193,7 @@ export default function App() {
                 storageService.payInvoice(invoiceId, contaId, valor);
               }}
               onAddCard={(card) => {
-                storageService.getData().cards.push({ ...card, id: `card-${Date.now()}` });
+                storageService.addCard(card);
               }}
             />
           )}
@@ -204,7 +204,7 @@ export default function App() {
               cards={data.cards}
               accounts={data.accounts}
               onAddInstallment={(plan) => {
-                storageService.getData().installments.push({ ...plan, id: `inst-${Date.now()}` });
+                storageService.addInstallment(plan);
               }}
             />
           )}
@@ -227,7 +227,7 @@ export default function App() {
             <DebtsView
               debts={data.debts}
               onAddDebt={(debt) => {
-                storageService.getData().debts.push({ ...debt, id: `debt-${Date.now()}` });
+                storageService.addDebt(debt);
               }}
             />
           )}
@@ -239,13 +239,13 @@ export default function App() {
               goals={data.goals}
               summary={summary}
               onAddPatrimony={(item) => {
-                storageService.getData().patrimony.push({ ...item, id: `pat-${Date.now()}` });
+                storageService.addPatrimony(item);
               }}
               onAddInvestment={(inv) => {
-                storageService.getData().investments.push({ ...inv, id: `inv-${Date.now()}` });
+                storageService.addInvestment(inv);
               }}
               onAddGoal={(goal) => {
-                storageService.getData().goals.push({ ...goal, id: `goal-${Date.now()}` });
+                storageService.addGoal(goal);
               }}
             />
           )}
