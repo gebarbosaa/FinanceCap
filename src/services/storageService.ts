@@ -31,6 +31,8 @@ import {
   INITIAL_AUDIT,
 } from './initialData';
 
+import { addMonthsToCompetencia } from './currency';
+
 const STORAGE_KEY = 'BF_FINANCE_OS_DATA_V1';
 
 export interface StorageData {
@@ -300,10 +302,26 @@ class StorageService {
       origem: 'SISTEMA_WEB',
     });
 
+    const fullyPaid = updatedInvoice.status === 'PAGA';
+    const updatedInstallments = fullyPaid
+      ? this.data.installments.map((plan) => {
+          if (plan.cartaoId !== inv.cartaoId || plan.parcelasFuturas <= 0) return plan;
+          const nextDueCompetencia = addMonthsToCompetencia(plan.primeiraCompetencia, plan.parcelasPagas);
+          if (nextDueCompetencia !== inv.competencia) return plan;
+          return {
+            ...plan,
+            parcelasPagas: Math.min(plan.totalParcelas, plan.parcelasPagas + 1),
+            parcelasFuturas: Math.max(0, plan.parcelasFuturas - 1),
+            saldoRestanteCentavos: Math.max(0, plan.saldoRestanteCentavos - plan.valorParcelaCentavos),
+          };
+        })
+      : this.data.installments;
+
     const nextData: StorageData = {
       ...this.data,
       transactions: [newTransaction, ...this.data.transactions],
       invoices: this.data.invoices.map((item) => item.id === invoiceId ? updatedInvoice : item),
+      installments: updatedInstallments,
       audit: [
         makeAudit('LANÇAMENTOS', transactionId, 'CRIAR', `Liquidação da fatura ${invoiceId}`, JSON.stringify(newTransaction)),
         makeAudit(
