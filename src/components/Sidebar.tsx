@@ -85,7 +85,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <aside className={`w-16 lg:w-64 flex flex-col flex-shrink-0 h-[calc(100vh-4rem)] sticky top-16 overflow-y-auto overflow-x-hidden select-none border-r transition-colors duration-200 ${darkMode ? "bg-[#0B2545] text-slate-200 border-[#1F4E79]" : "bg-white text-slate-700 border-slate-200"}`}>
+    <aside className={`bf-sidebar w-16 lg:w-64 flex flex-col flex-shrink-0 h-[calc(100vh-4rem)] sticky top-16 overflow-y-auto overflow-x-hidden select-none border-r transition-colors duration-200 ${darkMode ? "text-slate-200" : "text-slate-700"}`}>
       <div className="py-4 px-3 space-y-6">
         {/* Navigation Sections */}
         {menuItems.map((item, index) => {
