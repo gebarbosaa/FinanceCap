@@ -255,7 +255,7 @@ export const ConciliationView: React.FC<ConciliationViewProps> = ({
               className="w-full h-36 p-3 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl font-mono text-xs text-slate-900 dark:text-white focus:ring-1 focus:ring-blue-500" />
           </div>
           <div className="flex justify-end">
-            <button onClick={() => { const detected: ImportFormat = /<OFX[\\s>]/i.test(rawText) ? 'OFX' : format; setFormat(detected); processStatement(rawText, detected); }}
+            <button onClick={() => { const detected: ImportFormat = /<OFX[\\s>]/i.test(rawText) ? 'OFX' : 'CSV'; setFormat(detected); processStatement(rawText, detected); }}
               className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold rounded-xl shadow cursor-pointer transition flex items-center gap-1.5">
               Processar e pré-visualizar <ArrowRight className="w-4 h-4" />
             </button>
