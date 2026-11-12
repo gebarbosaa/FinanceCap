@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+
+const presentText = (value: string) => value.replace(/\\*\\*/g, '').replace(/\\r\\n/g, '\\n').trim();
 import {
   Sparkles,
   Send,
@@ -83,7 +85,8 @@ export const IntelligenceView: React.FC<IntelligenceViewProps> = ({ data }) => {
       <div className="bg-white dark:bg-slate-800 p-3 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center space-x-2">
         <input
           type="text"
-          placeholder="Faça uma pergunta sobre seus gastos, faturas, dívidas ou patrimônio..."
+          aria-label="Pergunta sobre suas finanças"
+          placeholder="Pergunte sobre gastos, faturas, dívidas ou patrimônio..."
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && question.trim() && handleAsk(question)}
@@ -124,9 +127,9 @@ export const IntelligenceView: React.FC<IntelligenceViewProps> = ({ data }) => {
           </div>
 
           {/* Direct Answer text with highlight */}
-          <div className="p-4 bg-slate-50 dark:bg-slate-700/30 rounded-xl border border-slate-100 dark:border-slate-700">
+          <div aria-live="polite" aria-atomic="true" className="p-4 bg-slate-50 dark:bg-slate-700/30 rounded-xl border border-slate-100 dark:border-slate-700">
             <p className="text-sm text-slate-800 dark:text-slate-100 leading-relaxed font-medium">
-              {activeAnswer.resposta}
+              {presentText(activeAnswer.resposta)}
             </p>
           </div>
 
@@ -155,7 +158,7 @@ export const IntelligenceView: React.FC<IntelligenceViewProps> = ({ data }) => {
                   Recomendação Estratégica Barbosa Fernandes:
                 </strong>
                 <p className="text-amber-800 dark:text-amber-300 leading-relaxed">
-                  {activeAnswer.recomendacao}
+                  {presentText(activeAnswer.recomendacao)}
                 </p>
               </div>
             </div>
