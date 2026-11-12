@@ -59,8 +59,8 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex min-h-16 flex-wrap items-center justify-between gap-3 py-2.5">
           {/* Logo and System Title */}
           <div className="flex min-w-0 flex-1 items-center space-x-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#1F4E79] to-[#0B2545] border border-[#3B82F6]/30 flex items-center justify-center shadow-inner">
-              <Wallet className="w-6 h-6 text-amber-400" />
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 border border-orange-400/30 flex items-center justify-center shadow-inner">
+              <Wallet className="w-6 h-6 text-white" />
             </div>
             <div className="min-w-0">
               <div className="flex min-w-0 items-center space-x-2">
@@ -71,21 +71,21 @@ export const Header: React.FC<HeaderProps> = ({
                   BF Finance OS
                 </span>
               </div>
-              <div className={`hidden sm:flex text-xs items-center space-x-1.5 ${darkMode ? "text-blue-200/70" : "text-slate-500"}`}>
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <div className={`hidden sm:flex text-xs items-center space-x-1.5 ${darkMode ? "text-white/75" : "text-black/65"}`}>
+                <ShieldCheck className="w-3.5 h-3.5 text-orange-500" />
                 <span>Gestão Executiva Patrimonial & Sincronização Google Sheets</span>
               </div>
             </div>
           </div>
 
           {/* Center Competence Selector */}
-          <div className={`hidden xl:flex shrink-0 items-center space-x-2 px-3 py-1.5 rounded-lg border ${darkMode ? "bg-[#1F4E79]/50 border-[#1F4E79]" : "bg-slate-50 border-slate-200"}`}>
-            <span className={`text-xs font-medium ${darkMode ? "text-blue-200" : "text-slate-500"}`}>Competência:</span>
+          <div className={`hidden xl:flex shrink-0 items-center space-x-2 px-3 py-1.5 rounded-lg border ${darkMode ? "bg-[#141414] border-white/10" : "bg-white border-black/10"}`}>
+            <span className={`text-xs font-medium ${darkMode ? "text-white" : "text-black"}`}>Competência:</span>
             <select
               value={currentCompetencia}
               onChange={(e) => onCompetenciaChange(e.target.value)}
               aria-label="Selecionar competência"
-              className={`text-xs font-semibold rounded px-2.5 py-1 border focus:outline-none focus:ring-1 focus:ring-blue-400 cursor-pointer ${darkMode ? "bg-[#0B2545] text-white border-blue-400/30" : "bg-white text-slate-800 border-slate-300"}`}
+              className={`text-xs font-semibold rounded px-2.5 py-1 border focus:outline-none focus:ring-1 focus:ring-orange-400 cursor-pointer ${darkMode ? "bg-[#141414] text-white border-orange-500/40" : "bg-white text-black border-orange-300"}`}
             >
               {competencies.map((c) => (
                 <option key={c} value={c}>
@@ -98,9 +98,9 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Quick Metrics & Actions */}
           <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
             {/* Quick Available Cash Pill */}
-            <div className={`hidden 2xl:flex flex-col items-end px-3 py-1 rounded-lg border ${darkMode ? "bg-[#1F4E79]/40 border-blue-400/20" : "bg-slate-50 border-slate-200"}`}>
-              <span className={`text-[10px] uppercase tracking-wider ${darkMode ? "text-blue-200" : "text-slate-500"}`}>Disponível p/ Gastar</span>
-              <span className="text-sm font-bold text-emerald-400">
+            <div className={`hidden 2xl:flex flex-col items-end px-3 py-1 rounded-lg border ${darkMode ? "bg-[#141414] border-white/10" : "bg-white border-black/10"}`}>
+              <span className={`text-[10px] uppercase tracking-wider ${darkMode ? "text-white" : "text-black"}`}>Disponível p/ Gastar</span>
+              <span className="text-sm font-bold text-orange-500">
                 {formatCurrency(summary.dinheiroDisponivelGastarCentavos)}
               </span>
             </div>
@@ -117,17 +117,17 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Google Sheets Sync Trigger */}
             <button
               onClick={onOpenSheetsSync}
-              className={`hidden lg:flex items-center space-x-1.5 text-xs font-semibold px-3 py-2 rounded-lg border transition cursor-pointer ${darkMode ? "bg-[#1F4E79] hover:bg-[#286399] text-white border-blue-400/30" : "bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200"}`}
+              className={`hidden lg:flex items-center space-x-1.5 text-xs font-semibold px-3 py-2 rounded-lg border transition cursor-pointer ${darkMode ? "bg-orange-500 hover:bg-orange-600 text-white border-orange-500" : "bg-orange-500 hover:bg-orange-600 text-white border-orange-500"}`}
               title="Sincronizar com Google Sheets e Google Drive"
             >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+              <FileSpreadsheet className="w-4 h-4 text-orange-500" />
               <span className="hidden sm:inline">Google Sheets</span>
             </button>
 
             {/* Dark Mode Toggle */}
             <button
               onClick={onToggleDarkMode}
-              className={`flex p-2 rounded-lg transition cursor-pointer ${darkMode ? "text-blue-200 hover:text-white hover:bg-[#1F4E79]" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"}`}
+              className={`flex p-2 rounded-lg transition cursor-pointer ${darkMode ? "text-white hover:text-white hover:bg-white/10" : "text-black hover:text-black hover:bg-black/5"}`}
               title={darkMode ? 'Mudar para Tema Claro' : 'Mudar para Tema Escuro'}
               aria-label={darkMode ? 'Ativar tema claro' : 'Ativar tema escuro'}
               aria-pressed={darkMode}
@@ -142,13 +142,13 @@ export const Header: React.FC<HeaderProps> = ({
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     aria-label="Menu da conta Google"
-                    className={`flex items-center space-x-2 p-1 rounded-xl transition cursor-pointer border ${darkMode ? "hover:bg-[#1F4E79] border-blue-400/20 bg-[#1F4E79]/40" : "hover:bg-slate-100 border-slate-200 bg-white"}`}
+                    className={`flex items-center space-x-2 p-1 rounded-xl transition cursor-pointer border ${darkMode ? "hover:bg-white/10 border-white/10 bg-[#141414]" : "hover:bg-black/5 border-black/10 bg-white"}`}
                   >
                     {user.photoURL ? (
                       <img
                         src={user.photoURL}
                         alt={user.displayName || 'Usuário Google'}
-                        className="w-7 h-7 rounded-lg border border-emerald-500/50 object-cover"
+                        className="w-7 h-7 rounded-lg border border-orange-500/50 object-cover"
                       />
                     ) : (
                       <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-xs font-bold text-white">
@@ -164,10 +164,10 @@ export const Header: React.FC<HeaderProps> = ({
                     <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 py-2.5 z-50 text-slate-800 dark:text-slate-100 divide-y divide-slate-100 dark:divide-slate-700">
                       <div className="px-4 py-2.5 space-y-1">
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-orange-500 dark:text-orange-500">
                             Conta Google Conectada
                           </span>
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                          <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
                         </div>
                         <p className="text-xs font-bold truncate text-slate-900 dark:text-white">
                           {user.displayName || 'Barbosa Fernandes'}
@@ -185,7 +185,7 @@ export const Header: React.FC<HeaderProps> = ({
                           }}
                           className="w-full text-left px-4 py-2 text-xs flex items-center space-x-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/60 transition cursor-pointer"
                         >
-                          <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                          <FileSpreadsheet className="w-4 h-4 text-orange-500" />
                           <div>
                             <span className="block font-semibold">Sincronizar 32 Abas</span>
                             <span className="text-[10px] text-slate-400">Google Sheets & Drive</span>
