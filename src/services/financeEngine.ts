@@ -142,7 +142,8 @@ export function calculateFinancialSummary(
     } else if (tx.tipo === 'DESPESA') {
       if (tx.status === 'REALIZADO') {
         despesasMesCentavos += tx.valorCentavos;
-      } else if (tx.status === 'PREVISTO' || tx.status === 'PENDENTE') {
+      } else if ((tx.status === 'PREVISTO' || tx.status === 'PENDENTE') && !tx.cartaoId && !tx.faturaId) {
+        // Card purchases are reserved through the invoice balance below; do not reserve them twice.
         despesasPendentesMesCentavos += tx.valorCentavos;
       }
     }
@@ -151,7 +152,7 @@ export function calculateFinancialSummary(
   // 3. Open invoices
   let faturasAbertasCentavos = 0;
   for (const inv of invoices) {
-    if (inv.status === 'ABERTA' || inv.status === 'VENCIDA' || inv.status === 'PARCIALMENTE_PAGA') {
+    if (inv.status === 'ABERTA' || inv.status === 'FECHADA' || inv.status === 'VENCIDA' || inv.status === 'PARCIALMENTE_PAGA') {
       faturasAbertasCentavos += inv.saldoRestanteCentavos;
     }
   }
