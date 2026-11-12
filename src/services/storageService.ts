@@ -14,22 +14,7 @@ import {
   AuditLog,
   SystemSettings,
 } from '../types/finance';
-import {
-  INITIAL_SETTINGS,
-  INITIAL_ACCOUNTS,
-  INITIAL_CATEGORIES,
-  INITIAL_CARDS,
-  INITIAL_RECURRENCES,
-  INITIAL_INSTALLMENTS,
-  INITIAL_DEBTS,
-  INITIAL_PATRIMONY,
-  INITIAL_INVESTMENTS,
-  INITIAL_GOALS,
-  INITIAL_TRANSACTIONS,
-  INITIAL_INVOICES,
-  INITIAL_BUDGETS,
-  INITIAL_AUDIT,
-} from './initialData';
+import { INITIAL_SETTINGS, INITIAL_CATEGORIES } from './initialData';
 
 import { addMonthsToCompetencia } from './currency';
 
@@ -486,28 +471,28 @@ class StorageService {
   public resetToDefault() {
     const defaultData: StorageData = {
       settings: INITIAL_SETTINGS,
-      accounts: INITIAL_ACCOUNTS,
+      accounts: [],
       categories: INITIAL_CATEGORIES,
-      cards: INITIAL_CARDS,
-      transactions: INITIAL_TRANSACTIONS,
-      invoices: INITIAL_INVOICES,
-      installments: INITIAL_INSTALLMENTS,
-      recurrences: INITIAL_RECURRENCES,
-      budgets: INITIAL_BUDGETS,
-      debts: INITIAL_DEBTS,
-      patrimony: INITIAL_PATRIMONY,
-      investments: INITIAL_INVESTMENTS,
-      goals: INITIAL_GOALS,
+      cards: [],
+      transactions: [],
+      invoices: [],
+      installments: [],
+      recurrences: [],
+      budgets: [],
+      debts: [],
+      patrimony: [],
+      investments: [],
+      goals: [],
       audit: [
         {
           id: `aud-${Date.now()}`,
           timestamp: new Date().toISOString(),
-          usuario: 'Barbosa Fernandes',
+          usuario: INITIAL_SETTINGS.nomeProprietario,
           acao: 'CRIAR',
           entidade: 'SISTEMA',
           registroId: 'sys-reset',
-          motivo: 'Restauração da base padrão BF Finance OS',
-          origem: 'SISTEMA',
+          motivo: 'Restauração para uma base financeira vazia; nenhum saldo fictício foi carregado.',
+          origem: 'SISTEMA_WEB',
         },
       ],
     };
