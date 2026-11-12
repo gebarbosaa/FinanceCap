@@ -9,7 +9,8 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { Account, Category, Transaction } from '../types/finance';
-import { formatCurrency, formatDateBR, parseDateBRToISO, parseToCentavos } from '../services/currency';
+import { formatCurrency, formatDateBR } from '../services/currency';
+import { parseBankStatementCsv } from '../services/bankStatementParser';
 
 interface ConciliationViewProps {
   accounts: Account[];
@@ -38,6 +39,7 @@ export const ConciliationView: React.FC<ConciliationViewProps> = ({
   const [csvText, setCsvText] = useState('');
   const [parsedRows, setParsedRows] = useState<ParsedRow[]>([]);
   const [step, setStep] = useState<'INPUT' | 'PREVIEW' | 'COMPLETED'>('INPUT');
+  const [parseErrors, setParseErrors] = useState<Array<{ lineNumber: number; message: string }>>([]);
 
   const catMap = new Map<string, Category>(categories.map((c) => [c.id, c]));
 
@@ -60,74 +62,52 @@ export const ConciliationView: React.FC<ConciliationViewProps> = ({
       alert('Cole o conteúdo do extrato CSV para prosseguir.');
       return;
     }
-
-    const lines = csvText.trim().split('\n');
-    const rows: ParsedRow[] = [];
-
-    for (const rawLine of lines) {
-      const line = rawLine.trim();
-      if (!line) continue;
-
-      // Detect separator (; or , or tab)
-      let parts: string[] = [];
-      if (line.includes(';')) {
-        parts = line.split(';');
-      } else if (line.includes('\t')) {
-        parts = line.split('\t');
-      } else {
-        parts = line.split(',');
-      }
-
-      if (parts.length < 3) continue;
-
-      // Extract date, description, amount
-      let dateRaw = parts[0].trim();
-      let desc = parts[1].trim().replace(/^["']|["']$/g, '');
-      let amountRaw = parts[2].trim().replace(/^["']|["']$/g, '');
-
-      // Skip header lines
-      if (desc.toLowerCase().includes('descri') || amountRaw.toLowerCase().includes('valor')) {
-        continue;
-      }
-
-      let dateISO = '';
-      if (dateRaw.includes('/')) {
-        dateISO = parseDateBRToISO(dateRaw);
-      } else {
-        dateISO = dateRaw;
-      }
-
-      const valorCentavosSigned = parseToCentavos(amountRaw);
-      const isNegative = valorCentavosSigned < 0;
-      const valorCentavos = Math.abs(valorCentavosSigned);
-      const tipo = isNegative ? 'DESPESA' : 'RECEITA';
-      const catId = suggestCategory(desc);
-
-      // Duplicate check against existing transactions
-      const isDuplicate = existingTransactions.some(
-        (t) =>
-          !t.isDeleted &&
-          t.valorCentavos === valorCentavos &&
-          t.data === dateISO &&
-          t.descricao.toLowerCase().trim() === desc.toLowerCase().trim()
-      );
-
-      rows.push({
-        data: dateISO,
-        descricao: desc,
-        valorCentavos,
-        tipo,
-        categoriaId: catId,
-        isDuplicate,
-        selected: !isDuplicate, // default uncheck duplicates
-      });
-    }
-
-    if (rows.length === 0) {
-      alert('Não foi possível identificar linhas de transação válidas no texto colado.');
+    if (!selectedAccountId) {
+      alert('Cadastre ou selecione uma conta bancária antes de importar.');
       return;
     }
 
+    const parsed = parseBankStatementCsv(csvText);
+    const seenInFile = new Set<string>();
+    const rows: ParsedRow[] = parsed.rows.map((item) => {
+      const isNegative = item.valorCentavos < 0;
+      const valorCentavos = Math.abs(item.valorCentavos);
+      const tipo = isNegative ? 'DESPESA' : 'RECEITA';
+      const normalizedDescription = item.descricao.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().trim();
+      const duplicateKey = [selectedAccountId, item.data, tipo, valorCentavos, normalizedDescription].join('|');
+      const duplicateInFile = seenInFile.has(duplicateKey);
+      seenInFile.add(duplicateKey);
+      const isDuplicate = duplicateInFile || existingTransactions.some((transaction) =>
+        !transaction.isDeleted &&
+        transaction.contaId === selectedAccountId &&
+        transaction.tipo === tipo &&
+        transaction.valorCentavos === valorCentavos &&
+        transaction.data === item.data &&
+        transaction.descricao.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().trim() === normalizedDescription
+      );
+      const suggestedId = suggestCategory(item.descricao);
+      const suggestedCategory = categories.find((category) => category.id === suggestedId && category.tipo === tipo)
+        || categories.find((category) => category.tipo === tipo && category.nome.toLowerCase().includes('outros'))
+        || categories.find((category) => category.tipo === tipo);
+
+      return {
+        data: item.data,
+        descricao: item.descricao,
+        valorCentavos,
+        tipo,
+        categoriaId: suggestedCategory?.id || '',
+        isDuplicate,
+        selected: !isDuplicate,
+      };
+    });
+
+    setParseErrors(parsed.errors);
+    if (rows.length === 0) {
+      alert(parsed.errors.length
+        ? 'Nenhuma linha válida foi encontrada. Corrija os erros indicados e tente novamente.'
+        : 'Não foi possível identificar transações válidas no extrato.');
+      return;
+    }
     setParsedRows(rows);
     setStep('PREVIEW');
   };
@@ -229,6 +209,18 @@ export const ConciliationView: React.FC<ConciliationViewProps> = ({
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
+        </div>
+      )}
+
+      {parseErrors.length > 0 && step !== 'COMPLETED' && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-200">
+          <strong>{parseErrors.length} linha(s) ignorada(s) por inconsistência.</strong>
+          <ul className="mt-2 list-disc pl-5 space-y-1 max-h-28 overflow-y-auto">
+            {parseErrors.slice(0, 8).map((error) => (
+              <li key={`${error.lineNumber}-${error.message}`}>Linha {error.lineNumber}: {error.message}</li>
+            ))}
+          </ul>
+          {parseErrors.length > 8 && <p className="mt-1">Mais {parseErrors.length - 8} erro(s) não exibidos.</p>}
         </div>
       )}
 
@@ -362,6 +354,7 @@ export const ConciliationView: React.FC<ConciliationViewProps> = ({
           <button
             onClick={() => {
               setParsedRows([]);
+              setParseErrors([]);
               setCsvText('');
               setStep('INPUT');
             }}
