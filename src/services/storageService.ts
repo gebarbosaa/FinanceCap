@@ -252,6 +252,46 @@ class StorageService {
     return { success: true, message: 'Pagamento de fatura registrado com sucesso!' };
   }
 
+  // Category CRUD. Archived categories stay linked to historical transactions.
+  public addCategory(category: Omit<Category, 'id'>): Category {
+    const nome = category.nome.trim();
+    if (!nome) throw new Error('Informe o nome da categoria.');
+    const duplicate = this.data.categories.some((item) => item.ativo !== false && item.tipo === category.tipo && item.nome.trim().toLocaleLowerCase() === nome.toLocaleLowerCase());
+    if (duplicate) throw new Error('Já existe uma categoria ativa com esse nome e tipo.');
+    const created: Category = { ...category, nome, id: `cat-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, ativo: true };
+    this.data.categories = [...this.data.categories, created];
+    this.logAudit('CRIAR', 'CATEGORIAS', created.id, `Criação da categoria ${created.nome}`, undefined, JSON.stringify(created));
+    this.persist({ ...this.data });
+    return created;
+  }
+
+  public updateCategory(categoryId: string, updates: Partial<Category>): Category | null {
+    const index = this.data.categories.findIndex((item) => item.id === categoryId);
+    if (index < 0) return null;
+    const previous = this.data.categories[index];
+    const nome = updates.nome === undefined ? previous.nome : updates.nome.trim();
+    if (!nome) throw new Error('Informe o nome da categoria.');
+    const tipo = updates.tipo ?? previous.tipo;
+    const duplicate = this.data.categories.some((item) => item.id !== categoryId && item.ativo !== false && item.tipo === tipo && item.nome.trim().toLocaleLowerCase() === nome.toLocaleLowerCase());
+    if (duplicate) throw new Error('Já existe uma categoria ativa com esse nome e tipo.');
+    const updated = { ...previous, ...updates, nome };
+    this.data.categories[index] = updated;
+    this.logAudit('EDITAR', 'CATEGORIAS', categoryId, `Edição da categoria ${nome}`, JSON.stringify(previous), JSON.stringify(updated));
+    this.persist({ ...this.data });
+    return updated;
+  }
+
+  public archiveCategory(categoryId: string): boolean {
+    const category = this.data.categories.find((item) => item.id === categoryId);
+    if (!category || category.ativo === false) return false;
+    if (categoryId === 'cat-desp-12') throw new Error('Esta categoria é reservada para liquidações internas.');
+    const updated = { ...category, ativo: false };
+    this.data.categories = this.data.categories.map((item) => item.id === categoryId ? updated : item);
+    this.logAudit('EXCLUIR_LOGICA', 'CATEGORIAS', categoryId, `Arquivamento da categoria ${category.nome}; histórico preservado.`, JSON.stringify(category), JSON.stringify(updated));
+    this.persist({ ...this.data });
+    return true;
+  }
+
   // Account operations
   public addAccount(acc: Omit<Account, 'id'>): Account {
     const newAcc: Account = {
