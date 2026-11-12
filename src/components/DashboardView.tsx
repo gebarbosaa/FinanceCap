@@ -553,8 +553,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-xl space-y-2 text-xs font-mono">
               <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
-                <span>(+) Saldo Bancário Consolidado:</span>
-                <span>{formatCurrency(summary.saldoTotalBancosCentavos)}</span>
+                <span>(+) Saldo em Contas Operacionais:</span>
+                <span>{formatCurrency(summary.saldoContasOperacionaisCentavos)}</span>
               </div>
               <div className="flex justify-between text-rose-600 font-semibold">
                 <span>(-) Despesas Pendentes do Mês:</span>
@@ -571,7 +571,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
 
             <div className="text-[11px] text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 p-3 rounded-lg border border-amber-200 dark:border-amber-900">
-              <strong>Regra de Integridade:</strong> Receitas futuras/previstas <u>nunca</u> são somadas neste indicador, garantindo que você nunca gaste dinheiro que ainda não caiu na conta.
+              <strong>Regra de Integridade:</strong> Contas de investimento e reserva ficam fora do dinheiro livre. Receitas futuras/previstas <u>nunca</u> são somadas, e despesas pendentes são descontadas uma única vez.
             </div>
 
             <button
