@@ -264,6 +264,7 @@ export default function App() {
           {activeTab === 'cards' && (
             <CardsView
               cards={data.cards}
+              categories={data.categories}
               invoices={data.invoices}
               accounts={data.accounts}
               transactions={data.transactions}
