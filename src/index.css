@@ -398,3 +398,50 @@ html, body {
 .bf-sidebar button:focus-visible {
   outline-color: var(--bf-accent) !important;
 }
+
+
+/* Final brand normalization: remove legacy blue and green accents across all app modules. */
+.bf-app [class*="bg-blue--"], .bf-app [class*="bg-indigo-"],
+.bf-app [class*="bg-green-"], .bf-app [class*="bg-emerald-"],
+.bf-app [class*="bg-teal-"], .bf-app [class*="bg-lime-"],
+.bf-app [class*="bg-cyan-"] {
+  background-color: var(--bf-accent-soft) !important;
+}
+.dark .bf-app [class*="bg-blue-"], .dark .bf-app [class*="bg-indigo-"],
+.dark .bf-app [class*="bg-green-"], .dark .bf-app [class*="bg-emerald-"],
+.dark .bf-app [class*="bg-teal-"], .dark .bf-app [class*="bg-lime-"],
+.dark .bf-app [class*="bg-cyan-"] {
+  background-color: rgba(255, 121, 0, .15) !important;
+}
+.bf-app [class*="text-blue-"], .bf-app [class*="text-indigo-"],
+.bf-app [class*="text-green-"], .bf-app [class*="text-emerald-"],
+.bf-app [class*="text-teal-"], .bf-app [class*="text-lime-"],
+.bf-app [class*="text-cyan-"] {
+  color: #e86f00 !important;
+}
+.dark .bf-app [class*="text-blue-"], .dark .bf-app [class*="text-indigo-"],
+.dark .bf-app [class*="text-green-"], .dark .bf-app [class*="text-emerald-"],
+.dark .bf-app [class*="text-teal-"], .dark .bf-app [class*="text-lime-"],
+.dark .bf-app [class*="text-cyan-"] {
+  color: #ff9a3d !important;
+}
+.bf-app [class*="border-blue-"], .bf-app [class*="border-indigo-"],
+.bf-app [class*="border-green-"], .bf-app [class*="border-emerald-"],
+.bf-app [class*="border-teal-"], .bf-app [class*="border-lime-"],
+.bf-app [class*="border-cyan-"] {
+  border-color: color-mix(in srgb, var(--bf-accent) 34%, var(--bf-border)) !important;
+}
+.bf-app [class*="from-blue-"], .bf-app [class*="to-blue-"],
+.bf-app [class*="via-blue-"], .bf-app [class*="from-green-"],
+.bf-app [class*="to-green-"], .bf-app [class*="via-green-"],
+.bf-app [class*="from-emerald-"], .bf-app [class*="to-emerald-"],
+.bf-app [class*="via-emerald-"], .bf-app [class*="from-indigo-"],
+.bf-app [class*="to-indigo-"], .bf-app [class*="via-indigo-"] {
+  --tw-gradient-from: var(--bf-accent-soft) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: color-mix(in srgb, var(--bf-accent-soft), transparent) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+.bf-app [class*="ring-blue-"], .bf-app [class*="ring-green-"],
+.bf-app [class*="ring-emerald-"], .bf-app [class*="ring-indigo-"] {
+  --tw-ring-color: color-mix(in srgb, var(--bf-accent) 45%, transparent) !important;
+}
