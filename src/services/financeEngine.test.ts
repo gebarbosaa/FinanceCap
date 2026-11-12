@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { parseToCentavos } from './currency';
-import { calculateAccountBalance, calculateCardLimits } from './financeEngine';
+import { calculateAccountBalance, calculateCardLimits, calculateFinancialSummary } from './financeEngine';
 import { runAll20MandatoryTests } from './testSuite';
 import type { Account, CreditCard, Invoice, InstallmentPlan, Transaction } from '../types/finance';
 
@@ -148,4 +148,49 @@ test('all 21 in-app business-rule checks pass', () => {
     failures.map((result) => ({ id: result.id, nome: result.nome, mensagem: result.mensagem })),
     []
   );
+});
+
+test('calculateFinancialSummary preserves a negative cash availability as a deficit', () => {
+  const account: Account = {
+    id: 'cash-account',
+    nome: 'Conta principal',
+    instituicao: 'Banco',
+    tipo: 'CONTA_CORRENTE',
+    saldoInicialCentavos: 10000,
+    dataSaldoInicial: '2026-11-01',
+    ativo: true,
+  };
+  const pendingExpense: Transaction = {
+    id: 'pending-expense',
+    data: '2026-11-12',
+    competencia: '2026-11',
+    descricao: 'Despesa pendente',
+    tipo: 'DESPESA',
+    categoriaId: 'expense',
+    contaId: account.id,
+    formaPagamento: 'PIX',
+    valorCentavos: 20000,
+    status: 'PENDENTE',
+    origem: 'MANUAL',
+    createdAt: '2026-11-12T12:00:00.000Z',
+    updatedAt: '2026-11-12T12:00:00.000Z',
+  };
+  const summary = calculateFinancialSummary(
+    [account], [], [pendingExpense], [], [], [], [], [],
+    {
+      nomeSistema: 'BF Finance OS',
+      nomeProprietario: 'Teste',
+      moeda: 'BRL',
+      idioma: 'pt-BR',
+      fusoHorario: 'America/Sao_Paulo',
+      anoReferencia: 2026,
+      mesReferencia: 11,
+      reservaEmergenciaMetaCentavos: 0,
+      alertaVencimentoDias: 5,
+      autoBackupDrive: false,
+    },
+    '2026-11'
+  );
+
+  assert.equal(summary.dinheiroDisponivelGastarCentavos, -10000);
 });
