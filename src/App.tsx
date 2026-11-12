@@ -24,6 +24,7 @@ import { ReportsView } from './components/ReportsView';
 import { AuditView } from './components/AuditView';
 import { TestsRunnerView } from './components/TestsRunnerView';
 import { SettingsView } from './components/SettingsView';
+import { CategoriesView } from './components/CategoriesView';
 import { SheetsSyncModal } from './components/SheetsSyncModal';
 import { QuickTransactionModal } from './components/QuickTransactionModal';
 
@@ -300,6 +301,16 @@ export default function App() {
           {activeTab === 'audit' && <AuditView auditLogs={data.audit} />}
 
           {activeTab === 'tests' && <TestsRunnerView />}
+
+          {activeTab === 'categories' && (
+            <CategoriesView
+              categories={data.categories}
+              transactions={data.transactions}
+              onAdd={(category) => storageService.addCategory(category)}
+              onUpdate={(id, updates) => storageService.updateCategory(id, updates)}
+              onArchive={(id) => storageService.archiveCategory(id)}
+            />
+          )}
 
           {activeTab === 'settings' && (
             <SettingsView
