@@ -251,66 +251,7 @@ html, body {
   .bf-header > div { padding-left: .85rem; padding-right: .85rem; }
   .bf-hero { padding: 1.25rem !important; border-radius: 18px; }
   .bf-dashboard { gap: 1rem; }
-
-  /* Mobile navigation: replace the cramped icon rail with a labeled bottom bar. */
-  .bf-sidebar {
-    position: fixed !important;
-    inset: auto 0 0 0 !important;
-    z-index: 40;
-    width: 100% !important;
-    height: calc(68px + env(safe-area-inset-bottom)) !important;
-    min-height: 68px;
-    flex-direction: row !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    border-right: 0 !important;
-    border-top: 1px solid var(--bf-border) !important;
-    padding-bottom: env(safe-area-inset-bottom);
-    box-shadow: 0 -8px 24px rgba(15, 23, 42, .08);
-    scrollbar-width: none;
-  }
-  .bf-sidebar::-webkit-scrollbar { display: none; }
-  .bf-sidebar-items {
-    display: flex;
-    flex: 0 0 auto;
-    align-items: stretch;
-    gap: .25rem;
-    padding: .35rem .5rem calc(.35rem + env(safe-area-inset-bottom));
-    margin: 0 !important;
-  }
-  .bf-sidebar-items > * { margin-top: 0 !important; }
-  .bf-sidebar button {
-    display: flex;
-    flex: 0 0 66px;
-    width: 66px;
-    min-height: 58px;
-    height: 58px;
-    flex-direction: column;
-    justify-content: center;
-    gap: .25rem;
-    padding: .35rem .2rem !important;
-    border-left: 0 !important;
-    border-radius: 12px;
-    transform: none !important;
-  }
-  .bf-sidebar button > div:first-child {
-    flex-direction: column;
-    gap: 0;
-  }
-  .bf-sidebar .bf-sidebar-label {
-    display: block !important;
-    max-width: 62px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 9px;
-    line-height: 1.1;
-    text-align: center;
-  }
-  .bf-sidebar button > div:last-child { display: none !important; }
-  .bf-main {
-    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)) !important;
-  }
+  .bf-sidebar { width: 3.75rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
