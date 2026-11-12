@@ -388,6 +388,33 @@ export async function syncDataToGoogleSheets(
     values: audRows,
   });
 
+
+  // Add presentation-only headers to tabs that otherwise would be created blank.
+  const emptyTabHeaders: Record<string, string[]> = {
+    'PLANEJAMENTO': ['ID', 'Competência', 'Categoria', 'Valor Planejado', 'Valor Realizado', 'Diferença', 'Status', 'Observações'],
+    'RELATÓRIOS': ['Relatório', 'Período', 'Indicador', 'Valor', 'Comparativo', 'Atualizado em'],
+    'JANEIRO': ['Data', 'Descrição', 'Categoria', 'Tipo', 'Conta / Cartão', 'Valor', 'Status', 'Competência'],
+    'FEVEREIRO': ['Data', 'Descrição', 'Categoria', 'Tipo', 'Conta / Cartão', 'Valor', 'Status', 'Competência'],
+    'MARÇO': ['Data', 'Descrição', 'Categoria', 'Tipo', 'Conta / Cartão', 'Valor', 'Status', 'Competência'],
+    'ABRIL': ['Data', 'Descrição', 'Categoria', 'Tipo', 'Conta / Cartão', 'Valor', 'Status', 'Competência'],
+    'MAIO': ['Data', 'Descrição', 'Categoria', 'Tipo', 'Conta / Cartão', 'Valor', 'Status', 'Competência'],
+    'JUNHO': ['Data', 'Descrição', 'Categoria', 'Tipo', 'Conta / Cartão', 'Valor', 'Status', 'Competência'],
+    'JULHO': ['Data', 'Descrição', 'Categoria', 'Tipo', 'Conta / Cartão', 'Valor', 'Status', 'Competência'],
+    'AGOSTO': ['Data', 'Descrição', 'Categoria', 'Tipo', 'Conta / Cartão', 'Valor', 'Status', 'Competência'],
+    'SETEMBRO': ['Data', 'Descrição', 'Categoria', 'Tipo', 'Conta / Cartão', 'Valor', 'Status', 'Competência'],
+    'OUTUBRO': ['Data', 'Descrição', 'Categoria', 'Tipo', 'Conta / Cartão', 'Valor', 'Status', 'Competência'],
+    'NOVEMBRO': ['Data', 'Descrição', 'Categoria', 'Tipo', 'Conta / Cartão', 'Valor', 'Status', 'Competência'],
+    'DEZEMBRO': ['Data', 'Descrição', 'Categoria', 'Tipo', 'Conta / Cartão', 'Valor', 'Status', 'Competência'],
+    'CONSOLIDAÇÃO': ['Competência', 'Entradas', 'Saídas', 'Resultado', 'Saldo Inicial', 'Saldo Final'],
+    'COMPARATIVO': ['Indicador', 'Mês Atual', 'Mês Anterior', 'Variação', 'Variação %'],
+    'INDICADORES ANUAIS': ['Indicador', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro', 'Total Anual'],
+  };
+
+  for (const [sheetName, headers] of Object.entries(emptyTabHeaders)) {
+    const lastColumn = String.fromCharCode(64 + headers.length);
+    valueRanges.push({ range: `'${sheetName}'!A1:${lastColumn}1`, values: [headers] });
+  }
+
   // Execute batch update
   const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, {
     method: 'POST',
@@ -404,5 +431,126 @@ export async function syncDataToGoogleSheets(
   if (!res.ok) {
     const err = await res.json();
     throw new Error(`Falha ao sincronizar com Google Sheets: ${err.error?.message || res.statusText}`);
+  }
+
+  await applyProfessionalSpreadsheetDesign(spreadsheetId, token, valueRanges);
+}
+
+
+/** Applies FinanceCap formatting without changing financial values or calculations. */
+async function applyProfessionalSpreadsheetDesign(
+  spreadsheetId: string,
+  token: string,
+  valueRanges: Array<{ range: string; values: (string | number)[][] }>
+): Promise<void> {
+  const headersBySheet = new Map<string, (string | number)[]>();
+  const rowCountBySheet = new Map<string, number>();
+
+  for (const item of valueRanges) {
+    const match = item.range.match(/^'(.+)'!/);
+    if (!match) continue;
+    headersBySheet.set(match[1], item.values[0] || []);
+    rowCountBySheet.set(match[1], item.values.length);
+  }
+
+  const requests: Record<string, unknown>[] = [];
+  const navy = { red: 11 / 255, green: 37 / 255, blue: 69 / 255 };
+  const white = { red: 1, green: 1, blue: 1 };
+  const ink = { red: 31 / 255, green: 41 / 255, blue: 55 / 255 };
+  const softBackground = { red: 248 / 255, green: 250 / 255, blue: 253 / 255 };
+
+  ALL_32_SHEET_NAMES.forEach((sheetName, index) => {
+    const sheetId = index + 100;
+    const headers = headersBySheet.get(sheetName) || [];
+    const populatedRows = rowCountBySheet.get(sheetName) || 1;
+    const columnCount = Math.max(1, headers.length);
+
+    requests.push({
+      updateSheetProperties: {
+        properties: { sheetId, gridProperties: { frozenRowCount: 1, hideGridlines: true } },
+        fields: 'gridProperties.frozenRowCount,gridProperties.hideGridlines',
+      },
+    });
+    requests.push({
+      repeatCell: {
+        range: { sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: columnCount },
+        cell: {
+          userEnteredFormat: {
+            backgroundColor: navy,
+            horizontalAlignment: 'CENTER',
+            verticalAlignment: 'MIDDLE',
+            wrapStrategy: 'WRAP',
+            textFormat: { foregroundColor: white, bold: true, fontFamily: 'Arial', fontSize: 10 },
+          },
+        },
+        fields: 'userEnteredFormat(backgroundColor,horizontalAlignment,verticalAlignment,wrapStrategy,textFormat)',
+      },
+    });
+    requests.push({
+      repeatCell: {
+        range: { sheetId, startRowIndex: 1, endRowIndex: 500, startColumnIndex: 0, endColumnIndex: 20 },
+        cell: {
+          userEnteredFormat: {
+            backgroundColor: softBackground,
+            verticalAlignment: 'MIDDLE',
+            textFormat: { foregroundColor: ink, fontFamily: 'Arial', fontSize: 10 },
+          },
+        },
+        fields: 'userEnteredFormat(backgroundColor,verticalAlignment,textFormat)',
+      },
+    });
+    requests.push({
+      updateDimensionProperties: {
+        range: { sheetId, dimension: 'ROWS', startIndex: 0, endIndex: 1 },
+        properties: { pixelSize: 42 },
+        fields: 'pixelSize',
+      },
+    });
+    requests.push({
+      updateDimensionProperties: {
+        range: { sheetId, dimension: 'COLUMNS', startIndex: 0, endIndex: 20 },
+        properties: { pixelSize: 140 },
+        fields: 'pixelSize',
+      },
+    });
+
+    headers.forEach((header, columnIndex) => {
+      const label = String(header).toLocaleLowerCase('pt-BR');
+      let width = 140;
+      if (/descrição|observações|motivo|entidade|produto|instituição|relatório/.test(label)) width = 230;
+      else if (/id|identificador/.test(label)) width = 170;
+      else if (/data|competência|prazo|timestamp/.test(label)) width = 135;
+      else if (/valor|saldo|limite|principal|parcela|entrada|saída|resultado/.test(label)) width = 155;
+
+      requests.push({
+        updateDimensionProperties: {
+          range: { sheetId, dimension: 'COLUMNS', startIndex: columnIndex, endIndex: columnIndex + 1 },
+          properties: { pixelSize: width },
+          fields: 'pixelSize',
+        },
+      });
+    });
+
+    requests.push({ clearBasicFilter: { sheetId } });
+    if (populatedRows > 1) {
+      requests.push({
+        setBasicFilter: {
+          filter: {
+            range: { sheetId, startRowIndex: 0, endRowIndex: populatedRows, startColumnIndex: 0, endColumnIndex: columnCount },
+          },
+        },
+      });
+    }
+  });
+
+  const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ requests }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(`Os dados foram sincronizados, mas o layout não pôde ser aplicado: ${error.error?.message || response.statusText}`);
   }
 }
