@@ -1,0 +1,201 @@
+import React, { useState } from 'react';
+import {
+  Wallet,
+  PlusCircle,
+  FileSpreadsheet,
+  Moon,
+  Sun,
+  CloudUpload,
+  User as UserIcon,
+  LogOut,
+  Sparkles,
+  ShieldCheck,
+} from 'lucide-react';
+import { formatCurrency, formatCompetencia } from '../services/currency';
+import { FinancialSummary } from '../types/finance';
+import { User } from 'firebase/auth';
+
+interface HeaderProps {
+  summary: FinancialSummary;
+  currentCompetencia: string;
+  onCompetenciaChange: (comp: string) => void;
+  onOpenQuickTx: () => void;
+  onOpenSheetsSync: () => void;
+  user: User | null;
+  onLogin: () => void;
+  onLogout: () => void;
+  darkMode: boolean;
+  onToggleDarkMode: () => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({
+  summary,
+  currentCompetencia,
+  onCompetenciaChange,
+  onOpenQuickTx,
+  onOpenSheetsSync,
+  user,
+  onLogin,
+  onLogout,
+  darkMode,
+  onToggleDarkMode,
+}) => {
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  // Available competencies (current year + past/future)
+  const competencies = [
+    '2026-08',
+    '2026-09',
+    '2026-10',
+    '2026-11',
+    '2026-12',
+    '2027-01',
+    '2027-02',
+  ];
+
+  return (
+    <header className="sticky top-0 z-30 bg-[#0B2545] text-white border-b border-[#1F4E79] shadow-md">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo and System Title */}
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#1F4E79] to-[#0B2545] border border-[#3B82F6]/30 flex items-center justify-center shadow-inner">
+              <Wallet className="w-6 h-6 text-amber-400" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="font-bold tracking-tight text-lg text-white">
+                  BARBOSA FERNANDES
+                </span>
+                <span className="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  BF Finance OS
+                </span>
+              </div>
+              <div className="text-xs text-blue-200/70 flex items-center space-x-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Gestão Executiva Patrimonial & Sincronização Google Sheets</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Center Competence Selector */}
+          <div className="hidden md:flex items-center space-x-2 bg-[#1F4E79]/50 border border-[#1F4E79] px-3 py-1.5 rounded-lg">
+            <span className="text-xs font-medium text-blue-200">Competência:</span>
+            <select
+              value={currentCompetencia}
+              onChange={(e) => onCompetenciaChange(e.target.value)}
+              aria-label="Selecionar competência"
+              className="bg-[#0B2545] text-white text-xs font-semibold rounded px-2.5 py-1 border border-blue-400/30 focus:outline-none focus:ring-1 focus:ring-blue-400 cursor-pointer"
+            >
+              {competencies.map((c) => (
+                <option key={c} value={c}>
+                  {formatCompetencia(c)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Quick Metrics & Actions */}
+          <div className="flex items-center space-x-3">
+            {/* Quick Available Cash Pill */}
+            <div className="hidden lg:flex flex-col items-end px-3 py-1 bg-[#1F4E79]/40 rounded-lg border border-blue-400/20">
+              <span className="text-[10px] text-blue-200 uppercase tracking-wider">Disponível p/ Gastar</span>
+              <span className="text-sm font-bold text-emerald-400">
+                {formatCurrency(summary.dinheiroDisponivelGastarCentavos)}
+              </span>
+            </div>
+
+            {/* Quick Add Transaction Button */}
+            <button
+              onClick={onOpenQuickTx}
+              className="flex items-center space-x-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs sm:text-sm px-3.5 py-2 rounded-lg shadow-md hover:shadow-lg transition cursor-pointer active:scale-95"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Novo Lançamento</span>
+            </button>
+
+            {/* Google Sheets Sync Trigger */}
+            <button
+              onClick={onOpenSheetsSync}
+              className="flex items-center space-x-1.5 bg-[#1F4E79] hover:bg-[#286399] text-white text-xs font-semibold px-3 py-2 rounded-lg border border-blue-400/30 transition cursor-pointer"
+              title="Sincronizar com Google Sheets e Google Drive"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+              <span className="hidden sm:inline">Google Sheets</span>
+            </button>
+
+            {/* Dark Mode Toggle */}
+            <button
+              onClick={onToggleDarkMode}
+              className="p-2 text-blue-200 hover:text-white hover:bg-[#1F4E79] rounded-lg transition cursor-pointer"
+              title={darkMode ? 'Mudar para Tema Claro' : 'Mudar para Tema Escuro'}
+            >
+              {darkMode ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4" />}
+            </button>
+
+            {/* Google User Profile */}
+            <div className="relative">
+              {user ? (
+                <div>
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center space-x-2 p-1.5 rounded-lg hover:bg-[#1F4E79] transition cursor-pointer"
+                  >
+                    {user.photoURL ? (
+                      <img
+                        src={user.photoURL}
+                        alt={user.displayName || 'Usuário'}
+                        className="w-7 h-7 rounded-full border border-blue-400/40"
+                      />
+                    ) : (
+                      <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold">
+                        {user.displayName?.charAt(0) || user.email?.charAt(0) || 'B'}
+                      </div>
+                    )}
+                  </button>
+
+                  {showUserMenu && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-50 text-slate-800 dark:text-slate-100">
+                      <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-700">
+                        <p className="text-xs font-bold truncate">{user.displayName || 'Barbosa Fernandes'}</p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{user.email}</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          onOpenSheetsSync();
+                        }}
+                        className="w-full text-left px-4 py-2 text-xs flex items-center space-x-2 hover:bg-slate-100 dark:hover:bg-slate-700"
+                      >
+                        <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                        <span>Gerenciar 32 Abas Sheets</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          onLogout();
+                        }}
+                        className="w-full text-left px-4 py-2 text-xs flex items-center space-x-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Desconectar Conta Google</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={onLogin}
+                  className="text-xs bg-white text-slate-900 font-semibold px-2.5 py-1.5 rounded-md hover:bg-slate-100 transition flex items-center space-x-1.5 cursor-pointer shadow"
+                >
+                  <UserIcon className="w-3.5 h-3.5 text-blue-600" />
+                  <span className="hidden sm:inline">Conectar Google</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};
