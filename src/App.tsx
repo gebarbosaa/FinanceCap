@@ -257,13 +257,13 @@ export default function App() {
               goals={data.goals}
               summary={summary}
               onAddPatrimony={(item) => {
-                storageService.getData().patrimony.push({ ...item, id: `pat-${Date.now()}` });
+                storageService.addPatrimony(item);
               }}
               onAddInvestment={(inv) => {
-                storageService.getData().investments.push({ ...inv, id: `inv-${Date.now()}` });
+                storageService.addInvestment(inv);
               }}
               onAddGoal={(goal) => {
-                storageService.getData().goals.push({ ...goal, id: `goal-${Date.now()}` });
+                storageService.addGoal(goal);
               }}
             />
           )}
