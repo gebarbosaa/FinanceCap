@@ -74,7 +74,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     section?: string;
   }> = [
     { section: 'VISÃO EXECUTIVA', id: 'dashboard', label: 'Dashboard Geral', icon: <LayoutDashboard className="w-4 h-4" /> },
-    { id: 'intelligence', label: 'BF Intelligence', icon: <Sparkles className="w-4 h-4 text-orange-500" />, badge: 'IA Real', badgeColor: 'bg-amber-500/20 text-amber-300' },
+    { id: 'intelligence', label: 'BF Intelligence', icon: <Sparkles className="w-4 h-4 text-orange-500" />, badge: 'IA Real', badgeColor: 'bg-orange-500/15 text-orange-500' },
     { id: 'radar', label: 'Radar de Gastos', icon: <Radar className="w-4 h-4 text-rose-400" />, badge: radarAlertCount > 0 ? radarAlertCount : undefined, badgeColor: 'bg-rose-500 text-white' },
 
     { section: 'OPERAÇÕES & CRÉDITO', id: 'transactions', label: 'Lançamentos', icon: <Receipt className="w-4 h-4" /> },
@@ -90,7 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
     { section: 'DADOS & GOVERNANÇA', id: 'reports', label: '32 Abas & Relatórios', icon: <FileSpreadsheet className="w-4 h-4 text-orange-500" /> },
     { id: 'audit', label: 'Log de Auditoria', icon: <History className="w-4 h-4" /> },
-    { id: 'tests', label: 'Testes do Sistema (20)', icon: <CheckCircle2 className="w-4 h-4 text-orange-500" />, badge: '20/20', badgeColor: 'bg-emerald-500/20 text-emerald-300' },
+    { id: 'tests', label: 'Testes do Sistema (20)', icon: <CheckCircle2 className="w-4 h-4 text-orange-500" />, badge: '20/20', badgeColor: 'bg-orange-500/15 text-orange-500' },
     { id: 'categories', label: 'Categorias', icon: <Tags className="w-4 h-4" /> },
     { id: 'settings', label: 'Configurações', icon: <Settings className="w-4 h-4" /> },
   ];
@@ -146,9 +146,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Google Authentication Box in Sidebar Footer */}
-      <div className="p-3 border-t border-slate-200 dark:border-slate-700/60 mt-auto">
+      <div className="p-3 border-t border-black/10 dark:border-white/10/60 mt-auto">
         {user ? (
-          <div className="hidden lg:block p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+          <div className="hidden lg:block p-2.5 rounded-xl bg-white dark:bg-[#141414] border border-slate-200 dark:border-slate-700">
             <div className="flex items-center space-x-2.5">
               {user.photoURL ? (
                 <img
@@ -162,12 +162,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold truncate text-slate-800 dark:text-slate-200">
+                <p className="text-xs font-bold truncate text-black dark:text-white">
                   {user.displayName?.split(' ')[0] || 'Barbosa F.'}
                 </p>
                 <div className="flex items-center space-x-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold truncate">
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+                  <span className="text-[10px] text-orange-500 font-semibold truncate">
                     Google Conectado
                   </span>
                 </div>
@@ -184,7 +184,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </div>
         ) : (
-          <div className="hidden lg:block p-3 rounded-xl bg-gradient-to-br from-orange-50 to-white dark:from-[#17120d] dark:to-[#141414] border border-orange-200 dark:border-orange-900/50 text-center space-y-2">
+          <div className="hidden lg:block p-3 rounded-xl bg-white dark:bg-[#141414] border border-black/10 dark:border-white/10 text-center space-y-2">
             <div className="flex items-center justify-center space-x-1.5">
               <GoogleLogo className="w-4 h-4" />
               <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
@@ -198,7 +198,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 type="button"
                 onClick={onLogin}
-                className="w-full flex items-center justify-center space-x-1.5 py-1.5 px-2 bg-white hover:bg-slate-50 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-white border border-slate-300 dark:border-slate-600 rounded-lg text-xs font-semibold shadow-sm transition cursor-pointer active:scale-95"
+                className="w-full flex items-center justify-center space-x-1.5 py-1.5 px-2 bg-orange-500 hover:bg-orange-600 text-white border border-orange-500 rounded-lg text-xs font-semibold shadow-sm transition cursor-pointer active:scale-95"
               >
                 <GoogleLogo className="w-3.5 h-3.5" />
                 <span>Entrar com Google</span>
@@ -229,7 +229,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onClick={onLogin}
                 title="Entrar com Google"
                 aria-label="Entrar com Google"
-                className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex items-center justify-center shadow-sm cursor-pointer"
+                className="w-8 h-8 rounded-lg bg-orange-500 dark:bg-orange-500 border border-orange-500 flex items-center justify-center shadow-sm cursor-pointer"
               >
                 <GoogleLogo className="w-4 h-4" />
               </button>
