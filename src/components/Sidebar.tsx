@@ -63,7 +63,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     section?: string;
   }> = [
     { section: 'VISÃO EXECUTIVA', id: 'dashboard', label: 'Dashboard Geral', icon: <LayoutDashboard className="w-4 h-4" /> },
-    { id: 'intelligence', label: 'BF Intelligence', icon: <Sparkles className="w-4 h-4 text-amber-400" />, badge: 'IA Real', badgeColor: 'bg-amber-500/20 text-amber-300' },
+    { id: 'intelligence', label: 'BF Intelligence', icon: <Sparkles className="w-4 h-4 text-blue-400" />, badge: 'IA Real', badgeColor: 'bg-blue-500/15 text-blue-300' },
     { id: 'radar', label: 'Radar de Gastos', icon: <Radar className="w-4 h-4 text-rose-400" />, badge: radarAlertCount > 0 ? radarAlertCount : undefined, badgeColor: 'bg-rose-500 text-white' },
 
     { section: 'OPERAÇÕES & CRÉDITO', id: 'transactions', label: 'Lançamentos', icon: <Receipt className="w-4 h-4" /> },
@@ -105,12 +105,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => onTabChange(item.id)}
                 className={`w-full flex items-center justify-center lg:justify-between px-2 lg:px-3 py-2.5 lg:py-2 rounded-lg text-xs font-semibold transition cursor-pointer group ${
                   isActive
-                    ? darkMode ? "bg-[#1F4E79] text-white shadow-sm border-l-4 border-amber-400 pl-2" : "bg-blue-50 text-blue-900 shadow-sm border-l-4 border-amber-500 pl-2"
+                    ? darkMode ? "bg-[#1F4E79] text-white shadow-sm border-l-4 border-blue-400 pl-2" : "bg-blue-50 text-blue-900 shadow-sm border-l-4 border-blue-500 pl-2"
                     : darkMode ? "text-slate-300 hover:bg-[#1F4E79]/50 hover:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
                 }`}
               >
                 <div className="flex min-w-0 items-center justify-center lg:justify-start space-x-0 lg:space-x-2.5 truncate">
-                  <span className={`${isActive ? "text-amber-500" : darkMode ? "text-blue-300 group-hover:text-white" : "text-slate-400 group-hover:text-blue-700"}`}>
+                  <span className={`${isActive ? "text-blue-500" : darkMode ? "text-blue-300 group-hover:text-white" : "text-slate-400 group-hover:text-blue-700"}`}>
                     {item.icon}
                   </span>
                   <span className="bf-sidebar-label hidden lg:inline truncate">{item.label}</span>
@@ -126,7 +126,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       {item.badge}
                     </span>
                   )}
-                  {isActive && <ChevronRight className="hidden lg:block w-3.5 h-3.5 text-amber-400" />}
+                  {isActive && <ChevronRight className="hidden lg:block w-3.5 h-3.5 text-blue-400" />}
                 </div>
               </button>
             </React.Fragment>
