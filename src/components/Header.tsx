@@ -79,13 +79,13 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Center Competence Selector */}
-          <div className="hidden xl:flex shrink-0 items-center space-x-2 bg-[#1F4E79]/50 border border-[#1F4E79] px-3 py-1.5 rounded-lg">
-            <span className="text-xs font-medium text-blue-200">Competência:</span>
+          <div className={`hidden xl:flex shrink-0 items-center space-x-2 px-3 py-1.5 rounded-lg border ${darkMode ? "bg-[#1F4E79]/50 border-[#1F4E79]" : "bg-slate-50 border-slate-200"}`}>
+            <span className={`text-xs font-medium ${darkMode ? "text-blue-200" : "text-slate-500"}`}>Competência:</span>
             <select
               value={currentCompetencia}
               onChange={(e) => onCompetenciaChange(e.target.value)}
               aria-label="Selecionar competência"
-              className="bg-[#0B2545] text-white text-xs font-semibold rounded px-2.5 py-1 border border-blue-400/30 focus:outline-none focus:ring-1 focus:ring-blue-400 cursor-pointer"
+              className={`text-xs font-semibold rounded px-2.5 py-1 border focus:outline-none focus:ring-1 focus:ring-blue-400 cursor-pointer ${darkMode ? "bg-[#0B2545] text-white border-blue-400/30" : "bg-white text-slate-800 border-slate-300"}`}
             >
               {competencies.map((c) => (
                 <option key={c} value={c}>
@@ -98,8 +98,8 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Quick Metrics & Actions */}
           <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
             {/* Quick Available Cash Pill */}
-            <div className="hidden 2xl:flex flex-col items-end px-3 py-1 bg-[#1F4E79]/40 rounded-lg border border-blue-400/20">
-              <span className="text-[10px] text-blue-200 uppercase tracking-wider">Disponível p/ Gastar</span>
+            <div className={`hidden 2xl:flex flex-col items-end px-3 py-1 rounded-lg border ${darkMode ? "bg-[#1F4E79]/40 border-blue-400/20" : "bg-slate-50 border-slate-200"}`}>
+              <span className={`text-[10px] uppercase tracking-wider ${darkMode ? "text-blue-200" : "text-slate-500"}`}>Disponível p/ Gastar</span>
               <span className="text-sm font-bold text-emerald-400">
                 {formatCurrency(summary.dinheiroDisponivelGastarCentavos)}
               </span>
@@ -117,7 +117,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Google Sheets Sync Trigger */}
             <button
               onClick={onOpenSheetsSync}
-              className="hidden lg:flex items-center space-x-1.5 bg-[#1F4E79] hover:bg-[#286399] text-white text-xs font-semibold px-3 py-2 rounded-lg border border-blue-400/30 transition cursor-pointer"
+              className={`hidden lg:flex items-center space-x-1.5 text-xs font-semibold px-3 py-2 rounded-lg border transition cursor-pointer ${darkMode ? "bg-[#1F4E79] hover:bg-[#286399] text-white border-blue-400/30" : "bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200"}`}
               title="Sincronizar com Google Sheets e Google Drive"
             >
               <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
@@ -131,8 +131,6 @@ export const Header: React.FC<HeaderProps> = ({
               title={darkMode ? 'Mudar para Tema Claro' : 'Mudar para Tema Escuro'}
               aria-label={darkMode ? 'Ativar tema claro' : 'Ativar tema escuro'}
               aria-pressed={darkMode}
-              aria-label={darkMode ? 'Ativar tema claro' : 'Ativar tema escuro'}
-              aria-pressed={darkMode}
             >
               {darkMode ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4" />}
             </button>
@@ -143,7 +141,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <div>
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center space-x-2 p-1.5 rounded-lg hover:bg-[#1F4E79] transition cursor-pointer"
+                    className={`flex items-center space-x-2 p-1.5 rounded-lg transition cursor-pointer ${darkMode ? "hover:bg-[#1F4E79]" : "hover:bg-slate-100"}`}
                   >
                     {user.photoURL ? (
                       <img
