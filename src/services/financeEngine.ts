@@ -217,10 +217,9 @@ export function calculateFinancialSummary(
 
   // 6. Dinheiro Disponível para Gastar (Rigorous calculation methodology)
   // Considers: Real bank balances - Pending expenses - Open/due invoices
-  const dinheiroDisponivelGastarCentavos = Math.max(
-    0,
-    saldoContasOperacionaisCentavos - despesasPendentesMesCentavos - faturasAbertasCentavos
-  );
+  // Keep negative values visible: clipping at zero hides a real projected cash deficit.
+  const dinheiroDisponivelGastarCentavos =
+    saldoContasOperacionaisCentavos - despesasPendentesMesCentavos - faturasAbertasCentavos;
 
   // 7. Net Worth (Patrimônio Líquido)
   // Total Ativos = Physical Assets + Bank Balances + Investments
