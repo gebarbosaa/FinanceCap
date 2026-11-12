@@ -16,12 +16,14 @@ import {
   Account,
   Transaction,
   InstallmentPlan,
+  Category,
 } from '../types/finance';
 import { formatCurrency, formatDateBR, parseToCentavos } from '../services/currency';
 import { calculateCardLimits } from '../services/financeEngine';
 
 interface CardsViewProps {
   cards: CreditCard[];
+  categories: Category[];
   invoices: Invoice[];
   accounts: Account[];
   transactions: Transaction[];
@@ -32,6 +34,7 @@ interface CardsViewProps {
 
 export const CardsView: React.FC<CardsViewProps> = ({
   cards,
+  categories,
   invoices,
   accounts,
   transactions,
@@ -40,6 +43,7 @@ export const CardsView: React.FC<CardsViewProps> = ({
   onAddCard,
 }) => {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [expandedInvoiceId, setExpandedInvoiceId] = useState<string | null>(null);
   const [payAccountId, setPayAccountId] = useState(accounts[0]?.id || '');
   const [payAmountType, setPayAmountType] = useState<'INTEGRAL' | 'PARCIAL'>('INTEGRAL');
   const [customPayAmount, setCustomPayAmount] = useState('');
@@ -230,22 +234,91 @@ export const CardsView: React.FC<CardsViewProps> = ({
                       </span>
                     </td>
                     <td className="py-3 px-4 text-center">
-                      {!isPaid && (
+                      <div className="flex flex-col items-center gap-2">
                         <button
-                          onClick={() => setSelectedInvoice(inv)}
-                          className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold rounded-lg shadow transition cursor-pointer"
+                          type="button"
+                          onClick={() => setExpandedInvoiceId(expandedInvoiceId === inv.id ? null : inv.id)}
+                          className="text-orange-600 dark:text-orange-400 font-bold hover:underline"
+                          aria-expanded={expandedInvoiceId === inv.id}
                         >
-                          Pagar Fatura
+                          {expandedInvoiceId === inv.id ? 'Ocultar lançamentos' : 'Ver lançamentos'}
                         </button>
-                      )}
-                      {isPaid && (
-                        <span className="flex items-center justify-center space-x-1 text-emerald-600 text-xs font-semibold">
-                          <CheckCircle className="w-3.5 h-3.5" />
-                          <span>Quitada</span>
-                        </span>
-                      )}
+                        {!isPaid && (
+                          <button
+                            onClick={() => setSelectedInvoice(inv)}
+                            className="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg shadow transition cursor-pointer"
+                          >
+                            Pagar Fatura
+                          </button>
+                        )}
+                        {isPaid && (
+                          <span className="flex items-center justify-center space-x-1 text-emerald-600 text-xs font-semibold">
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            <span>Quitada</span>
+                          </span>
+                        )}
+                      </div>
                     </td>
                   </tr>
+                  {expandedInvoiceId === inv.id && (
+                    <tr key={`${inv.id}-transactions`} className="bg-orange-50/50 dark:bg-slate-900/60">
+                      <td colSpan={9} className="px-4 py-4">
+                        {(() => {
+                          const invoiceTransactions = transactions
+                            .filter((tx) => {
+                              if (tx.isDeleted || tx.cartaoId !== inv.cartaoId || tx.tipo !== 'DESPESA' || tx.status === 'CANCELADO' || tx.status === 'ESTORNADO') return false;
+                              if (tx.faturaId) return tx.faturaId === inv.id;
+                              return tx.competencia === inv.competencia;
+                            })
+                            .sort((a, b) => a.data.localeCompare(b.data));
+                          return (
+                            <div className="space-y-3">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">
+                                  Lançamentos da fatura • {card?.nome || 'Cartão'} • {inv.competencia}
+                                </h4>
+                                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                                  {invoiceTransactions.length} {invoiceTransactions.length === 1 ? 'lançamento' : 'lançamentos'} • {formatCurrency(invoiceTransactions.reduce((sum, tx) => sum + tx.valorCentavos, 0))}
+                                </span>
+                              </div>
+                              {invoiceTransactions.length === 0 ? (
+                                <p className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-4 text-xs text-slate-500 dark:text-slate-400">
+                                  Nenhum lançamento encontrado para esta fatura. Compras sem vínculo direto são agrupadas pela competência.
+                                </p>
+                              ) : (
+                                <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+                                  <table className="w-full text-left text-xs">
+                                    <thead className="bg-white dark:bg-slate-800 text-slate-500">
+                                      <tr>
+                                        <th className="px-3 py-2">Data</th>
+                                        <th className="px-3 py-2">Descrição</th>
+                                        <th className="px-3 py-2">Categoria</th>
+                                        <th className="px-3 py-2">Parcela</th>
+                                        <th className="px-3 py-2 text-right">Valor</th>
+                                        <th className="px-3 py-2">Status</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                                      {invoiceTransactions.map((tx) => (
+                                        <tr key={tx.id} className="text-slate-700 dark:text-slate-200">
+                                          <td className="px-3 py-2 whitespace-nowrap">{formatDateBR(tx.data)}</td>
+                                          <td className="px-3 py-2 font-semibold">{tx.descricao}</td>
+                                          <td className="px-3 py-2">{categories.find((category) => category.id === tx.categoriaId)?.nome || 'Sem categoria'}</td>
+                                          <td className="px-3 py-2">{tx.parcelaNumero && tx.totalParcelas ? `${tx.parcelaNumero}/${tx.totalParcelas}` : '—'}</td>
+                                          <td className="px-3 py-2 text-right font-bold whitespace-nowrap">{formatCurrency(tx.valorCentavos)}</td>
+                                          <td className="px-3 py-2">{tx.status}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+                      </td>
+                    </tr>
+                  )}
                 );
               })}
             </tbody>
