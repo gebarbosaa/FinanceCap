@@ -71,9 +71,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const totalSpentInCategories = categorySpending.reduce((sum, c) => sum + c.spentCentavos, 0) || 1;
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="bf-dashboard space-y-6 pb-12">
       {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-[#0B2545] via-[#1F4E79] to-[#0B2545] text-white p-6 rounded-2xl shadow-lg border border-[#1F4E79] relative overflow-hidden">
+      <div className="bf-hero text-white p-6 sm:p-7 rounded-2xl relative overflow-hidden">
         <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
           <div>
