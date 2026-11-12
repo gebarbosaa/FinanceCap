@@ -202,7 +202,8 @@ export const CardsView: React.FC<CardsViewProps> = ({
                 const isPaid = inv.status === 'PAGA';
 
                 return (
-                  <tr key={inv.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                  <React.Fragment key={inv.id}>
+                  <tr className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
                     <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">
                       {card?.nome || 'Cartão'}
                     </td>
@@ -319,6 +320,7 @@ export const CardsView: React.FC<CardsViewProps> = ({
                       </td>
                     </tr>
                   )}
+                  </React.Fragment>
                 );
               })}
             </tbody>
