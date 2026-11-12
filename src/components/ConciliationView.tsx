@@ -168,7 +168,7 @@ export const ConciliationView: React.FC<ConciliationViewProps> = ({
       alert('Nenhuma linha selecionada para importação.');
       return;
     }
-    if (difference !== null && difference !== 0 && !allowMismatch) {
+    if (difference === null) {\n      alert('Informe o saldo inicial e o saldo final para concluir a conciliação.');\n      return;\n    }\n    if (difference !== 0 && !allowMismatch) {
       alert('O saldo final não confere. Marque a confirmação de divergência para prosseguir conscientemente.');
       return;
     }
@@ -331,7 +331,7 @@ export const ConciliationView: React.FC<ConciliationViewProps> = ({
           {hasDuplicates && <p className="text-xs text-amber-700">Duplicados foram desmarcados automaticamente. Você pode revisar cada linha antes de confirmar.</p>}
           <div className="flex flex-wrap justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-700">
             <button onClick={() => { setStep('INPUT'); setAllowMismatch(false); }} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl cursor-pointer">Cancelar</button>
-            <button onClick={handleConfirmImport} disabled={selectedCount === 0 || (difference !== null && difference !== 0 && !allowMismatch)}
+            <button onClick={handleConfirmImport} disabled={selectedCount === 0 || difference === null || (difference !== 0 && !allowMismatch)}
               className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow cursor-pointer transition">
               Confirmar e gravar {selectedCount} lançamentos
             </button>
