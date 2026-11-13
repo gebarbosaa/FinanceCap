@@ -194,3 +194,66 @@ test('calculateFinancialSummary preserves a negative cash availability as a defi
 
   assert.equal(summary.dinheiroDisponivelGastarCentavos, -10000);
 });
+
+
+test('calculateCardLimits counts exact cent values for generated installment rows without duplicating the plan balance', () => {
+  const card: CreditCard = {
+    id: 'card-installment-remainder',
+    nome: 'Cartão parcelado',
+    instituicao: 'Banco',
+    bandeira: 'VISA',
+    limiteTotalCentavos: 100000,
+    diaFechamento: 20,
+    diaVencimento: 5,
+    contaPagamentoId: 'account-test',
+    cor: '#000000',
+    ativo: true,
+  };
+  const plan: InstallmentPlan = {
+    id: 'plan-remainder',
+    descricao: 'Compra com centavos',
+    valorTotalCentavos: 10001,
+    totalParcelas: 3,
+    valorParcelaCentavos: 3333,
+    dataCompra: '2026-11-10',
+    primeiraCompetencia: '2026-11',
+    cartaoId: card.id,
+    parcelasPagas: 0,
+    parcelasFuturas: 3,
+    saldoRestanteCentavos: 10001,
+  };
+  const rows: Transaction[] = [3334, 3334, 3333].map((amount, index) => ({
+    id: `installment-row-${index + 1}`,
+    data: '2026-11-10',
+    competencia: `2026-${String(index + 11).padStart(2, '0')}`,
+    descricao: `Compra (${index + 1}/3)`,
+    tipo: 'DESPESA',
+    categoriaId: 'expense',
+    cartaoId: card.id,
+    faturaId: `invoice-${index + 1}`,
+    formaPagamento: 'CARTAO_CREDITO',
+    valorCentavos: amount,
+    status: 'PENDENTE',
+    parcelamentoId: plan.id,
+    parcelaNumero: index + 1,
+    totalParcelas: 3,
+    origem: 'PARCELAMENTO',
+    createdAt: '2026-11-10T12:00:00.000Z',
+    updatedAt: '2026-11-10T12:00:00.000Z',
+  }));
+  const invoices: Invoice[] = rows.map((row, index) => ({
+    id: row.faturaId!,
+    cartaoId: card.id,
+    competencia: row.competencia,
+    dataFechamento: `${row.competencia}-20`,
+    dataVencimento: `${row.competencia}-28`,
+    valorTotalCentavos: row.valorCentavos,
+    valorPagoCentavos: 0,
+    saldoRestanteCentavos: row.valorCentavos,
+    status: 'ABERTA',
+  }));
+
+  const result = calculateCardLimits(card, rows, [plan], invoices);
+  assert.equal(result.limiteUtilizadoCentavos, 10001);
+  assert.equal(result.limiteDisponivelCentavos, 89999);
+});
