@@ -264,6 +264,7 @@ export default function App() {
           {activeTab === 'accounts' && (
             <AccountsView
               accounts={data.accounts}
+              transactions={data.transactions}
               onAddAccount={(account) => storageService.addAccount(account)}
               onUpdateAccount={(accountId, updates) => storageService.updateAccount(accountId, updates)}
             />
