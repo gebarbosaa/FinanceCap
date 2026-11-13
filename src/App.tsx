@@ -28,6 +28,7 @@ import { SettingsView } from './components/SettingsView';
 import { CategoriesView } from './components/CategoriesView';
 import { SheetsSyncModal } from './components/SheetsSyncModal';
 import { QuickTransactionModal } from './components/QuickTransactionModal';
+import { WaterTracker } from './components/WaterTracker';
 
 export default function App() {
   const [data, setData] = useState<StorageData>(() => storageService.getData());
@@ -395,6 +396,16 @@ export default function App() {
               onAdd={(category) => storageService.addCategory(category)}
               onUpdate={(id, updates) => storageService.updateCategory(id, updates)}
               onArchive={(id) => storageService.archiveCategory(id)}
+            />
+          )}
+
+          {activeTab === 'water' && (
+            <WaterTracker
+              entries={data.waterEntries}
+              dailyGoalMl={data.settings.waterGoalMl || 2000}
+              onAdd={(amountMl, date) => storageService.addWaterIntake(amountMl, date)}
+              onDelete={(id) => storageService.deleteWaterIntake(id)}
+              onGoalChange={(waterGoalMl) => storageService.updateSettings({ waterGoalMl })}
             />
           )}
 
