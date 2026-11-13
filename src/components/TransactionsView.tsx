@@ -23,7 +23,7 @@ import {
   TransactionType,
   TransactionStatus,
 } from '../types/finance';
-import { formatCurrency, formatDateBR } from '../services/currency';
+import { formatCurrency, formatDateBR, parseToCentavos } from '../services/currency';
 
 interface TransactionsViewProps {
   transactions: Transaction[];
@@ -34,6 +34,8 @@ interface TransactionsViewProps {
   onAddTransaction: () => void;
   onEditTransaction: (tx: Transaction) => void;
   onDeleteTransaction: (txId: string, reason: string) => void;
+  onSaveEdit: (txId: string, updates: Partial<Transaction>) => void;
+  invoices: import('../types/finance').Invoice[];
 }
 
 export const TransactionsView: React.FC<TransactionsViewProps> = ({
@@ -53,6 +55,12 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   const [filterAccount, setFilterAccount] = useState<string>('TODAS');
   const [deleteModalTx, setDeleteModalTx] = useState<Transaction | null>(null);
   const [deleteReason, setDeleteReason] = useState('');
+  const [editTx, setEditTx] = useState<Transaction | null>(null);
+  const [editDescription, setEditDescription] = useState('');
+  const [editAmount, setEditAmount] = useState('');
+  const [editCategory, setEditCategory] = useState('');
+  const [editStatus, setEditStatus] = useState<TransactionStatus>('REALIZADO');
+  const [editNotes, setEditNotes] = useState('');
 
   const catMap = new Map<string, Category>(categories.map((c) => [c.id, c]));
   const accMap = new Map<string, Account>(accounts.map((a) => [a.id, a]));
@@ -98,6 +106,41 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const openEdit = (tx: Transaction) => {
+    if (tx.parcelamentoId || tx.tipo === 'LIQUIDACAO') {
+      alert('Esta movimentação é gerenciada pelo parcelamento ou pela fatura de origem.');
+      return;
+    }
+    setEditTx(tx);
+    setEditDescription(tx.descricao);
+    setEditAmount((tx.valorCentavos / 100).toFixed(2).replace('.', ','));
+    setEditCategory(tx.categoriaId);
+    setEditStatus(tx.status);
+    setEditNotes(tx.observacoes || '');
+  };
+
+  const submitEdit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!editTx) return;
+    const amount = parseToCentavos(editAmount);
+    if (!editDescription.trim() || !Number.isSafeInteger(amount) || amount <= 0) {
+      alert('Informe uma descrição e um valor válido.');
+      return;
+    }
+    try {
+      onSaveEdit(editTx.id, {
+        descricao: editDescription.trim(),
+        valorCentavos: amount,
+        categoriaId: editCategory,
+        status: editStatus,
+        observacoes: editNotes.trim() || undefined,
+      });
+      setEditTx(null);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Não foi possível atualizar o lançamento.');
+    }
   };
 
   const confirmDelete = () => {
@@ -384,7 +427,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                       <td className="py-3 px-4 text-center whitespace-nowrap">
                         <div className="flex items-center justify-center space-x-1.5 opacity-90 group-hover:opacity-100">
                           <button
-                            onClick={() => onEditTransaction(tx)}
+                            onClick={() => openEdit(tx)}
                             className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded cursor-pointer transition"
                             title="Editar lançamento"
                           >
@@ -408,6 +451,44 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
         </div>
       </div>
 
+      {editTx && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <form onSubmit={submitEdit} className="bg-white dark:bg-slate-800 max-w-lg w-full rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-extrabold text-slate-900 dark:text-white">Editar lançamento</h3>
+              <button type="button" onClick={() => setEditTx(null)} className="text-slate-400 font-bold">✕</button>
+            </div>
+            <p className="text-xs text-slate-500">Tipo: {editTx.tipo} • Data: {formatDateBR(editTx.data)} • A conta/cartão e a data permanecem vinculados ao registro original.</p>
+            <label className="block text-xs font-bold">Descrição
+              <input required maxLength={120} value={editDescription} onChange={(event) => setEditDescription(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent p-2.5 text-sm" />
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label className="block text-xs font-bold">Valor (R$)
+                <input required value={editAmount} onChange={(event) => setEditAmount(event.target.value)} inputMode="decimal" disabled={!!editTx.faturaId && invoices.some((invoice) => invoice.id === editTx.faturaId && invoice.status === 'PAGA')} className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent p-2.5 text-sm disabled:opacity-50" />
+              </label>
+              <label className="block text-xs font-bold">Status
+                <select value={editStatus} onChange={(event) => setEditStatus(event.target.value as TransactionStatus)} className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent p-2.5 text-sm">
+                  <option value="REALIZADO">Realizado</option><option value="PENDENTE">Pendente</option><option value="PREVISTO">Previsto</option><option value="CANCELADO">Cancelado</option>
+                </select>
+              </label>
+            </div>
+            {editTx.tipo !== 'TRANSFERENCIA' && (
+              <label className="block text-xs font-bold">Categoria
+                <select value={editCategory} onChange={(event) => setEditCategory(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent p-2.5 text-sm">
+                  {categories.filter((category) => category.tipo === (editTx.tipo === 'RECEITA' ? 'RECEITA' : 'DESPESA')).map((category) => <option key={category.id} value={category.id}>{category.nome}</option>)}
+                </select>
+              </label>
+            )}
+            <label className="block text-xs font-bold">Observações
+              <textarea rows={2} value={editNotes} onChange={(event) => setEditNotes(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent p-2.5 text-sm" />
+            </label>
+            <div className="flex justify-end gap-2 pt-2">
+              <button type="button" onClick={() => setEditTx(null)} className="rounded-xl border border-slate-300 dark:border-slate-600 px-4 py-2 text-xs font-semibold">Cancelar</button>
+              <button type="submit" className="rounded-xl bg-orange-500 px-4 py-2 text-xs font-bold text-white">Salvar alterações</button>
+            </div>
+          </form>
+        </div>
+      )}
       {/* Logical Deletion Modal (MANDATORY REASON) */}
       {deleteModalTx && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
