@@ -265,6 +265,7 @@ export default function App() {
             <AccountsView
               accounts={data.accounts}
               onAddAccount={(account) => storageService.addAccount(account)}
+              onUpdateAccount={(accountId, updates) => storageService.updateAccount(accountId, updates)}
             />
           )}
 
@@ -282,6 +283,7 @@ export default function App() {
               onAddCard={(card) => {
                 storageService.addCard(card);
               }}
+              onUpdateCard={(cardId, updates) => storageService.updateCard(cardId, updates)}
             />
           )}
 
