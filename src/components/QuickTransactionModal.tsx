@@ -64,8 +64,26 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({
       return;
     }
 
+    if (tipo === 'TRANSFERENCIA' && (!contaId || !contaDestinoId || contaId === contaDestinoId)) {
+      alert('Selecione contas de origem e destino diferentes.');
+      return;
+    }
+    if (tipo !== 'TRANSFERENCIA' && targetType === 'CONTA' && !accounts.some((account) => account.id === contaId && account.ativo)) {
+      alert('Selecione uma conta bancária ativa.');
+      return;
+    }
+    if (tipo === 'DESPESA' && targetType === 'CARTAO' && !cards.some((card) => card.id === cartaoId && card.ativo)) {
+      alert('Selecione um cartão de crédito ativo.');
+      return;
+    }
+    if (tipo !== 'TRANSFERENCIA' && !availableCategories.some((category) => category.id === categoriaId)) {
+      alert('Selecione uma categoria válida.');
+      return;
+    }
+
     const competencia = data.substring(0, 7);
 
+    try {
     onSaveTransaction({
       data,
       competencia,
@@ -74,13 +92,18 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({
       categoriaId: tipo === 'TRANSFERENCIA' ? 'cat-desp-12' : categoriaId,
       contaId: targetType === 'CONTA' || tipo === 'TRANSFERENCIA' ? contaId : undefined,
       contaDestinoId: tipo === 'TRANSFERENCIA' ? contaDestinoId : undefined,
-      cartaoId: targetType === 'CARTAO' && tipo !== 'TRANSFERENCIA' ? cartaoId : undefined,
-      formaPagamento,
+      cartaoId: targetType === 'CARTAO' && tipo === 'DESPESA' ? cartaoId : undefined,
+      formaPagamento: targetType === 'CARTAO' && tipo === 'DESPESA' ? 'CARTAO_CREDITO' : formaPagamento,
       valorCentavos: centavos,
       status,
       observacoes: observacoes.trim() || undefined,
       origem: 'MANUAL',
     });
+
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Não foi possível gravar o lançamento.');
+      return;
+    }
 
     onClose();
     // Reset
@@ -232,7 +255,7 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({
                   onChange={(e) => setContaId(e.target.value)}
                   className="w-full p-2.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl font-medium"
                 >
-                  {accounts.map((acc) => (
+                  {accounts.filter((acc) => acc.ativo).map((acc) => (
                     <option key={acc.id} value={acc.id}>
                       {acc.nome} ({acc.instituicao})
                     </option>
@@ -244,7 +267,7 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({
                   onChange={(e) => setCartaoId(e.target.value)}
                   className="w-full p-2.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl font-medium"
                 >
-                  {cards.map((c) => (
+                  {cards.filter((card) => card.ativo).map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.nome} ({c.bandeira})
                     </option>
