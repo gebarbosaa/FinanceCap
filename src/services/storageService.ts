@@ -477,6 +477,133 @@ class StorageService {
     return created;
   }
 
+  // Create one installment plan, its monthly card transactions, and the matching invoices in a single local persistence operation.
+  public addInstallmentPurchase(
+    plan: Omit<InstallmentPlan, 'id'>,
+    categoryId: string
+  ): InstallmentPlan {
+    const card = plan.cartaoId ? this.data.cards.find((item) => item.id === plan.cartaoId && item.ativo) : undefined;
+    if (!card) throw new Error('Selecione um cartão de crédito ativo.');
+    const category = this.data.categories.find((item) => item.id === categoryId && item.tipo === 'DESPESA' && item.ativo !== false);
+    if (!category) throw new Error('Selecione uma categoria de despesa ativa.');
+    if (!Number.isSafeInteger(plan.valorTotalCentavos) || plan.valorTotalCentavos <= 0) throw new Error('O valor total deve ser positivo e informado em centavos inteiros.');
+    if (!Number.isInteger(plan.totalParcelas) || plan.totalParcelas < 2 || plan.totalParcelas > 48) throw new Error('A compra deve ter entre 2 e 48 parcelas.');
+    if (!/^\\d{4}-(0[1-9]|1[0-2])$/.test(plan.primeiraCompetencia)) throw new Error('A primeira competência da fatura é inválida.');
+    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(plan.dataCompra)) throw new Error('A data da compra é inválida.');
+    if (this.data.installments.some((item) => item.compraTransacaoId && item.compraTransacaoId === plan.compraTransacaoId)) {
+      throw new Error('Esta compra já foi cadastrada.');
+    }
+
+    const planId = `inst-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const createdPlan: InstallmentPlan = {
+      ...plan,
+      id: planId,
+      parcelasPagas: 0,
+      parcelasFuturas: plan.totalParcelas,
+      saldoRestanteCentavos: plan.valorTotalCentavos,
+    };
+    const now = new Date().toISOString();
+    const nextInvoices = [...this.data.invoices];
+    const newTransactions: Transaction[] = [];
+
+    for (let index = 0; index < plan.totalParcelas; index += 1) {
+      const competence = addMonthsToCompetencia(plan.primeiraCompetencia, index);
+      const amount = Math.floor(plan.valorTotalCentavos / plan.totalParcelas) + (index < (plan.valorTotalCentavos % plan.totalParcelas) ? 1 : 0);
+      let invoice = nextInvoices.find((item) => item.cartaoId === card.id && item.competencia === competence);
+      if (invoice && (invoice.status === 'PAGA' || invoice.status === 'CANCELADA')) {
+        throw new Error(`A fatura de ${competence} do cartão ${card.nome} já está paga ou cancelada. Revise a primeira competência.`);
+      }
+      if (!invoice) {
+        const [year, month] = competence.split('-').map(Number);
+        const closingDate = new Date(year, month - 1, Math.min(card.diaFechamento, new Date(year, month, 0).getDate()));
+        const dueMonthOffset = card.diaVencimento <= card.diaFechamento ? 1 : 0;
+        const dueBase = new Date(year, month - 1 + dueMonthOffset, 1);
+        const dueYear = dueBase.getFullYear();
+        const dueMonth = dueBase.getMonth() + 1;
+        const dueDay = Math.min(card.diaVencimento, new Date(dueYear, dueMonth, 0).getDate());
+        const invoiceId = `invoice-${card.id}-${competence}`;
+        invoice = {
+          id: invoiceId,
+          cartaoId: card.id,
+          competencia: competence,
+          dataFechamento: `${year}-${String(month).padStart(2, '0')}-${String(closingDate.getDate()).padStart(2, '0')}`,
+          dataVencimento: `${dueYear}-${String(dueMonth).padStart(2, '0')}-${String(dueDay).padStart(2, '0')}`,
+          valorTotalCentavos: 0,
+          valorPagoCentavos: 0,
+          saldoRestanteCentavos: 0,
+          status: 'ABERTA',
+        };
+        nextInvoices.push(invoice);
+      }
+
+      const transactionId = `tx-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 6)}`;
+      const transaction: Transaction = {
+        id: transactionId,
+        data: plan.dataCompra,
+        competencia: competence,
+        descricao: `${plan.descricao} (${index + 1}/${plan.totalParcelas})`,
+        tipo: 'DESPESA',
+        categoriaId,
+        cartaoId: card.id,
+        faturaId: invoice.id,
+        formaPagamento: 'CARTAO_CREDITO',
+        valorCentavos: amount,
+        status: 'PENDENTE',
+        parcelamentoId: planId,
+        parcelaNumero: index + 1,
+        totalParcelas: plan.totalParcelas,
+        observacoes: `Compra parcelada original: ${plan.descricao}. Valor total: ${plan.valorTotalCentavos} centavos.`,
+        origem: 'PARCELAMENTO',
+        isDeleted: false,
+        createdAt: now,
+        updatedAt: now,
+      };
+      newTransactions.push(transaction);
+      const invoiceIndex = nextInvoices.findIndex((item) => item.id === invoice!.id);
+      const updatedInvoice = {
+        ...nextInvoices[invoiceIndex],
+        valorTotalCentavos: nextInvoices[invoiceIndex].valorTotalCentavos + amount,
+        saldoRestanteCentavos: nextInvoices[invoiceIndex].saldoRestanteCentavos + amount,
+      };
+      nextInvoices[invoiceIndex] = updatedInvoice;
+    }
+
+    createdPlan.compraTransacaoId = newTransactions[0]?.id;
+    const auditEntries: AuditLog[] = [
+      {
+        id: `aud-${Date.now()}-plan`,
+        timestamp: now,
+        usuario: this.data.settings.nomeProprietario,
+        acao: 'CRIAR',
+        entidade: 'PARCELAMENTOS',
+        registroId: planId,
+        valorPosterior: JSON.stringify(createdPlan),
+        motivo: `Compra parcelada criada: ${plan.descricao}; ${plan.totalParcelas} parcelas geradas.`,
+        origem: 'SISTEMA_WEB',
+      },
+      ...newTransactions.map((transaction) => ({
+        id: `aud-${transaction.id}`,
+        timestamp: now,
+        usuario: this.data.settings.nomeProprietario,
+        acao: 'CRIAR' as AuditLog['acao'],
+        entidade: 'LANÇAMENTOS',
+        registroId: transaction.id,
+        valorPosterior: JSON.stringify(transaction),
+        motivo: 'Parcela gerada automaticamente a partir de uma compra parcelada.',
+        origem: 'SISTEMA_WEB' as AuditLog['origem'],
+      })),
+    ];
+
+    this.persist({
+      ...this.data,
+      installments: [...this.data.installments, createdPlan],
+      transactions: [...newTransactions, ...this.data.transactions],
+      invoices: nextInvoices,
+      audit: [...auditEntries, ...this.data.audit],
+    });
+    return createdPlan;
+  }
+
   public addDebt(debt: Omit<Debt, 'id'>): Debt {
     const created: Debt = { ...debt, id: `debt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` };
     this.data.debts = [...this.data.debts, created];
