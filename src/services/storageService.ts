@@ -327,22 +327,22 @@ class StorageService {
       if (!updated.contaId || !updated.contaDestinoId || updated.contaId === updated.contaDestinoId) {
         throw new Error('Uma transferência exige contas de origem e destino diferentes.');
       }
-      if (!this.data.accounts.some((account) => account.id === updated.contaId && account.ativo) ||
-          !this.data.accounts.some((account) => account.id === updated.contaDestinoId && account.ativo)) {
+      if ((!this.data.accounts.some((account) => account.id === updated.contaId && account.ativo) && updated.contaId !== previous.contaId) ||
+          (!this.data.accounts.some((account) => account.id === updated.contaDestinoId && account.ativo) && updated.contaDestinoId !== previous.contaDestinoId)) {
         throw new Error('As duas contas da transferência precisam estar ativas.');
       }
       updated.cartaoId = undefined;
       updated.faturaId = undefined;
     } else if (updated.tipo === 'DESPESA' && updated.cartaoId) {
       const card = this.data.cards.find((item) => item.id === updated.cartaoId && item.ativo);
-      if (!card) throw new Error('Selecione um cartão ativo.');
+      if (!card || (!card.ativo && updated.cartaoId !== previous.cartaoId)) throw new Error('Selecione um cartão ativo.');
       const [year, month, day] = updated.data.split('-').map(Number);
       const monthCompetence = `${year}-${String(month).padStart(2, '0')}`;
       updated.competencia = day > card.diaFechamento ? addMonthsToCompetencia(monthCompetence, 1) : monthCompetence;
       updated.formaPagamento = 'CARTAO_CREDITO';
       updated.contaId = undefined;
     } else {
-      if (!updated.contaId || !this.data.accounts.some((account) => account.id === updated.contaId && account.ativo)) {
+      if (!updated.contaId || (!this.data.accounts.some((account) => account.id === updated.contaId && account.ativo) && updated.contaId !== previous.contaId)) {
         throw new Error('Selecione uma conta bancária ativa.');
       }
       updated.cartaoId = undefined;
