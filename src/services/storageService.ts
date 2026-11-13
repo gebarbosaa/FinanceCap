@@ -354,7 +354,7 @@ class StorageService {
       }
       updated.cartaoId = undefined;
       updated.faturaId = undefined;
-      if (updated.tipo !== 'TRANSFERENCIA') updated.contaDestinoId = undefined;
+      updated.contaDestinoId = undefined;
     }
 
     if (updated.tipo === 'DESPESA' || updated.tipo === 'RECEITA') {
@@ -768,7 +768,7 @@ class StorageService {
         competencia: competence,
         descricao: `${plan.descricao} (${index + 1}/${plan.totalParcelas})`,
         tipo: 'DESPESA',
-        categoriaId,
+        categoriaId: categoryId,
         cartaoId: card.id,
         faturaId: invoice.id,
         formaPagamento: 'CARTAO_CREDITO',
