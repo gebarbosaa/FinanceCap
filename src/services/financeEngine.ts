@@ -111,18 +111,14 @@ export function calculateCardLimits(
   for (const installment of installments) {
     if (installment.cartaoId !== card.id || installment.parcelasFuturas <= 0) continue;
 
-    let invoiceCoveredInstallments = 0;
-    for (let index = 0; index < installment.parcelasFuturas; index++) {
-      const competence = addMonthsToCompetencia(
-        installment.primeiraCompetencia,
-        installment.parcelasPagas + index
-      );
-      if (validInvoices.some((invoice) => invoice.competencia === competence)) {
-        invoiceCoveredInstallments++;
-      }
-    }
-
-    const coveredValue = invoiceCoveredInstallments * installment.valorParcelaCentavos;
+    const coveredValue = transactions
+      .filter((transaction) =>
+        transaction.parcelamentoId === installment.id &&
+        !transaction.isDeleted &&
+        transaction.faturaId !== undefined &&
+        validInvoiceIds.has(transaction.faturaId)
+      )
+      .reduce((sum, transaction) => sum + transaction.valorCentavos, 0);
     const futureBalance = Math.max(0, (installment.saldoRestanteCentavos || 0) - coveredValue);
     limiteUtilizadoCentavos += futureBalance;
   }
