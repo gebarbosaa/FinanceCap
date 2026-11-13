@@ -134,7 +134,13 @@ export const PatrimonyView: React.FC<PatrimonyViewProps> = ({
                 if (!descricao?.trim()) return;
                 const valor = parseToCentavos(window.prompt('Valor de avaliação (R$):') || '');
                 if (!Number.isSafeInteger(valor) || valor <= 0) { window.alert('Informe um valor válido.'); return; }
-                onAddPatrimony({ tipo: 'ATIVO', subtipo: 'BENS_DIVERSOS', descricao: descricao.trim(), valorAvaliacaoCentavos: valor, dataAvaliacao: new Date().toISOString().slice(0, 10) });
+                const tipo = (window.prompt('Natureza: 1 para ativo ou 2 para passivo', '1') || '1') === '2' ? 'PASSIVO' : 'ATIVO';
+                const subtypes: PatrimonyItem['subtipo'][] = ['IMOVEL','VEICULO','CONTA_BANCARIA','INVESTIMENTO','NEGOCIO','BENS_DIVERSOS','DIVIDA_PESSOAL','OUTRO_PASSIVO'];
+                const subtypeText = subtypes.map((item,index) => `${index + 1}. ${item.replaceAll('_',' ')}`).join('\n');
+                const subtypeIndex = Number(window.prompt(`Tipo do bem/passivo:\n${subtypeText}`, '6')) - 1;
+                const subtipo = subtypes[subtypeIndex];
+                if (!subtipo) { window.alert('Tipo inválido.'); return; }
+                onAddPatrimony({ tipo, subtipo, descricao: descricao.trim(), valorAvaliacaoCentavos: valor, dataAvaliacao: new Date().toISOString().slice(0, 10) });
               }} className="rounded-lg bg-orange-500 px-3 py-2 text-xs font-bold text-white">Adicionar bem</button>
             </div>
 
@@ -198,7 +204,12 @@ export const PatrimonyView: React.FC<PatrimonyViewProps> = ({
                   const saldo = parseToCentavos(window.prompt('Saldo atual (R$):') || '');
                   if (!Number.isSafeInteger(aplicado) || aplicado <= 0 || !Number.isSafeInteger(saldo) || saldo < 0) { window.alert('Informe valores válidos.'); return; }
                   const today = new Date().toISOString().slice(0, 10);
-                  onAddInvestment({ instituicao: instituicao.trim(), produto: produto.trim(), categoria: 'RENDA_FIXA_CDB', dataAplicacao: today, valorInvestidoCentavos: aplicado, saldoAtualCentavos: saldo, rentabilidadeHistoricaPercentual: aplicado ? Number(((saldo / aplicado - 1) * 100).toFixed(2)) : 0, dataAtualizacao: today });
+                  const categories: Investment['categoria'][] = ['RENDA_FIXA_CDB','TESOURO_DIRETO','LCI_LCA','ACOES','FUNDOS_IMOBILIARIOS','CRIPTO','PREVIDENCIA'];
+                  const categoryText = categories.map((item,index) => `${index + 1}. ${item.replaceAll('_',' ')}`).join('\n');
+                  const categoryIndex = Number(window.prompt(`Categoria do investimento:\n${categoryText}`, '1')) - 1;
+                  const category = categories[categoryIndex];
+                  if (!category) { window.alert('Categoria inválida.'); return; }
+                  onAddInvestment({ instituicao: instituicao.trim(), produto: produto.trim(), categoria: category, dataAplicacao: today, valorInvestidoCentavos: aplicado, saldoAtualCentavos: saldo, rentabilidadeHistoricaPercentual: aplicado ? Number(((saldo / aplicado - 1) * 100).toFixed(2)) : 0, dataAtualizacao: today });
                 }} className="rounded-lg bg-orange-500 px-3 py-2 text-xs font-bold text-white">Adicionar investimento</button>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -273,7 +284,10 @@ export const PatrimonyView: React.FC<PatrimonyViewProps> = ({
                 const aporte = parseToCentavos(window.prompt('Aporte mensal (R$):') || '');
                 const prazo = window.prompt('Prazo (AAAA-MM-DD):') || '';
                 if (!Number.isSafeInteger(alvo) || alvo <= 0 || !Number.isSafeInteger(aporte) || aporte < 0 || !/^\\d{4}-\\d{2}-\\d{2}$/.test(prazo)) { window.alert('Revise o valor, aporte e prazo.'); return; }
-                onAddGoal({ nome: nome.trim(), valorAlvoCentavos: alvo, valorAcumuladoCentavos: 0, prazo, prioridade: 'MEDIA', aporteMensalCentavos: aporte });
+                const priorityChoice = Number(window.prompt('Prioridade: 1 alta, 2 média, 3 baixa', '2'));
+                const prioridade = ({1:'ALTA',2:'MEDIA',3:'BAIXA'} as const)[priorityChoice as 1|2|3];
+                if (!prioridade) { window.alert('Prioridade inválida.'); return; }
+                onAddGoal({ nome: nome.trim(), valorAlvoCentavos: alvo, valorAcumuladoCentavos: 0, prazo, prioridade, aporteMensalCentavos: aporte });
               }} className="rounded-lg bg-orange-500 px-3 py-2 text-xs font-bold text-white">Adicionar meta</button>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
