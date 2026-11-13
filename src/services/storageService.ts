@@ -991,8 +991,8 @@ class StorageService {
     const remaining = debt.saldoDevedorCentavos - principalCentavos;
     const updatedDebt = this.updateDebt(debtId, {
       saldoDevedorCentavos: remaining,
-      parcelasRestantes: remaining === 0 ? 0 : Math.max(0, debt.parcelasRestantes - 1),
-      status: remaining === 0 ? 'QUITADO' : 'EM_DIA',
+      parcelasRestantes: remaining === 0 ? 0 : debt.parcelasRestantes,
+      status: remaining === 0 ? 'QUITADO' : debt.status,
     });
     return { principal, interest, debt: updatedDebt };
   }
