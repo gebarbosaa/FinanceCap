@@ -25,7 +25,7 @@ export const DebtsView: React.FC<DebtsViewProps> = ({ debts, accounts, categorie
     const total = Number(form.parcelasTotais);
     const restantes = Number(form.parcelasRestantes);
     const juros = Number(form.juros);
-    if (!form.credor.trim() || principal <= 0 || saldo < 0 || parcela <= 0 || !Number.isInteger(total) || total < 1 || !Number.isInteger(restantes) || restantes < 0 || restantes > total || !Number.isFinite(juros) || juros < 0 || !/^\\d{4}-\\d{2}-\\d{2}$/.test(form.proximoVencimento)) {
+    if (!form.credor.trim() || principal <= 0 || saldo < 0 || parcela <= 0 || !Number.isInteger(total) || total < 1 || !Number.isInteger(restantes) || restantes < 0 || restantes > total || !Number.isFinite(juros) || juros < 0 || !/^\d{4}-\d{2}-\d{2}$/.test(form.proximoVencimento)) {
       window.alert('Revise os dados da dívida.'); return;
     }
     onAddDebt({ credor: form.credor.trim(), tipo: form.tipo, principalContratadoCentavos: principal, saldoDevedorCentavos: saldo, taxaJurosMensalPercentual: juros, parcelasTotais: total, parcelasRestantes: restantes, valorParcelaCentavos: parcela, proximoVencimento: form.proximoVencimento, status: saldo === 0 ? 'QUITADO' : 'EM_DIA' });
