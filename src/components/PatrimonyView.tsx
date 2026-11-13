@@ -24,8 +24,11 @@ interface PatrimonyViewProps {
   goals: Goal[];
   summary: FinancialSummary;
   onAddPatrimony: (item: Omit<PatrimonyItem, 'id'>) => void;
+  onUpdatePatrimony: (id: string, updates: Partial<Omit<PatrimonyItem, 'id'>>) => void;
   onAddInvestment: (inv: Omit<Investment, 'id'>) => void;
+  onUpdateInvestment: (id: string, updates: Partial<Omit<Investment, 'id'>>) => void;
   onAddGoal: (goal: Omit<Goal, 'id'>) => void;
+  onUpdateGoal: (id: string, updates: Partial<Omit<Goal, 'id'>>) => void;
 }
 
 export const PatrimonyView: React.FC<PatrimonyViewProps> = ({
@@ -37,6 +40,9 @@ export const PatrimonyView: React.FC<PatrimonyViewProps> = ({
   onAddPatrimony,
   onAddInvestment,
   onAddGoal,
+  onUpdatePatrimony,
+  onUpdateInvestment,
+  onUpdateGoal,
 }) => {
   const [activeTab, setActiveTab] = useState<'BALANCO' | 'INVESTIMENTOS' | 'METAS'>(initialTab);
 
@@ -160,13 +166,16 @@ export const PatrimonyView: React.FC<PatrimonyViewProps> = ({
                     <span className="text-xs font-black text-slate-900 dark:text-white">
                       {formatCurrency(item.valorAvaliacaoCentavos)}
                     </span>
-                    <span
-                      className={`block text-[10px] font-bold ${
-                        item.tipo === 'ATIVO' ? 'text-emerald-600' : 'text-rose-600'
-                      }`}
-                    >
-                      {item.tipo}
-                    </span>
+                    <span className={`block text-[10px] font-bold ${item.tipo === 'ATIVO' ? 'text-emerald-600' : 'text-rose-600'}`}>{item.tipo}</span>
+                    <button type="button" onClick={() => {
+                      const description = window.prompt('Descrição:', item.descricao);
+                      if (description === null || !description.trim()) return;
+                      const valueText = window.prompt('Valor de avaliação (R$):', (item.valorAvaliacaoCentavos / 100).toFixed(2).replace('.', ','));
+                      if (valueText === null) return;
+                      const value = parseToCentavos(valueText);
+                      if (!Number.isSafeInteger(value) || value <= 0) { window.alert('Informe um valor válido.'); return; }
+                      onUpdatePatrimony(item.id, { descricao: description.trim(), valorAvaliacaoCentavos: value, dataAvaliacao: new Date().toISOString().slice(0, 10) });
+                    }} className="mt-1 text-[10px] font-bold text-orange-600">Editar</button>
                   </div>
                 </div>
               ))}
@@ -238,6 +247,13 @@ export const PatrimonyView: React.FC<PatrimonyViewProps> = ({
                       {formatCurrency(inv.saldoAtualCentavos)}
                     </span>
                   </div>
+                  <button type="button" onClick={() => {
+                    const valueText = window.prompt('Saldo atualizado (R$):', (inv.saldoAtualCentavos / 100).toFixed(2).replace('.', ','));
+                    if (valueText === null) return;
+                    const value = parseToCentavos(valueText);
+                    if (!Number.isSafeInteger(value) || value < 0) { window.alert('Informe um saldo válido.'); return; }
+                    onUpdateInvestment(inv.id, { saldoAtualCentavos: value, rentabilidadeHistoricaPercentual: Number(((value / inv.valorInvestidoCentavos - 1) * 100).toFixed(2)), dataAtualizacao: new Date().toISOString().slice(0, 10) });
+                  }} className="text-[10px] font-bold text-orange-600">Atualizar saldo</button>
                 </div>
               </div>
             ))}
@@ -318,8 +334,15 @@ export const PatrimonyView: React.FC<PatrimonyViewProps> = ({
                     </div>
                   </div>
 
-                  <div className="text-[11px] text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-700">
-                    Prazo alvo: {formatDateBR(goal.prazo)}
+                  <div className="text-[11px] text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between gap-2">
+                    <span>Prazo alvo: {formatDateBR(goal.prazo)}</span>
+                    <button type="button" onClick={() => {
+                      const valueText = window.prompt('Valor acumulado (R$):', (goal.valorAcumuladoCentavos / 100).toFixed(2).replace('.', ','));
+                      if (valueText === null) return;
+                      const value = parseToCentavos(valueText);
+                      if (!Number.isSafeInteger(value) || value < 0) { window.alert('Informe um valor válido.'); return; }
+                      onUpdateGoal(goal.id, { valorAcumuladoCentavos: value });
+                    }} className="font-bold text-orange-600">Atualizar progresso</button>
                   </div>
                 </div>
               );
