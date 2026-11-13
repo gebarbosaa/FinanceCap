@@ -322,6 +322,7 @@ export default function App() {
               onAddDebt={(debt) => {
                 storageService.addDebt(debt);
               }}
+              onUpdateDebt={(id, updates) => storageService.updateDebt(id, updates)}
             />
           )}
 
@@ -332,15 +333,12 @@ export default function App() {
               investments={data.investments}
               goals={data.goals}
               summary={summary}
-              onAddPatrimony={(item) => {
-                storageService.addPatrimony(item);
-              }}
-              onAddInvestment={(inv) => {
-                storageService.addInvestment(inv);
-              }}
-              onAddGoal={(goal) => {
-                storageService.addGoal(goal);
-              }}
+              onAddPatrimony={(item) => { storageService.addPatrimony(item); }}
+              onUpdatePatrimony={(id, updates) => storageService.updatePatrimony(id, updates)}
+              onAddInvestment={(inv) => { storageService.addInvestment(inv); }}
+              onUpdateInvestment={(id, updates) => storageService.updateInvestment(id, updates)}
+              onAddGoal={(goal) => { storageService.addGoal(goal); }}
+              onUpdateGoal={(id, updates) => storageService.updateGoal(id, updates)}
             />
           )}
 
@@ -351,15 +349,12 @@ export default function App() {
               investments={data.investments}
               goals={data.goals}
               summary={summary}
-              onAddPatrimony={(item) => {
-                storageService.addPatrimony(item);
-              }}
-              onAddInvestment={(inv) => {
-                storageService.addInvestment(inv);
-              }}
-              onAddGoal={(goal) => {
-                storageService.addGoal(goal);
-              }}
+              onAddPatrimony={(item) => { storageService.addPatrimony(item); }}
+              onUpdatePatrimony={(id, updates) => storageService.updatePatrimony(id, updates)}
+              onAddInvestment={(inv) => { storageService.addInvestment(inv); }}
+              onUpdateInvestment={(id, updates) => storageService.updateInvestment(id, updates)}
+              onAddGoal={(goal) => { storageService.addGoal(goal); }}
+              onUpdateGoal={(id, updates) => storageService.updateGoal(id, updates)}
             />
           )}
 
