@@ -698,6 +698,7 @@ class StorageService {
           valorCentavos: recurrence.valorCentavos,
           status: 'PENDENTE',
           origem: 'RECORRENCIA',
+          recorrenciaId: recurrence.id,
           idExterno,
         }, 'Geração de lançamento recorrente');
         generated.push(transaction);
