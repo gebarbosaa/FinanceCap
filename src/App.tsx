@@ -250,11 +250,9 @@ export default function App() {
               cards={data.cards}
               currentCompetencia={currentCompetencia}
               onAddTransaction={() => setIsQuickTxOpen(true)}
-              onEditTransaction={(tx) => {
-                const desc = prompt('Nova descrição:', tx.descricao);
-                if (desc) {
-                  storageService.updateTransaction(tx.id, { descricao: desc });
-                }
+              invoices={data.invoices}
+              onSaveEdit={(txId, updates) => {
+                storageService.updateTransaction(txId, updates);
               }}
               onDeleteTransaction={(txId, reason) => {
                 storageService.deleteTransaction(txId, reason);
