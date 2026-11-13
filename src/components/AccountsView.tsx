@@ -2,9 +2,11 @@ import React, { useMemo, useState } from 'react';
 import { Landmark, Plus, Wallet, Building2 } from 'lucide-react';
 import { Account, AccountType } from '../types/finance';
 import { formatCurrency, formatDateBR, getCurrentDateISO, parseToCentavos } from '../services/currency';
+import { calculateAccountBalance } from '../services/financeEngine';
 
 interface AccountsViewProps {
   accounts: Account[];
+  transactions: import('../types/finance').Transaction[];
   onAddAccount: (account: Omit<Account, 'id'>) => void;
   onUpdateAccount: (accountId: string, updates: Partial<Omit<Account, 'id'>>) => void;
 }
@@ -18,7 +20,7 @@ const ACCOUNT_TYPES: Array<{ value: AccountType; label: string }> = [
   { value: 'RESERVA', label: 'Reserva financeira' },
 ];
 
-export const AccountsView: React.FC<AccountsViewProps> = ({ accounts, onAddAccount, onUpdateAccount }) => {
+export const AccountsView: React.FC<AccountsViewProps> = ({ accounts, transactions, onAddAccount, onUpdateAccount }) => {
   const [showForm, setShowForm] = useState(false);
   const [nome, setNome] = useState('');
   const [instituicao, setInstituicao] = useState('');
@@ -30,8 +32,8 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ accounts, onAddAccou
 
   const activeAccounts = accounts.filter((account) => account.ativo);
   const totalBalance = useMemo(
-    () => activeAccounts.reduce((sum, account) => sum + account.saldoInicialCentavos, 0),
-    [activeAccounts]
+    () => activeAccounts.reduce((sum, account) => sum + calculateAccountBalance(account, transactions), 0),
+    [activeAccounts, transactions]
   );
 
   const submit = (event: React.FormEvent) => {
@@ -82,7 +84,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ accounts, onAddAccou
             <Landmark className="w-5 h-5 text-orange-500" /> Contas bancárias
           </h2>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            Cadastre suas contas e acompanhe os saldos iniciais usados nos cálculos financeiros.
+            Cadastre suas contas e acompanhe o saldo atual calculado a partir do saldo-base e dos lançamentos realizados.
           </p>
         </div>
         <button type="button" onClick={() => { setError(''); setShowForm((value) => !value); }}
@@ -93,7 +95,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ accounts, onAddAccou
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
-          <p className="text-xs text-slate-500 dark:text-slate-400">Saldo inicial das contas ativas</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Saldo atual das contas ativas</p>
           <p className="mt-2 text-2xl font-black text-slate-900 dark:text-white">{formatCurrency(totalBalance)}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
@@ -172,7 +174,8 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ accounts, onAddAccou
                 </div>
                 <div className="flex items-center justify-between sm:justify-end gap-3">
                   <div className="sm:text-right">
-                    <p className="font-bold text-slate-900 dark:text-white">{formatCurrency(account.saldoInicialCentavos)}</p>
+                    <p className="font-bold text-slate-900 dark:text-white">{formatCurrency(calculateAccountBalance(account, transactions))}</p>
+                    <p className="text-[10px] text-slate-500">Saldo-base: {formatCurrency(account.saldoInicialCentavos)}</p>
                     <span className={account.ativo ? 'text-[10px] font-bold text-orange-600' : 'text-[10px] font-bold text-slate-400'}>{account.ativo ? 'ATIVA' : 'INATIVA'}</span>
                   </div>
                   <div className="flex gap-2">
