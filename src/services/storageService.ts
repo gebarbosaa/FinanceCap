@@ -656,6 +656,29 @@ class StorageService {
 
 
   // Persist and audit entities created by the app. Never mutate getData() collections directly.
+  public updateCard(cardId: string, updates: Partial<Omit<CreditCard, 'id'>>): CreditCard {
+    const index = this.data.cards.findIndex((item) => item.id === cardId);
+    if (index < 0) throw new Error('Cartão não encontrado.');
+    const previous = this.data.cards[index];
+    const next = { ...previous, ...updates, id: previous.id };
+    if (!next.nome.trim() || !next.instituicao.trim()) throw new Error('Informe o nome e a instituição do cartão.');
+    if (!Number.isSafeInteger(next.limiteTotalCentavos) || next.limiteTotalCentavos <= 0) throw new Error('O limite deve ser positivo e informado em centavos inteiros.');
+    if (!Number.isInteger(next.diaFechamento) || next.diaFechamento < 1 || next.diaFechamento > 31 || !Number.isInteger(next.diaVencimento) || next.diaVencimento < 1 || next.diaVencimento > 31) throw new Error('Dias de fechamento e vencimento devem estar entre 1 e 31.');
+    if (!this.data.accounts.some((account) => account.id === next.contaPagamentoId)) throw new Error('Selecione uma conta de pagamento existente.');
+    const hasHistory = this.data.invoices.some((invoice) => invoice.cartaoId === cardId) || this.data.transactions.some((tx) => tx.cartaoId === cardId);
+    if (hasHistory && (next.diaFechamento !== previous.diaFechamento || next.diaVencimento !== previous.diaVencimento)) {
+      throw new Error('Não é possível alterar fechamento ou vencimento após existirem lançamentos/faturas. Cadastre outro cartão para um novo ciclo.');
+    }
+    this.data.cards[index] = next;
+    this.logAudit('EDITAR', 'CARTÕES', cardId, `Edição do cartão ${next.nome}`, JSON.stringify(previous), JSON.stringify(next));
+    this.persist({ ...this.data });
+    return next;
+  }
+
+  public setCardActive(cardId: string, active: boolean): CreditCard {
+    return this.updateCard(cardId, { ativo: active });
+  }
+
   public addCard(card: Omit<CreditCard, 'id'>): CreditCard {
     const created: CreditCard = { ...card, id: `card-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` };
     this.data.cards = [...this.data.cards, created];
@@ -828,6 +851,24 @@ class StorageService {
   }
 
   // Account operations
+  public updateAccount(accountId: string, updates: Partial<Omit<Account, 'id'>>): Account {
+    const index = this.data.accounts.findIndex((item) => item.id === accountId);
+    if (index < 0) throw new Error('Conta bancária não encontrada.');
+    const previous = this.data.accounts[index];
+    const next = { ...previous, ...updates, id: previous.id };
+    if (!next.nome.trim() || !next.instituicao.trim()) throw new Error('Informe o nome e a instituição da conta.');
+    if (!Number.isSafeInteger(next.saldoInicialCentavos)) throw new Error('O saldo inicial deve ser informado em centavos inteiros.');
+    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(next.dataSaldoInicial)) throw new Error('A data-base do saldo é inválida.');
+    this.data.accounts[index] = next;
+    this.logAudit('EDITAR', 'CONTAS', accountId, `Edição da conta ${next.nome}`, JSON.stringify(previous), JSON.stringify(next));
+    this.persist({ ...this.data });
+    return next;
+  }
+
+  public setAccountActive(accountId: string, active: boolean): Account {
+    return this.updateAccount(accountId, { ativo: active });
+  }
+
   public addAccount(acc: Omit<Account, 'id'>): Account {
     const newAcc: Account = {
       ...acc,
