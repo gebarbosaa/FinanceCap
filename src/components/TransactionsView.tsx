@@ -57,6 +57,9 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   const [deleteReason, setDeleteReason] = useState('');
   const [editTx, setEditTx] = useState<Transaction | null>(null);
   const [editDescription, setEditDescription] = useState('');
+  const [editDate, setEditDate] = useState('');
+  const [editSource, setEditSource] = useState('');
+  const [editDestinationAccount, setEditDestinationAccount] = useState('');
   const [editAmount, setEditAmount] = useState('');
   const [editCategory, setEditCategory] = useState('');
   const [editStatus, setEditStatus] = useState<TransactionStatus>('REALIZADO');
@@ -115,6 +118,9 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
     }
     setEditTx(tx);
     setEditDescription(tx.descricao);
+    setEditDate(tx.data);
+    setEditSource(tx.cartaoId ? `card:${tx.cartaoId}` : `account:${tx.contaId || accounts.find((account) => account.ativo)?.id || ''}`);
+    setEditDestinationAccount(tx.contaDestinoId || accounts.find((account) => account.ativo && account.id !== tx.contaId)?.id || '');
     setEditAmount((tx.valorCentavos / 100).toFixed(2).replace('.', ','));
     setEditCategory(tx.categoriaId);
     setEditStatus(tx.status);
@@ -130,13 +136,36 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
       return;
     }
     try {
-      onSaveEdit(editTx.id, {
+      if (!editDate) throw new Error('Informe a data do lançamento.');
+      const updates: Partial<Transaction> = {
+        data: editDate,
+        competencia: editDate.slice(0, 7),
         descricao: editDescription.trim(),
         valorCentavos: amount,
         categoriaId: editCategory,
         status: editStatus,
         observacoes: editNotes.trim() || undefined,
-      });
+      };
+      if (editTx.tipo === 'TRANSFERENCIA') {
+        if (!editSource.startsWith('account:') || !editDestinationAccount || editSource.slice(8) === editDestinationAccount) {
+          throw new Error('Selecione contas de origem e destino diferentes.');
+        }
+        updates.contaId = editSource.slice(8);
+        updates.contaDestinoId = editDestinationAccount;
+        updates.cartaoId = undefined;
+        updates.faturaId = undefined;
+      } else if (editSource.startsWith('card:')) {
+        if (editTx.tipo !== 'DESPESA') throw new Error('Receitas não podem ser lançadas em cartão de crédito.');
+        updates.cartaoId = editSource.slice(5);
+        updates.contaId = undefined;
+        updates.contaDestinoId = undefined;
+        updates.formaPagamento = 'CARTAO_CREDITO';
+      } else {
+        updates.contaId = editSource.startsWith('account:') ? editSource.slice(8) : '';
+        updates.cartaoId = undefined;
+        updates.contaDestinoId = undefined;
+      }
+      onSaveEdit(editTx.id, updates);
       setEditTx(null);
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Não foi possível atualizar o lançamento.');
@@ -463,9 +492,12 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
               <h3 className="font-extrabold text-slate-900 dark:text-white">Editar lançamento</h3>
               <button type="button" onClick={() => setEditTx(null)} className="text-slate-400 font-bold">✕</button>
             </div>
-            <p className="text-xs text-slate-500">Tipo: {editTx.tipo} • Data: {formatDateBR(editTx.data)} • A conta/cartão e a data permanecem vinculados ao registro original.</p>
+            <p className="text-xs text-slate-500">Tipo: {editTx.tipo}. Altere a data e a origem; compras no cartão serão realocadas para a fatura correspondente.</p>
             <label className="block text-xs font-bold">Descrição
               <input required maxLength={120} value={editDescription} onChange={(event) => setEditDescription(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent p-2.5 text-sm" />
+            </label>
+            <label className="block text-xs font-bold">Data
+              <input required type="date" value={editDate} onChange={(event) => setEditDate(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent p-2.5 text-sm" />
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label className="block text-xs font-bold">Valor (R$)
@@ -481,6 +513,31 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
               <label className="block text-xs font-bold">Categoria
                 <select value={editCategory} onChange={(event) => setEditCategory(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent p-2.5 text-sm">
                   {categories.filter((category) => category.tipo === (editTx.tipo === 'RECEITA' ? 'RECEITA' : 'DESPESA')).map((category) => <option key={category.id} value={category.id}>{category.nome}</option>)}
+                </select>
+              </label>
+            )}
+            {editTx.tipo === 'TRANSFERENCIA' ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label className="block text-xs font-bold">Conta de origem
+                  <select required value={editSource} onChange={(event) => setEditSource(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent p-2.5 text-sm">
+                    {accounts.filter((account) => account.ativo || account.id === editTx.contaId).map((account) => <option key={account.id} value={`account:${account.id}`}>{account.nome}</option>)}
+                  </select>
+                </label>
+                <label className="block text-xs font-bold">Conta de destino
+                  <select required value={editDestinationAccount} onChange={(event) => setEditDestinationAccount(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent p-2.5 text-sm">
+                    {accounts.filter((account) => account.ativo || account.id === editTx.contaDestinoId).map((account) => <option key={account.id} value={account.id}>{account.nome}</option>)}
+                  </select>
+                </label>
+              </div>
+            ) : (
+              <label className="block text-xs font-bold">Conta / Cartão de origem
+                <select required value={editSource} onChange={(event) => setEditSource(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent p-2.5 text-sm">
+                  <optgroup label="Contas bancárias">
+                    {accounts.filter((account) => account.ativo || account.id === editTx.contaId).map((account) => <option key={account.id} value={`account:${account.id}`}>{account.nome}</option>)}
+                  </optgroup>
+                  {editTx.tipo === 'DESPESA' && <optgroup label="Cartões de crédito">
+                    {cards.filter((card) => card.ativo || card.id === editTx.cartaoId).map((card) => <option key={card.id} value={`card:${card.id}`}>{card.nome}</option>)}
+                  </optgroup>}
                 </select>
               </label>
             )}
