@@ -1,12 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Layers, Zap, Plus, X, CalendarDays, CreditCard as CardIcon } from 'lucide-react';
-import { InstallmentPlan, CreditCard, Account, Category } from '../types/finance';
+import { InstallmentPlan, CreditCard, Category } from '../types/finance';
 import { formatCurrency, formatDateBR, getCurrentDateISO, parseToCentavos, addMonthsToCompetencia, formatCompetencia } from '../services/currency';
 
 interface InstallmentsViewProps {
   installments: InstallmentPlan[];
   cards: CreditCard[];
-  accounts: Account[];
   categories: Category[];
   onAddInstallment: (plan: Omit<InstallmentPlan, 'id'>, categoryId: string) => void;
 }
@@ -20,7 +19,6 @@ const getInvoiceCompetence = (purchaseDate: string, closingDay: number): string 
 export const InstallmentsView: React.FC<InstallmentsViewProps> = ({
   installments,
   cards,
-  accounts,
   categories,
   onAddInstallment,
 }) => {
