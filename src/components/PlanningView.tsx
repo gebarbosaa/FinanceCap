@@ -31,6 +31,9 @@ interface PlanningViewProps {
   recurrences: Recurrence[];
   currentCompetencia: string;
   onUpdateBudget: (budget: Budget) => void;
+  onAddRecurrence: (recurrence: Omit<Recurrence, 'id'>) => void;
+  onToggleRecurrence: (id: string, active: boolean) => void;
+  onGenerateRecurrences: (competencia: string) => number;
 }
 
 export const PlanningView: React.FC<PlanningViewProps> = ({
@@ -43,6 +46,9 @@ export const PlanningView: React.FC<PlanningViewProps> = ({
   recurrences,
   currentCompetencia,
   onUpdateBudget,
+  onAddRecurrence,
+  onToggleRecurrence,
+  onGenerateRecurrences,
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<'ORCAMENTO' | 'PROJECAO_12M'>('ORCAMENTO');
 
@@ -308,6 +314,52 @@ export const PlanningView: React.FC<PlanningViewProps> = ({
           </div>
         </div>
       )}
+
+      <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Lançamentos recorrentes</h3>
+            <p className="text-xs text-slate-500 mt-1">Gere lançamentos previstos uma única vez por competência, com proteção contra duplicidade.</p>
+          </div>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => {
+              const tipo = (window.prompt('Tipo: 1 para despesa ou 2 para receita', '1') || '').trim() === '2' ? 'RECEITA' : 'DESPESA';
+              const descricao = window.prompt('Descrição da recorrência:');
+              if (!descricao?.trim()) return;
+              const valor = parseToCentavos(window.prompt('Valor por ocorrência (R$):') || '');
+              const options = categories.filter(item => item.tipo === tipo && item.ativo !== false);
+              const categoryText = options.map((item,index) => `${index + 1}. ${item.nome}`).join('\n');
+              const categoryIndex = Number(window.prompt(`Escolha a categoria pelo número:\n${categoryText}`, '1')) - 1;
+              const category = options[categoryIndex];
+              const accountText = accounts.filter(item => item.ativo).map((item,index) => `${index + 1}. ${item.nome}`).join('\n');
+              const accountIndex = Number(window.prompt(`Escolha a conta pelo número:\n${accountText}`, '1')) - 1;
+              const account = accounts.filter(item => item.ativo)[accountIndex];
+              const day = Number(window.prompt('Dia de vencimento (1 a 31):', '5'));
+              const frequencyChoice = Number(window.prompt('Frequência: 1 mensal, 2 trimestral, 3 semestral, 4 anual, 5 semanal, 6 diária', '1'));
+              const frequency = ({1:'MENSAL',2:'TRIMESTRAL',3:'SEMESTRAL',4:'ANUAL',5:'SEMANAL',6:'DIARIA'} as const)[frequencyChoice as 1|2|3|4|5|6];
+              if (!category || !account || !Number.isSafeInteger(valor) || valor <= 0 || !Number.isInteger(day) || day < 1 || day > 31 || !frequency) { window.alert('Dados inválidos ou seleção incompleta.'); return; }
+              onAddRecurrence({ descricao: descricao.trim(), valorCentavos: valor, tipo, frequencia: frequency, diaVencimento: day, categoriaId: category.id, contaId: account.id, ativo: true, idempotencyHash: `${Date.now()}-${descricao.trim().toLowerCase()}` });
+            }} className="rounded-lg bg-orange-500 px-3 py-2 text-xs font-bold text-white">Adicionar recorrência</button>
+            <button type="button" onClick={() => {
+              const count = onGenerateRecurrences(currentCompetencia);
+              window.alert(`${count} lançamento(s) gerado(s) para ${currentCompetencia}.`);
+            }} className="rounded-lg border border-orange-300 px-3 py-2 text-xs font-bold text-orange-600 dark:text-orange-400">Gerar este mês</button>
+          </div>
+        </div>
+        {recurrences.length === 0 ? <p className="text-xs text-slate-500">Nenhuma recorrência cadastrada.</p> : (
+          <div className="divide-y divide-slate-100 dark:divide-slate-700">
+            {recurrences.map(item => (
+              <div key={item.id} className="py-3 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">{item.descricao}</p>
+                  <p className="text-xs text-slate-500">{item.tipo} · {item.frequencia} · dia {item.diaVencimento} · {formatCurrency(item.valorCentavos)}</p>
+                </div>
+                <button type="button" onClick={() => onToggleRecurrence(item.id, !item.ativo)} className={`rounded-lg px-3 py-1.5 text-xs font-bold ${item.ativo ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'}`}>{item.ativo ? 'Pausar' : 'Ativar'}</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 };
