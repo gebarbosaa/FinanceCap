@@ -15,7 +15,7 @@ const OWNER_KEY = 'BF_FINANCE_OS_OWNER_UID';
 
 const ARRAY_FIELDS = [
   'accounts', 'categories', 'cards', 'transactions', 'invoices', 'installments',
-  'recurrences', 'budgets', 'debts', 'patrimony', 'investments', 'goals', 'audit',
+  'recurrences', 'budgets', 'debts', 'patrimony', 'investments', 'goals', 'audit', 'waterEntries',
 ] as const;
 
 type ArrayField = typeof ARRAY_FIELDS[number];
@@ -40,7 +40,7 @@ export async function loadUserFinance(uid: string, localData: StorageData): Prom
         settings: INITIAL_SETTINGS,
         accounts: [], categories: INITIAL_CATEGORIES, cards: [], transactions: [],
         invoices: [], installments: [], recurrences: [], budgets: [], debts: [],
-        patrimony: [], investments: [], goals: [], audit: [],
+        patrimony: [], investments: [], goals: [], audit: [], waterEntries: [],
       }
     : localData;
 
