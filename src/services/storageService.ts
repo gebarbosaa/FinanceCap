@@ -24,7 +24,7 @@ import type { Unsubscribe } from 'firebase/firestore';
 const STORAGE_KEY = 'BF_FINANCE_OS_DATA_V1';
 
 const isValidISODate = (value: string): boolean => {
-  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return false;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const [year, month, day] = value.split('-').map(Number);
   const parsed = new Date(Date.UTC(year, month - 1, day));
   return parsed.getUTCFullYear() === year && parsed.getUTCMonth() === month - 1 && parsed.getUTCDate() === day;
@@ -869,7 +869,8 @@ class StorageService {
     const next = { ...previous, ...updates, id: previous.id };
     if (!next.nome.trim() || !next.instituicao.trim()) throw new Error('Informe o nome e a instituição da conta.');
     if (!Number.isSafeInteger(next.saldoInicialCentavos)) throw new Error('O saldo inicial deve ser informado em centavos inteiros.');
-    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(next.dataSaldoInicial)) throw new Error('A data-base do saldo é inválida.');
+    if (!next.ativo && this.data.cards.some((card) => card.ativo && card.contaPagamentoId === accountId)) throw new Error('Esta conta é usada para pagar um cartão ativo. Altere a conta de pagamento ou bloqueie o cartão antes de inativá-la.');
+    if (!isValidISODate(next.dataSaldoInicial)) throw new Error('A data-base do saldo é inválida.');
     this.data.accounts[index] = next;
     this.logAudit('EDITAR', 'CONTAS', accountId, `Edição da conta ${next.nome}`, JSON.stringify(previous), JSON.stringify(next));
     this.persist({ ...this.data });
