@@ -257,3 +257,30 @@ test('calculateCardLimits counts exact cent values for generated installment row
   assert.equal(result.limiteUtilizadoCentavos, 10001);
   assert.equal(result.limiteDisponivelCentavos, 89999);
 });
+
+
+test('calculateAccountBalance applies transfers symmetrically and invoice settlements only to cash', () => {
+  const source: Account = {
+    id: 'source-account', nome: 'Origem', instituicao: 'Banco', tipo: 'CONTA_CORRENTE',
+    saldoInicialCentavos: 100000, dataSaldoInicial: '2026-11-01', ativo: true,
+  };
+  const destination: Account = {
+    id: 'destination-account', nome: 'Destino', instituicao: 'Banco', tipo: 'CONTA_CORRENTE',
+    saldoInicialCentavos: 50000, dataSaldoInicial: '2026-11-01', ativo: true,
+  };
+  const transfer: Transaction = {
+    id: 'transfer-test', data: '2026-11-10', competencia: '2026-11', descricao: 'Transferência',
+    tipo: 'TRANSFERENCIA', categoriaId: 'internal', contaId: source.id, contaDestinoId: destination.id,
+    formaPagamento: 'TRANSFERENCIA', valorCentavos: 20000, status: 'REALIZADO', origem: 'MANUAL',
+    createdAt: '2026-11-10T12:00:00.000Z', updatedAt: '2026-11-10T12:00:00.000Z',
+  };
+  const invoiceSettlement: Transaction = {
+    id: 'invoice-settlement-test', data: '2026-11-11', competencia: '2026-11', descricao: 'Pagamento de fatura',
+    tipo: 'LIQUIDACAO', categoriaId: 'internal', contaId: source.id,
+    formaPagamento: 'DEBITO', valorCentavos: 10000, status: 'REALIZADO', origem: 'SISTEMA',
+    createdAt: '2026-11-11T12:00:00.000Z', updatedAt: '2026-11-11T12:00:00.000Z',
+  };
+
+  assert.equal(calculateAccountBalance(source, [transfer, invoiceSettlement]), 70000);
+  assert.equal(calculateAccountBalance(destination, [transfer, invoiceSettlement]), 70000);
+});
