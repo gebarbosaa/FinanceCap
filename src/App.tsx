@@ -291,8 +291,9 @@ export default function App() {
               installments={data.installments}
               cards={data.cards}
               accounts={data.accounts}
-              onAddInstallment={(plan) => {
-                storageService.addInstallment(plan);
+              categories={data.categories}
+              onAddInstallment={(plan, categoryId) => {
+                storageService.addInstallmentPurchase(plan, categoryId);
               }}
             />
           )}
