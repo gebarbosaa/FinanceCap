@@ -943,6 +943,54 @@ class StorageService {
     return created;
   }
 
+  public updateDebt(debtId: string, updates: Partial<Omit<Debt, 'id'>>): Debt {
+    const index = this.data.debts.findIndex((item) => item.id === debtId);
+    if (index < 0) throw new Error('Dívida não encontrada.');
+    const previous = this.data.debts[index];
+    const next = { ...previous, ...updates, id: previous.id };
+    if (!next.credor.trim() || !Number.isSafeInteger(next.principalContratadoCentavos) || next.principalContratadoCentavos <= 0 || !Number.isSafeInteger(next.saldoDevedorCentavos) || next.saldoDevedorCentavos < 0 || next.saldoDevedorCentavos > next.principalContratadoCentavos || !Number.isSafeInteger(next.valorParcelaCentavos) || next.valorParcelaCentavos <= 0 || !Number.isInteger(next.parcelasTotais) || next.parcelasTotais < 1 || !Number.isInteger(next.parcelasRestantes) || next.parcelasRestantes < 0 || next.parcelasRestantes > next.parcelasTotais || !Number.isFinite(next.taxaJurosMensalPercentual) || next.taxaJurosMensalPercentual < 0 || !isValidISODate(next.proximoVencimento)) throw new Error('Dados da dívida inválidos.');
+    this.data.debts[index] = next;
+    this.logAudit('EDITAR', 'DÍVIDAS', debtId, `Edição da dívida ${next.credor}`, JSON.stringify(previous), JSON.stringify(next));
+    this.persist({ ...this.data });
+    return next;
+  }
+
+  public updatePatrimony(id: string, updates: Partial<Omit<PatrimonyItem, 'id'>>): PatrimonyItem {
+    const index = this.data.patrimony.findIndex((item) => item.id === id);
+    if (index < 0) throw new Error('Item patrimonial não encontrado.');
+    const previous = this.data.patrimony[index];
+    const next = { ...previous, ...updates, id: previous.id };
+    if (!next.descricao.trim() || !Number.isSafeInteger(next.valorAvaliacaoCentavos) || next.valorAvaliacaoCentavos <= 0 || !isValidISODate(next.dataAvaliacao)) throw new Error('Dados patrimoniais inválidos.');
+    this.data.patrimony[index] = next;
+    this.logAudit('EDITAR', 'PATRIMÔNIO', id, `Edição patrimonial: ${next.descricao}`, JSON.stringify(previous), JSON.stringify(next));
+    this.persist({ ...this.data });
+    return next;
+  }
+
+  public updateInvestment(id: string, updates: Partial<Omit<Investment, 'id'>>): Investment {
+    const index = this.data.investments.findIndex((item) => item.id === id);
+    if (index < 0) throw new Error('Investimento não encontrado.');
+    const previous = this.data.investments[index];
+    const next = { ...previous, ...updates, id: previous.id };
+    if (!next.instituicao.trim() || !next.produto.trim() || !Number.isSafeInteger(next.valorInvestidoCentavos) || next.valorInvestidoCentavos <= 0 || !Number.isSafeInteger(next.saldoAtualCentavos) || next.saldoAtualCentavos < 0 || !Number.isFinite(next.rentabilidadeHistoricaPercentual) || !isValidISODate(next.dataAplicacao) || !isValidISODate(next.dataAtualizacao)) throw new Error('Dados do investimento inválidos.');
+    this.data.investments[index] = next;
+    this.logAudit('EDITAR', 'INVESTIMENTOS', id, `Edição do investimento ${next.produto}`, JSON.stringify(previous), JSON.stringify(next));
+    this.persist({ ...this.data });
+    return next;
+  }
+
+  public updateGoal(id: string, updates: Partial<Omit<Goal, 'id'>>): Goal {
+    const index = this.data.goals.findIndex((item) => item.id === id);
+    if (index < 0) throw new Error('Meta financeira não encontrada.');
+    const previous = this.data.goals[index];
+    const next = { ...previous, ...updates, id: previous.id };
+    if (!next.nome.trim() || !Number.isSafeInteger(next.valorAlvoCentavos) || next.valorAlvoCentavos <= 0 || !Number.isSafeInteger(next.valorAcumuladoCentavos) || next.valorAcumuladoCentavos < 0 || !Number.isSafeInteger(next.aporteMensalCentavos) || next.aporteMensalCentavos < 0 || !isValidISODate(next.prazo)) throw new Error('Dados da meta inválidos.');
+    this.data.goals[index] = next;
+    this.logAudit('EDITAR', 'METAS', id, `Edição da meta ${next.nome}`, JSON.stringify(previous), JSON.stringify(next));
+    this.persist({ ...this.data });
+    return next;
+  }
+
   // Account operations
   public updateAccount(accountId: string, updates: Partial<Omit<Account, 'id'>>): Account {
     const index = this.data.accounts.findIndex((item) => item.id === accountId);
