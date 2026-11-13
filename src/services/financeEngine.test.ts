@@ -284,3 +284,33 @@ test('calculateAccountBalance applies transfers symmetrically and invoice settle
   assert.equal(calculateAccountBalance(source, [transfer, invoiceSettlement]), 70000);
   assert.equal(calculateAccountBalance(destination, [transfer, invoiceSettlement]), 70000);
 });
+
+
+test('debt principal amortization reduces cash but is excluded from ordinary expenses', () => {
+  const account: Account = {
+    id: 'debt-cash-account', nome: 'Conta', instituicao: 'Banco', tipo: 'CONTA_CORRENTE',
+    saldoInicialCentavos: 10000, dataSaldoInicial: '2026-11-01', ativo: true,
+  };
+  const base = {
+    data: '2026-11-12', competencia: '2026-11', categoriaId: 'expense',
+    contaId: account.id, formaPagamento: 'DEBITO', status: 'REALIZADO' as const,
+    origem: 'SISTEMA' as const, debtId: 'debt-1',
+    createdAt: '2026-11-12T12:00:00.000Z', updatedAt: '2026-11-12T12:00:00.000Z',
+  };
+  const principal: Transaction = {
+    ...base, id: 'debt-principal', descricao: 'Amortização principal',
+    tipo: 'AMORTIZACAO', valorCentavos: 6000,
+  };
+  const interest: Transaction = {
+    ...base, id: 'debt-interest', descricao: 'Juros do empréstimo',
+    tipo: 'DESPESA', valorCentavos: 500,
+  };
+  const settings = {
+    nomeSistema: 'BF Finance OS', nomeProprietario: 'Teste', moeda: 'BRL', idioma: 'pt-BR',
+    fusoHorario: 'America/Sao_Paulo', anoReferencia: 2026, mesReferencia: 11,
+    reservaEmergenciaMetaCentavos: 0, alertaVencimentoDias: 5, autoBackupDrive: false,
+  };
+  assert.equal(calculateAccountBalance(account, [principal, interest]), 3500);
+  const summary = calculateFinancialSummary([account], [], [principal, interest], [], [], [], [], [], settings, '2026-11');
+  assert.equal(summary.despesasMesCentavos, 500);
+});
