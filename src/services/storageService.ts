@@ -917,7 +917,8 @@ class StorageService {
   }
 
   public addPatrimony(item: Omit<PatrimonyItem, 'id'>): PatrimonyItem {
-    const created: PatrimonyItem = { ...item, id: `pat-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` };
+    if (!item.descricao.trim() || !Number.isSafeInteger(item.valorAvaliacaoCentavos) || item.valorAvaliacaoCentavos <= 0 || !isValidISODate(item.dataAvaliacao)) throw new Error('Informe descrição, valor positivo e data de avaliação válida.');
+    const created: PatrimonyItem = { ...item, descricao: item.descricao.trim(), id: `pat-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` };
     this.data.patrimony = [...this.data.patrimony, created];
     this.logAudit('CRIAR', 'PATRIMÔNIO', created.id, `Cadastro patrimonial: ${created.descricao}`, undefined, JSON.stringify(created));
     this.persist({ ...this.data });
@@ -925,7 +926,8 @@ class StorageService {
   }
 
   public addInvestment(investment: Omit<Investment, 'id'>): Investment {
-    const created: Investment = { ...investment, id: `inv-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` };
+    if (!investment.instituicao.trim() || !investment.produto.trim() || !Number.isSafeInteger(investment.valorInvestidoCentavos) || investment.valorInvestidoCentavos <= 0 || !Number.isSafeInteger(investment.saldoAtualCentavos) || investment.saldoAtualCentavos < 0 || !Number.isFinite(investment.rentabilidadeHistoricaPercentual) || !isValidISODate(investment.dataAplicacao) || !isValidISODate(investment.dataAtualizacao)) throw new Error('Dados do investimento inválidos. Confira instituição, produto, valores e datas.');
+    const created: Investment = { ...investment, instituicao: investment.instituicao.trim(), produto: investment.produto.trim(), id: `inv-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` };
     this.data.investments = [...this.data.investments, created];
     this.logAudit('CRIAR', 'INVESTIMENTOS', created.id, `Cadastro do investimento ${created.produto}`, undefined, JSON.stringify(created));
     this.persist({ ...this.data });
@@ -933,7 +935,8 @@ class StorageService {
   }
 
   public addGoal(goal: Omit<Goal, 'id'>): Goal {
-    const created: Goal = { ...goal, id: `goal-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` };
+    if (!goal.nome.trim() || !Number.isSafeInteger(goal.valorAlvoCentavos) || goal.valorAlvoCentavos <= 0 || !Number.isSafeInteger(goal.valorAcumuladoCentavos) || goal.valorAcumuladoCentavos < 0 || !Number.isSafeInteger(goal.aporteMensalCentavos) || goal.aporteMensalCentavos < 0 || !isValidISODate(goal.prazo)) throw new Error('Dados da meta inválidos. Confira nome, valores e prazo.');
+    const created: Goal = { ...goal, nome: goal.nome.trim(), id: `goal-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` };
     this.data.goals = [...this.data.goals, created];
     this.logAudit('CRIAR', 'METAS', created.id, `Cadastro da meta ${created.nome}`, undefined, JSON.stringify(created));
     this.persist({ ...this.data });
