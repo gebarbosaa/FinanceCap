@@ -6,6 +6,7 @@ import { formatCurrency, formatDateBR, getCurrentDateISO, parseToCentavos } from
 interface AccountsViewProps {
   accounts: Account[];
   onAddAccount: (account: Omit<Account, 'id'>) => void;
+  onUpdateAccount: (accountId: string, updates: Partial<Omit<Account, 'id'>>) => void;
 }
 
 const ACCOUNT_TYPES: Array<{ value: AccountType; label: string }> = [
@@ -17,7 +18,7 @@ const ACCOUNT_TYPES: Array<{ value: AccountType; label: string }> = [
   { value: 'RESERVA', label: 'Reserva financeira' },
 ];
 
-export const AccountsView: React.FC<AccountsViewProps> = ({ accounts, onAddAccount }) => {
+export const AccountsView: React.FC<AccountsViewProps> = ({ accounts, onAddAccount, onUpdateAccount }) => {
   const [showForm, setShowForm] = useState(false);
   const [nome, setNome] = useState('');
   const [instituicao, setInstituicao] = useState('');
@@ -169,11 +170,15 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ accounts, onAddAccou
                     <p className="text-[11px] text-slate-400">Data-base: {formatDateBR(account.dataSaldoInicial)}</p>
                   </div>
                 </div>
-                <div className="sm:text-right">
-                  <p className="font-bold text-slate-900 dark:text-white">{formatCurrency(account.saldoInicialCentavos)}</p>
-                  <span className={account.ativo ? 'text-[10px] font-bold text-orange-600' : 'text-[10px] font-bold text-slate-400'}>
-                    {account.ativo ? 'ATIVA' : 'INATIVA'}
-                  </span>
+                <div className="flex items-center justify-between sm:justify-end gap-3">
+                  <div className="sm:text-right">
+                    <p className="font-bold text-slate-900 dark:text-white">{formatCurrency(account.saldoInicialCentavos)}</p>
+                    <span className={account.ativo ? 'text-[10px] font-bold text-orange-600' : 'text-[10px] font-bold text-slate-400'}>{account.ativo ? 'ATIVA' : 'INATIVA'}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => { const nome = window.prompt('Nome da conta:', account.nome); if (nome === null) return; const instituicao = window.prompt('Instituição:', account.instituicao); if (instituicao === null) return; const saldo = window.prompt('Saldo inicial em reais:', (account.saldoInicialCentavos / 100).toFixed(2).replace('.', ',')); if (saldo === null) return; const amount = parseToCentavos(saldo); if (!nome.trim() || !instituicao.trim() || !Number.isSafeInteger(amount)) { window.alert('Dados inválidos.'); return; } try { onUpdateAccount(account.id, { nome: nome.trim(), instituicao: instituicao.trim(), saldoInicialCentavos: amount }); } catch (err) { window.alert(err instanceof Error ? err.message : 'Falha ao atualizar conta.'); } }} className="rounded-lg border border-slate-300 dark:border-slate-600 px-2.5 py-1.5 text-[11px] font-semibold">Editar</button>
+                    <button type="button" onClick={() => { try { onUpdateAccount(account.id, { ativo: !account.ativo }); } catch (err) { window.alert(err instanceof Error ? err.message : 'Falha ao alterar conta.'); } }} className="rounded-lg border border-slate-300 dark:border-slate-600 px-2.5 py-1.5 text-[11px] font-semibold">{account.ativo ? 'Inativar' : 'Reativar'}</button>
+                  </div>
                 </div>
               </div>
             ))}
