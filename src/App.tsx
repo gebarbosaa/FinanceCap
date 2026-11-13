@@ -319,10 +319,11 @@ export default function App() {
           {activeTab === 'debts' && (
             <DebtsView
               debts={data.debts}
-              onAddDebt={(debt) => {
-                storageService.addDebt(debt);
-              }}
+              accounts={data.accounts}
+              categories={data.categories}
+              onAddDebt={(debt) => { storageService.addDebt(debt); }}
               onUpdateDebt={(id, updates) => storageService.updateDebt(id, updates)}
+              onApplyDebtPayment={(payment) => storageService.applyDebtPayment(payment.debtId, payment.accountId, payment.principalCentavos, payment.interestCentavos, payment.interestCategoryId, payment.date, payment.paymentId)}
             />
           )}
 
