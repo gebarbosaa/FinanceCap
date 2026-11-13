@@ -955,6 +955,48 @@ class StorageService {
     return next;
   }
 
+  public applyDebtPayment(
+    debtId: string,
+    accountId: string,
+    principalCentavos: number,
+    interestCentavos: number,
+    interestCategoryId: string,
+    date: string,
+    paymentId: string
+  ): { principal: Transaction; interest?: Transaction; debt: Debt } {
+    const debt = this.data.debts.find((item) => item.id === debtId);
+    if (!debt || debt.status === 'QUITADO') throw new Error('Dívida não encontrada ou já quitada.');
+    if (!this.data.accounts.some((item) => item.id === accountId && item.ativo)) throw new Error('Selecione uma conta bancária ativa.');
+    if (!isValidISODate(date) || !paymentId.trim()) throw new Error('Data ou identificador do pagamento inválido.');
+    if (!Number.isSafeInteger(principalCentavos) || principalCentavos <= 0 || principalCentavos > debt.saldoDevedorCentavos) throw new Error('O valor amortizado deve ser positivo e não pode superar o saldo devedor.');
+    if (!Number.isSafeInteger(interestCentavos) || interestCentavos < 0) throw new Error('O valor dos juros é inválido.');
+    if (interestCentavos > 0 && !this.data.categories.some((item) => item.id === interestCategoryId && item.tipo === 'DESPESA' && item.ativo !== false)) throw new Error('Selecione uma categoria de despesa válida para os juros.');
+    if (this.data.transactions.some((item) => item.idExterno === `debt-payment:${paymentId}:principal` || item.idExterno === `debt-payment:${paymentId}:interest`)) throw new Error('Este pagamento já foi registrado.');
+    const competence = date.slice(0, 7);
+    const principal = this.addTransaction({
+      data: date, competencia: competence, descricao: `Amortização do principal — ${debt.credor}`,
+      tipo: 'AMORTIZACAO', categoriaId: 'cat-desp-12', contaId: accountId,
+      formaPagamento: 'DEBITO', valorCentavos: principalCentavos, status: 'REALIZADO',
+      origem: 'SISTEMA', debtId, idExterno: `debt-payment:${paymentId}:principal`,
+    }, 'Amortização de principal de dívida');
+    let interest: Transaction | undefined;
+    if (interestCentavos > 0) {
+      interest = this.addTransaction({
+        data: date, competencia, descricao: `Juros do pagamento — ${debt.credor}`,
+        tipo: 'DESPESA', categoriaId: interestCategoryId, contaId: accountId,
+        formaPagamento: 'DEBITO', valorCentavos: interestCentavos, status: 'REALIZADO',
+        origem: 'SISTEMA', debtId, idExterno: `debt-payment:${paymentId}:interest`,
+      }, 'Pagamento de juros de dívida');
+    }
+    const remaining = debt.saldoDevedorCentavos - principalCentavos;
+    const updatedDebt = this.updateDebt(debtId, {
+      saldoDevedorCentavos: remaining,
+      parcelasRestantes: remaining === 0 ? 0 : Math.max(0, debt.parcelasRestantes - 1),
+      status: remaining === 0 ? 'QUITADO' : 'EM_DIA',
+    });
+    return { principal, interest, debt: updatedDebt };
+  }
+
   public updatePatrimony(id: string, updates: Partial<Omit<PatrimonyItem, 'id'>>): PatrimonyItem {
     const index = this.data.patrimony.findIndex((item) => item.id === id);
     if (index < 0) throw new Error('Item patrimonial não encontrado.');
