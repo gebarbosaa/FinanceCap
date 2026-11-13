@@ -32,7 +32,6 @@ interface TransactionsViewProps {
   cards: CreditCard[];
   currentCompetencia: string;
   onAddTransaction: () => void;
-  onEditTransaction: (tx: Transaction) => void;
   onDeleteTransaction: (txId: string, reason: string) => void;
   onSaveEdit: (txId: string, updates: Partial<Transaction>) => void;
   invoices: import('../types/finance').Invoice[];
@@ -45,8 +44,9 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   cards,
   currentCompetencia,
   onAddTransaction,
-  onEditTransaction,
   onDeleteTransaction,
+  onSaveEdit,
+  invoices,
 }) => {
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<string>('TODOS');
@@ -434,8 +434,9 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
+                            disabled={!!tx.parcelamentoId || tx.tipo === 'LIQUIDACAO'}
                             onClick={() => setDeleteModalTx(tx)}
-                            className="p-1 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 rounded cursor-pointer transition"
+                            className="p-1 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 rounded cursor-pointer transition disabled:opacity-30 disabled:cursor-not-allowed"
                             title="Excluir logicamente com auditoria"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
