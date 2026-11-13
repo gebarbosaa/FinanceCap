@@ -15,7 +15,7 @@ import {
   Goal,
   FinancialSummary,
 } from '../types/finance';
-import { formatCurrency, formatDateBR } from '../services/currency';
+import { formatCurrency, formatDateBR, parseToCentavos } from '../services/currency';
 
 interface PatrimonyViewProps {
   initialTab?: 'BALANCO' | 'INVESTIMENTOS' | 'METAS';
@@ -34,6 +34,9 @@ export const PatrimonyView: React.FC<PatrimonyViewProps> = ({
   investments,
   goals,
   summary,
+  onAddPatrimony,
+  onAddInvestment,
+  onAddGoal,
 }) => {
   const [activeTab, setActiveTab] = useState<'BALANCO' | 'INVESTIMENTOS' | 'METAS'>(initialTab);
 
@@ -118,9 +121,16 @@ export const PatrimonyView: React.FC<PatrimonyViewProps> = ({
 
           {/* Physical Assets List */}
           <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
-            <h3 className="font-extrabold text-slate-900 dark:text-white text-base">
-              Ativos Físicos & Bens Cadastrados
-            </h3>
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="font-extrabold text-slate-900 dark:text-white text-base">Ativos Físicos & Bens Cadastrados</h3>
+              <button type="button" onClick={() => {
+                const descricao = window.prompt('Descrição do bem:');
+                if (!descricao?.trim()) return;
+                const valor = parseToCentavos(window.prompt('Valor de avaliação (R$):') || '');
+                if (!Number.isSafeInteger(valor) || valor <= 0) { window.alert('Informe um valor válido.'); return; }
+                onAddPatrimony({ tipo: 'ATIVO', subtipo: 'BENS_DIVERSOS', descricao: descricao.trim(), valorAvaliacaoCentavos: valor, dataAvaliacao: new Date().toISOString().slice(0, 10) });
+              }} className="rounded-lg bg-orange-500 px-3 py-2 text-xs font-bold text-white">Adicionar bem</button>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {patrimony.map((item) => (
@@ -169,9 +179,19 @@ export const PatrimonyView: React.FC<PatrimonyViewProps> = ({
         <div className="space-y-6">
           <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row justify-between sm:items-center gap-4">
             <div>
-              <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-                Carteira de Investimentos
-              </h2>
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">Carteira de Investimentos</h2>
+                <button type="button" onClick={() => {
+                  const produto = window.prompt('Nome do investimento:');
+                  if (!produto?.trim()) return;
+                  const instituicao = window.prompt('Instituição financeira:') || 'Não informada';
+                  const aplicado = parseToCentavos(window.prompt('Valor aplicado (R$):') || '');
+                  const saldo = parseToCentavos(window.prompt('Saldo atual (R$):') || '');
+                  if (!Number.isSafeInteger(aplicado) || aplicado <= 0 || !Number.isSafeInteger(saldo) || saldo < 0) { window.alert('Informe valores válidos.'); return; }
+                  const today = new Date().toISOString().slice(0, 10);
+                  onAddInvestment({ instituicao: instituicao.trim(), produto: produto.trim(), categoria: 'RENDA_FIXA_CDB', dataAplicacao: today, valorInvestidoCentavos: aplicado, saldoAtualCentavos: saldo, rentabilidadeHistoricaPercentual: aplicado ? Number(((saldo / aplicado - 1) * 100).toFixed(2)) : 0, dataAtualizacao: today });
+                }} className="rounded-lg bg-orange-500 px-3 py-2 text-xs font-bold text-white">Adicionar investimento</button>
+              </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 Custódia em corretoras autorizadas (XP, Itaú). Rentabilidade e marcação a mercado.
               </p>
@@ -228,9 +248,18 @@ export const PatrimonyView: React.FC<PatrimonyViewProps> = ({
       {activeTab === 'METAS' && (
         <div className="space-y-6">
           <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-              Metas Financeiras & Objetivos
-            </h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">Metas Financeiras & Objetivos</h2>
+              <button type="button" onClick={() => {
+                const nome = window.prompt('Nome da meta:');
+                if (!nome?.trim()) return;
+                const alvo = parseToCentavos(window.prompt('Valor-alvo (R$):') || '');
+                const aporte = parseToCentavos(window.prompt('Aporte mensal (R$):') || '');
+                const prazo = window.prompt('Prazo (AAAA-MM-DD):') || '';
+                if (!Number.isSafeInteger(alvo) || alvo <= 0 || !Number.isSafeInteger(aporte) || aporte < 0 || !/^\\d{4}-\\d{2}-\\d{2}$/.test(prazo)) { window.alert('Revise o valor, aporte e prazo.'); return; }
+                onAddGoal({ nome: nome.trim(), valorAlvoCentavos: alvo, valorAcumuladoCentavos: 0, prazo, prioridade: 'MEDIA', aporteMensalCentavos: aporte });
+              }} className="rounded-lg bg-orange-500 px-3 py-2 text-xs font-bold text-white">Adicionar meta</button>
+            </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Planejamento de poupança mensal calculada para atingir cada objetivo no prazo desejado.
             </p>
