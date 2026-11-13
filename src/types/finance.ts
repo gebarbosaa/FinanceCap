@@ -244,6 +244,13 @@ export interface AuditLog {
   origem: string;
 }
 
+export interface WaterIntakeEntry {
+  id: string;
+  date: string; // YYYY-MM-DD
+  amountMl: number;
+  createdAt: string;
+}
+
 export interface SystemSettings {
   nomeSistema: string;
   nomeProprietario: string;
@@ -255,6 +262,7 @@ export interface SystemSettings {
   reservaEmergenciaMetaCentavos: number;
   alertaVencimentoDias: number;
   autoBackupDrive: boolean;
+  waterGoalMl?: number;
   sheetsSpreadsheetId?: string;
   sheetsSpreadsheetUrl?: string;
   lastSheetsSync?: string;
