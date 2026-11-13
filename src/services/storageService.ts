@@ -225,7 +225,7 @@ class StorageService {
   public addTransaction(tx: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>, reason: string = 'Inclusão de lançamento'): Transaction {
     if (!Number.isSafeInteger(tx.valorCentavos) || tx.valorCentavos <= 0) throw new Error('O valor deve ser positivo e informado em centavos inteiros.');
     if (!tx.descricao.trim()) throw new Error('Informe a descrição do lançamento.');
-    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(tx.data)) throw new Error('Informe uma data válida.');
+    if (!/^\d{4}-\\d{2}-\\d{2}$/.test(tx.data)) throw new Error('Informe uma data válida.');
     if (tx.tipo === 'TRANSFERENCIA') {
       if (!tx.contaId || !tx.contaDestinoId) throw new Error('Selecione as contas de origem e destino.');
       if (tx.contaId === tx.contaDestinoId) throw new Error('A conta de origem e a conta de destino devem ser diferentes.');
