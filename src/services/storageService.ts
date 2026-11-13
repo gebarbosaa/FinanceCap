@@ -23,6 +23,13 @@ import type { Unsubscribe } from 'firebase/firestore';
 
 const STORAGE_KEY = 'BF_FINANCE_OS_DATA_V1';
 
+const isValidISODate = (value: string): boolean => {
+  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split('-').map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  return parsed.getUTCFullYear() === year && parsed.getUTCMonth() === month - 1 && parsed.getUTCDate() === day;
+};
+
 export interface StorageData {
   settings: SystemSettings;
   accounts: Account[];
@@ -664,7 +671,7 @@ class StorageService {
     if (!next.nome.trim() || !next.instituicao.trim()) throw new Error('Informe o nome e a instituição do cartão.');
     if (!Number.isSafeInteger(next.limiteTotalCentavos) || next.limiteTotalCentavos <= 0) throw new Error('O limite deve ser positivo e informado em centavos inteiros.');
     if (!Number.isInteger(next.diaFechamento) || next.diaFechamento < 1 || next.diaFechamento > 31 || !Number.isInteger(next.diaVencimento) || next.diaVencimento < 1 || next.diaVencimento > 31) throw new Error('Dias de fechamento e vencimento devem estar entre 1 e 31.');
-    if (!this.data.accounts.some((account) => account.id === next.contaPagamentoId)) throw new Error('Selecione uma conta de pagamento existente.');
+    if (!this.data.accounts.some((account) => account.id === next.contaPagamentoId && (account.ativo || next.contaPagamentoId === previous.contaPagamentoId))) throw new Error('Selecione uma conta de pagamento ativa.');
     const hasHistory = this.data.invoices.some((invoice) => invoice.cartaoId === cardId) || this.data.transactions.some((tx) => tx.cartaoId === cardId);
     if (hasHistory && (next.diaFechamento !== previous.diaFechamento || next.diaVencimento !== previous.diaVencimento)) {
       throw new Error('Não é possível alterar fechamento ou vencimento após existirem lançamentos/faturas. Cadastre outro cartão para um novo ciclo.');
@@ -680,7 +687,11 @@ class StorageService {
   }
 
   public addCard(card: Omit<CreditCard, 'id'>): CreditCard {
-    const created: CreditCard = { ...card, id: `card-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` };
+    if (!card.nome.trim() || !card.instituicao.trim()) throw new Error('Informe o nome e a instituição do cartão.');
+    if (!Number.isSafeInteger(card.limiteTotalCentavos) || card.limiteTotalCentavos <= 0) throw new Error('O limite deve ser positivo e informado em centavos inteiros.');
+    if (!Number.isInteger(card.diaFechamento) || card.diaFechamento < 1 || card.diaFechamento > 31 || !Number.isInteger(card.diaVencimento) || card.diaVencimento < 1 || card.diaVencimento > 31) throw new Error('Dias de fechamento e vencimento devem estar entre 1 e 31.');
+    if (!this.data.accounts.some((account) => account.id === card.contaPagamentoId && account.ativo)) throw new Error('Selecione uma conta de pagamento ativa.');
+    const created: CreditCard = { ...card, nome: card.nome.trim(), instituicao: card.instituicao.trim(), id: `card-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` };
     this.data.cards = [...this.data.cards, created];
     this.logAudit('CRIAR', 'CARTÕES', created.id, `Cadastro do cartão ${created.nome}`, undefined, JSON.stringify(created));
     this.persist({ ...this.data });
@@ -866,13 +877,21 @@ class StorageService {
   }
 
   public setAccountActive(accountId: string, active: boolean): Account {
+    if (!active && this.data.cards.some((card) => card.ativo && card.contaPagamentoId === accountId)) {
+      throw new Error('Esta conta é usada para pagar um cartão ativo. Altere a conta de pagamento ou bloqueie o cartão antes de inativá-la.');
+    }
     return this.updateAccount(accountId, { ativo: active });
   }
 
   public addAccount(acc: Omit<Account, 'id'>): Account {
+    if (!acc.nome.trim() || !acc.instituicao.trim()) throw new Error('Informe o nome e a instituição da conta.');
+    if (!Number.isSafeInteger(acc.saldoInicialCentavos)) throw new Error('O saldo inicial deve ser informado em centavos inteiros.');
+    if (!isValidISODate(acc.dataSaldoInicial)) throw new Error('A data-base do saldo é inválida.');
     const newAcc: Account = {
       ...acc,
-      id: `acc-${Date.now()}`,
+      nome: acc.nome.trim(),
+      instituicao: acc.instituicao.trim(),
+      id: `acc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     };
     this.data.accounts.push(newAcc);
     this.logAudit('CRIAR', 'CONTAS', newAcc.id, `Criação da conta ${newAcc.nome}`, undefined, JSON.stringify(newAcc));
