@@ -290,7 +290,6 @@ export default function App() {
             <InstallmentsView
               installments={data.installments}
               cards={data.cards}
-              accounts={data.accounts}
               categories={data.categories}
               onAddInstallment={(plan, categoryId) => {
                 storageService.addInstallmentPurchase(plan, categoryId);
