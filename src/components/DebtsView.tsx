@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import { Landmark, AlertCircle, Calculator, TrendingDown, ArrowRight, ShieldCheck, Check } from 'lucide-react';
-import { Debt } from '../types/finance';
+import { Account, Category, Debt } from '../types/finance';
 import { formatCurrency, formatDateBR, parseToCentavos } from '../services/currency';
 
 interface DebtsViewProps {
   debts: Debt[];
+  accounts: Account[];
+  categories: Category[];
+  onApplyDebtPayment: (args: { debtId: string; accountId: string; principalCentavos: number; interestCentavos: number; interestCategoryId: string; date: string; paymentId: string }) => void;
   onAddDebt: (debt: Omit<Debt, 'id'>) => void;
   onUpdateDebt: (id: string, updates: Partial<Omit<Debt, 'id'>>) => void;
 }
 
-export const DebtsView: React.FC<DebtsViewProps> = ({ debts, onAddDebt, onUpdateDebt }) => {
+export const DebtsView: React.FC<DebtsViewProps> = ({ debts, accounts, categories, onAddDebt, onUpdateDebt, onApplyDebtPayment }) => {
   const [amortizeAmount, setAmortizeAmount] = useState<string>('20000');
   const [selectedDebt, setSelectedDebt] = useState<Debt | undefined>(debts[0]);
   const [showForm, setShowForm] = useState(false);
@@ -161,6 +164,25 @@ export const DebtsView: React.FC<DebtsViewProps> = ({ debts, onAddDebt, onUpdate
             Simule o impacto de um aporte extraordinário abatendo diretamente o principal devedor.
           </p>
 
+          <div className="flex flex-wrap gap-2">
+            <button type="button" disabled={!accounts.some(account => account.ativo)} onClick={() => {
+              if (!selectedDebt) return;
+              const accountOptions = accounts.filter(account => account.ativo);
+              const accountText = accountOptions.map((item,index) => `${index + 1}. ${item.nome}`).join('\n');
+              const accountIndex = Number(window.prompt(`Conta de saída:\n${accountText}`, '1')) - 1;
+              const account = accountOptions[accountIndex];
+              if (!account) return;
+              const principal = parseToCentavos(window.prompt('Valor amortizado do principal (R$):') || '');
+              const interest = parseToCentavos(window.prompt('Juros pagos neste pagamento (R$):', '0') || '0');
+              const expenseCategories = categories.filter(item => item.tipo === 'DESPESA' && item.ativo !== false);
+              const categoryText = expenseCategories.map((item,index) => `${index + 1}. ${item.nome}`).join('\n');
+              const categoryIndex = interest > 0 ? Number(window.prompt(`Categoria dos juros:\n${categoryText}`, '1')) - 1 : 0;
+              const category = expenseCategories[categoryIndex];
+              if (!Number.isSafeInteger(principal) || principal <= 0 || !Number.isSafeInteger(interest) || interest < 0 || (interest > 0 && !category)) { window.alert('Revise os valores e a categoria dos juros.'); return; }
+              onApplyDebtPayment({ debtId: selectedDebt.id, accountId: account.id, principalCentavos: principal, interestCentavos: interest, interestCategoryId: category?.id || '', date: new Date().toISOString().slice(0, 10), paymentId: `debtpay-${Date.now()}` });
+            }} className="rounded-lg bg-orange-500 px-4 py-2.5 text-xs font-bold text-white disabled:opacity-50">Registrar amortização real</button>
+            <p className="self-center text-[11px] text-slate-500">O principal reduz a dívida sem entrar como despesa; os juros são lançados como despesa financeira.</p>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
