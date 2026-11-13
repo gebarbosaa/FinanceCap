@@ -944,6 +944,8 @@ class StorageService {
     }
 
     const candidate = JSON.parse(JSON.stringify(imported)) as StorageData;
+    candidate.waterEntries = Array.isArray(candidate.waterEntries) ? candidate.waterEntries : [];
+    candidate.settings = { ...INITIAL_SETTINGS, ...candidate.settings };
     const timestamp = new Date().toISOString();
     const restoreAudit: AuditLog = {
       id: `aud-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
