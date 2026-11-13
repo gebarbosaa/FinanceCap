@@ -350,7 +350,7 @@ export function generate12MonthProjection(
 
     // Include only future planned transactions; realized expenses are already reflected in bank balances.
     for (const tx of transactions) {
-      if (tx.isDeleted || tx.parcelamentoId || tx.recorrenciaId || tx.competencia !== competencia || (tx.status !== 'PREVISTO' && tx.status !== 'PENDENTE')) continue;
+      if (tx.isDeleted || tx.parcelamentoId || tx.competencia !== competencia || (tx.status !== 'PREVISTO' && tx.status !== 'PENDENTE')) continue;
       if (tx.tipo === 'RECEITA') receitasEsperadasCentavos += tx.valorCentavos;
       if (tx.tipo === 'DESPESA') despesasFixasCentavos += tx.valorCentavos;
     }
