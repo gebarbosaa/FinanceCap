@@ -247,6 +247,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
               <option value="DESPESA">Despesa</option>
               <option value="TRANSFERENCIA">Transferência</option>
               <option value="LIQUIDACAO">Liquidação (Fatura)</option>
+              <option value="AMORTIZACAO">Amortização de principal</option>
               <option value="AJUSTE">Ajuste de Saldo</option>
               <option value="ESTORNO">Estorno</option>
             </select>
@@ -347,6 +348,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                   const isExpense = tx.tipo === 'DESPESA';
                   const isTransfer = tx.tipo === 'TRANSFERENCIA';
                   const isLiquidation = tx.tipo === 'LIQUIDACAO';
+                  const isAmortization = tx.tipo === 'AMORTIZACAO';
 
                   return (
                     <tr
@@ -380,7 +382,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                               ? 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300'
                               : isTransfer
                               ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
-                              : isLiquidation
+                              : isLiquidation || isAmortization
                               ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300'
                               : 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300'
                           }`}
@@ -388,7 +390,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                           {isIncome && <ArrowUpRight className="w-3 h-3 text-emerald-600" />}
                           {isExpense && <ArrowDownRight className="w-3 h-3 text-rose-600" />}
                           {isTransfer && <ArrowLeftRight className="w-3 h-3 text-blue-600" />}
-                          <span>{tx.tipo}</span>
+                          <span>{isAmortization ? 'AMORTIZAÇÃO PRINCIPAL' : tx.tipo}</span>
                         </span>
                       </td>
                       <td className="py-3 px-4 whitespace-nowrap">
@@ -460,14 +462,15 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                       <td className="py-3 px-4 text-center whitespace-nowrap">
                         <div className="flex items-center justify-center space-x-1.5 opacity-90 group-hover:opacity-100">
                           <button
+                            disabled={tx.tipo === 'AMORTIZACAO' || tx.tipo === 'LIQUIDACAO'}
                             onClick={() => openEdit(tx)}
-                            className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded cursor-pointer transition"
+                            className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded cursor-pointer transition disabled:opacity-30 disabled:cursor-not-allowed"
                             title="Editar lançamento"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
-                            disabled={!!tx.parcelamentoId || tx.tipo === 'LIQUIDACAO'}
+                            disabled={!!tx.parcelamentoId || tx.tipo === 'LIQUIDACAO' || tx.tipo === 'AMORTIZACAO'}
                             onClick={() => setDeleteModalTx(tx)}
                             className="p-1 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 rounded cursor-pointer transition disabled:opacity-30 disabled:cursor-not-allowed"
                             title="Excluir logicamente com auditoria"
