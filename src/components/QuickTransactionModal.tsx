@@ -76,7 +76,8 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({
       alert('Selecione um cartão de crédito ativo.');
       return;
     }
-    if (tipo !== 'TRANSFERENCIA' && !availableCategories.some((category) => category.id === categoriaId)) {
+    const selectedCategoryId = availableCategories.some((category) => category.id === categoriaId) ? categoriaId : (availableCategories[0]?.id || '');
+    if (tipo !== 'TRANSFERENCIA' && !selectedCategoryId) {
       alert('Selecione uma categoria válida.');
       return;
     }
@@ -84,12 +85,12 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({
     const competencia = data.substring(0, 7);
 
     try {
-    onSaveTransaction({
+      onSaveTransaction({
       data,
       competencia,
       descricao: descricao.trim(),
       tipo,
-      categoriaId: tipo === 'TRANSFERENCIA' ? 'cat-desp-12' : categoriaId,
+      categoriaId: tipo === 'TRANSFERENCIA' ? 'cat-desp-12' : selectedCategoryId,
       contaId: targetType === 'CONTA' || tipo === 'TRANSFERENCIA' ? contaId : undefined,
       contaDestinoId: tipo === 'TRANSFERENCIA' ? contaDestinoId : undefined,
       cartaoId: targetType === 'CARTAO' && tipo === 'DESPESA' ? cartaoId : undefined,
@@ -98,8 +99,7 @@ export const QuickTransactionModal: React.FC<QuickTransactionModalProps> = ({
       status,
       observacoes: observacoes.trim() || undefined,
       origem: 'MANUAL',
-    });
-
+      });
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Não foi possível gravar o lançamento.');
       return;
