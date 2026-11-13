@@ -982,7 +982,7 @@ class StorageService {
     let interest: Transaction | undefined;
     if (interestCentavos > 0) {
       interest = this.addTransaction({
-        data: date, competencia, descricao: `Juros do pagamento — ${debt.credor}`,
+        data: date, competencia: competence, descricao: `Juros do pagamento — ${debt.credor}`,
         tipo: 'DESPESA', categoriaId: interestCategoryId, contaId: accountId,
         formaPagamento: 'DEBITO', valorCentavos: interestCentavos, status: 'REALIZADO',
         origem: 'SISTEMA', debtId, idExterno: `debt-payment:${paymentId}:interest`,
