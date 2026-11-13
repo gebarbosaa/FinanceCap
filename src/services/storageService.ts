@@ -357,10 +357,13 @@ class StorageService {
       if (invoiceIndex >= 0) {
         const invoice = nextInvoices[invoiceIndex];
         if (invoice.status === 'PAGA' || invoice.status === 'CANCELADA') throw new Error('Não é possível excluir uma compra de uma fatura paga ou cancelada.');
+        if (invoice.valorTotalCentavos - previous.valorCentavos < invoice.valorPagoCentavos) {
+          throw new Error('Não é possível excluir esta compra porque a fatura já possui pagamentos vinculados.');
+        }
         nextInvoices[invoiceIndex] = {
           ...invoice,
-          valorTotalCentavos: Math.max(invoice.valorPagoCentavos, invoice.valorTotalCentavos - previous.valorCentavos),
-          saldoRestanteCentavos: Math.max(0, invoice.saldoRestanteCentavos - previous.valorCentavos),
+          valorTotalCentavos: invoice.valorTotalCentavos - previous.valorCentavos,
+          saldoRestanteCentavos: invoice.saldoRestanteCentavos - previous.valorCentavos,
         };
       }
     }
