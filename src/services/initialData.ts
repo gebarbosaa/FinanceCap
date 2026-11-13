@@ -27,6 +27,7 @@ export const INITIAL_SETTINGS: SystemSettings = {
   reservaEmergenciaMetaCentavos: 9000000, // R$ 90.000,00
   alertaVencimentoDias: 5,
   autoBackupDrive: true,
+  waterGoalMl: 2000,
 };
 
 export const INITIAL_ACCOUNTS: Account[] = [
