@@ -31,6 +31,7 @@ interface CardsViewProps {
   installments: InstallmentPlan[];
   onPayInvoice: (invoiceId: string, contaId: string, valorCentavos: number) => { success: boolean; message: string };
   onAddCard: (card: Omit<CreditCard, 'id'>) => void;
+  onUpdateCard: (cardId: string, updates: Partial<Omit<CreditCard, 'id'>>) => void;
 }
 
 export const CardsView: React.FC<CardsViewProps> = ({
@@ -42,6 +43,7 @@ export const CardsView: React.FC<CardsViewProps> = ({
   installments,
   onPayInvoice,
   onAddCard,
+  onUpdateCard,
 }) => {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [expandedInvoiceId, setExpandedInvoiceId] = useState<string | null>(null);
@@ -157,6 +159,19 @@ export const CardsView: React.FC<CardsViewProps> = ({
             : 0;
           const openInvoices = invoices.filter((i) => i.cartaoId === card.id && i.status !== 'PAGA');
 
+          const editCard = () => {
+            const nome = window.prompt('Nome do cartão:', card.nome);
+            if (nome === null) return;
+            const instituicao = window.prompt('Instituição:', card.instituicao);
+            if (instituicao === null) return;
+            const limite = window.prompt('Limite total em reais:', (card.limiteTotalCentavos / 100).toFixed(2).replace('.', ','));
+            if (limite === null) return;
+            const limiteCentavos = parseToCentavos(limite);
+            if (!nome.trim() || !instituicao.trim() || !Number.isSafeInteger(limiteCentavos) || limiteCentavos <= 0) { window.alert('Dados inválidos.'); return; }
+            try { onUpdateCard(card.id, { nome: nome.trim(), instituicao: instituicao.trim(), limiteTotalCentavos: limiteCentavos }); }
+            catch (error) { window.alert(error instanceof Error ? error.message : 'Não foi possível atualizar o cartão.'); }
+          };
+
           return (
             <div
               key={card.id}
@@ -171,6 +186,10 @@ export const CardsView: React.FC<CardsViewProps> = ({
                       {card.instituicao} • {card.bandeira}
                     </span>
                     <h3 className="text-lg font-black tracking-tight">{card.nome}</h3>
+                    <div className="mt-2 flex gap-2">
+                      <button type="button" onClick={editCard} className="rounded-lg border border-white/30 bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white">Editar</button>
+                      <button type="button" onClick={() => { try { onUpdateCard(card.id, { ativo: !card.ativo }); } catch (error) { window.alert(error instanceof Error ? error.message : 'Não foi possível alterar o cartão.'); } }} className="rounded-lg border border-white/30 bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white">{card.ativo ? 'Bloquear' : 'Reativar'}</button>
+                    </div>
                   </div>
                   <span className="px-2.5 py-1 text-[10px] font-bold bg-white/10 rounded-lg backdrop-blur">
                     {card.ativo ? 'ATIVO' : 'BLOQUEADO'}
