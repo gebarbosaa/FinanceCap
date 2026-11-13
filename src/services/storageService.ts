@@ -634,6 +634,84 @@ class StorageService {
     return true;
   }
 
+  public addRecurrence(recurrence: Omit<Recurrence, 'id'>): Recurrence {
+    if (!recurrence.descricao.trim() || !Number.isSafeInteger(recurrence.valorCentavos) || recurrence.valorCentavos <= 0) throw new Error('Informe descrição e valor positivo para a recorrência.');
+    if (!this.data.categories.some((item) => item.id === recurrence.categoriaId && item.tipo === recurrence.tipo && item.ativo !== false)) throw new Error('Selecione uma categoria ativa compatível.');
+    if (!Number.isInteger(recurrence.diaVencimento) || recurrence.diaVencimento < 1 || recurrence.diaVencimento > 31) throw new Error('O dia da recorrência deve estar entre 1 e 31.');
+    if (recurrence.cartaoId) {
+      if (recurrence.tipo !== 'DESPESA' || !this.data.cards.some((item) => item.id === recurrence.cartaoId && item.ativo)) throw new Error('Selecione um cartão ativo para a despesa recorrente.');
+    } else if (!recurrence.contaId || !this.data.accounts.some((item) => item.id === recurrence.contaId && item.ativo)) {
+      throw new Error('Selecione uma conta bancária ativa.');
+    }
+    const created: Recurrence = { ...recurrence, descricao: recurrence.descricao.trim(), id: `rec-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, idempotencyHash: recurrence.idempotencyHash || `rec-${Date.now()}-${Math.random().toString(36).slice(2, 8)}` };
+    this.data.recurrences = [...this.data.recurrences, created];
+    this.logAudit('CRIAR', 'RECORRÊNCIAS', created.id, `Cadastro da recorrência ${created.descricao}`, undefined, JSON.stringify(created));
+    this.persist({ ...this.data });
+    return created;
+  }
+
+  public setRecurrenceActive(recurrenceId: string, active: boolean): Recurrence {
+    const index = this.data.recurrences.findIndex((item) => item.id === recurrenceId);
+    if (index < 0) throw new Error('Recorrência não encontrada.');
+    const previous = this.data.recurrences[index];
+    const next = { ...previous, ativo: active };
+    this.data.recurrences[index] = next;
+    this.logAudit('EDITAR', 'RECORRÊNCIAS', recurrenceId, active ? 'Recorrência ativada' : 'Recorrência pausada', JSON.stringify(previous), JSON.stringify(next));
+    this.persist({ ...this.data });
+    return next;
+  }
+
+  public generateRecurringTransactions(competencia: string): Transaction[] {
+    if (!/^\\d{4}-(0[1-9]|1[0-2])$/.test(competencia)) throw new Error('Competência inválida.');
+    const [year, month] = competencia.split('-').map(Number);
+    const monthDays = new Date(year, month, 0).getDate();
+    const generated: Transaction[] = [];
+    const intervalByFrequency: Record<Recurrence['frequencia'], number> = { DIARIA: 1, SEMANAL: 1, MENSAL: 1, TRIMESTRAL: 3, SEMESTRAL: 6, ANUAL: 12 };
+    for (const recurrence of [...this.data.recurrences]) {
+      if (!recurrence.ativo) continue;
+      const interval = intervalByFrequency[recurrence.frequencia];
+      if (recurrence.ultimaGeracaoCompetencia) {
+        const [lastYear, lastMonth] = recurrence.ultimaGeracaoCompetencia.split('-').map(Number);
+        const elapsed = (year - lastYear) * 12 + month - lastMonth;
+        if (elapsed < interval) continue;
+      }
+      const dates: string[] = [];
+      if (recurrence.frequencia === 'DIARIA') {
+        for (let day = 1; day <= monthDays; day++) dates.push(`${competencia}-${String(day).padStart(2, '0')}`);
+      } else if (recurrence.frequencia === 'SEMANAL') {
+        for (let day = Math.min(recurrence.diaVencimento, monthDays); day <= monthDays; day += 7) dates.push(`${competencia}-${String(day).padStart(2, '0')}`);
+      } else {
+        dates.push(`${competencia}-${String(Math.min(recurrence.diaVencimento, monthDays)).padStart(2, '0')}`);
+      }
+      for (const date of dates) {
+        const idExterno = `${recurrence.id}:${date}`;
+        if (this.data.transactions.some((tx) => !tx.isDeleted && tx.idExterno === idExterno)) continue;
+        const transaction = this.addTransaction({
+          data: date,
+          competencia,
+          descricao: recurrence.descricao,
+          tipo: recurrence.tipo,
+          categoriaId: recurrence.categoriaId,
+          contaId: recurrence.cartaoId ? undefined : recurrence.contaId,
+          cartaoId: recurrence.cartaoId,
+          formaPagamento: recurrence.cartaoId ? 'CARTAO_CREDITO' : 'DEBITO',
+          valorCentavos: recurrence.valorCentavos,
+          status: 'PENDENTE',
+          origem: 'RECORRENCIA',
+          idExterno,
+        }, 'Geração de lançamento recorrente');
+        generated.push(transaction);
+      }
+      const index = this.data.recurrences.findIndex((item) => item.id === recurrence.id);
+      if (index >= 0) this.data.recurrences[index] = { ...this.data.recurrences[index], ultimaGeracaoCompetencia: competencia };
+    }
+    if (generated.length > 0) {
+      this.logAudit('CRIAR', 'RECORRÊNCIAS', competencia, `Geração de ${generated.length} lançamento(s) para ${competencia}`);
+      this.persist({ ...this.data });
+    }
+    return generated;
+  }
+
   // Persist budget changes by competence/category without creating duplicates.
   public upsertBudget(budget: Budget): Budget {
     if (!Number.isInteger(budget.valorPlanejadoCentavos) || budget.valorPlanejadoCentavos <= 0) {
@@ -830,7 +908,8 @@ class StorageService {
   }
 
   public addDebt(debt: Omit<Debt, 'id'>): Debt {
-    const created: Debt = { ...debt, id: `debt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` };
+    if (!debt.credor.trim() || !Number.isSafeInteger(debt.principalContratadoCentavos) || debt.principalContratadoCentavos <= 0 || !Number.isSafeInteger(debt.saldoDevedorCentavos) || debt.saldoDevedorCentavos < 0 || debt.saldoDevedorCentavos > debt.principalContratadoCentavos || !Number.isSafeInteger(debt.valorParcelaCentavos) || debt.valorParcelaCentavos <= 0 || !Number.isInteger(debt.parcelasTotais) || debt.parcelasTotais < 1 || !Number.isInteger(debt.parcelasRestantes) || debt.parcelasRestantes < 0 || debt.parcelasRestantes > debt.parcelasTotais || !Number.isFinite(debt.taxaJurosMensalPercentual) || debt.taxaJurosMensalPercentual < 0 || !isValidISODate(debt.proximoVencimento)) throw new Error('Dados da dívida inválidos. Confira valores, parcelas, juros e vencimento.');
+    const created: Debt = { ...debt, credor: debt.credor.trim(), id: `debt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` };
     this.data.debts = [...this.data.debts, created];
     this.logAudit('CRIAR', 'DÍVIDAS', created.id, `Cadastro da dívida ${created.credor}`, undefined, JSON.stringify(created));
     this.persist({ ...this.data });
