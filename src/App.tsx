@@ -310,6 +310,9 @@ export default function App() {
               recurrences={data.recurrences}
               currentCompetencia={currentCompetencia}
               onUpdateBudget={(bgt) => storageService.upsertBudget(bgt)}
+              onAddRecurrence={(recurrence) => storageService.addRecurrence(recurrence)}
+              onToggleRecurrence={(id, active) => storageService.setRecurrenceActive(id, active)}
+              onGenerateRecurrences={(competencia) => storageService.generateRecurringTransactions(competencia).length}
             />
           )}
 
