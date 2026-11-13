@@ -18,6 +18,7 @@ import {
   CheckCircle2,
   Settings,
   Tags,
+  Droplets,
   ChevronRight,
 } from 'lucide-react';
 
@@ -39,7 +40,8 @@ export type ActiveTab =
   | 'audit'
   | 'tests'
   | 'settings'
-  | 'categories';
+  | 'categories'
+  | 'water';
 
 import { User } from 'firebase/auth';
 import { GoogleLogo } from './GoogleAuthButton';
@@ -84,6 +86,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'accounts', label: 'Contas bancárias', icon: <Wallet className="w-4 h-4" /> },
     { id: 'installments', label: 'Parcelamentos', icon: <Layers className="w-4 h-4" /> },
     { id: 'conciliation', label: 'Conciliação CSV', icon: <UploadCloud className="w-4 h-4" /> },
+    { id: 'water', label: 'Controle de água', icon: <Droplets className="w-4 h-4 text-orange-500" /> },
 
     { section: 'PLANEJAMENTO & ESTRATÉGIA', id: 'planning', label: 'Orçamento & 12 Meses', icon: <CalendarDays className="w-4 h-4" /> },
     { id: 'simulator', label: 'Simulador Financeiro', icon: <Calculator className="w-4 h-4" /> },
