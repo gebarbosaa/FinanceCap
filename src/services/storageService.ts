@@ -223,51 +223,150 @@ class StorageService {
 
   // Transactions CRUD
   public addTransaction(tx: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>, reason: string = 'Inclusão de lançamento'): Transaction {
+    if (!Number.isSafeInteger(tx.valorCentavos) || tx.valorCentavos <= 0) throw new Error('O valor deve ser positivo e informado em centavos inteiros.');
+    if (!tx.descricao.trim()) throw new Error('Informe a descrição do lançamento.');
+    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(tx.data)) throw new Error('Informe uma data válida.');
+    if (tx.tipo === 'TRANSFERENCIA') {
+      if (!tx.contaId || !tx.contaDestinoId) throw new Error('Selecione as contas de origem e destino.');
+      if (tx.contaId === tx.contaDestinoId) throw new Error('A conta de origem e a conta de destino devem ser diferentes.');
+      if (!this.data.accounts.some((account) => account.id === tx.contaId && account.ativo) ||
+          !this.data.accounts.some((account) => account.id === tx.contaDestinoId && account.ativo)) {
+        throw new Error('As contas da transferência precisam estar ativas.');
+      }
+    }
+    if (tx.tipo === 'DESPESA' && tx.cartaoId) {
+      const card = this.data.cards.find((item) => item.id === tx.cartaoId && item.ativo);
+      if (!card) throw new Error('Selecione um cartão de crédito ativo.');
+      const [year, month, day] = tx.data.split('-').map(Number);
+      const competence = day > card.diaFechamento
+        ? addMonthsToCompetencia(`${year}-${String(month).padStart(2, '0')}`, 1)
+        : `${year}-${String(month).padStart(2, '0')}`;
+      tx = { ...tx, competencia: competence, formaPagamento: 'CARTAO_CREDITO' };
+    } else if (tx.tipo !== 'TRANSFERENCIA') {
+      if (!tx.contaId || !this.data.accounts.some((account) => account.id === tx.contaId && account.ativo)) {
+        throw new Error('Selecione uma conta bancária ativa.');
+      }
+    }
+    if (tx.tipo === 'DESPESA' || tx.tipo === 'RECEITA') {
+      if (!this.data.categories.some((category) => category.id === tx.categoriaId && category.tipo === tx.tipo && category.ativo !== false)) {
+        throw new Error('Selecione uma categoria ativa compatível com o lançamento.');
+      }
+    }
+
+    let preparedTx = { ...tx };
+    let nextInvoices = [...this.data.invoices];
+    if (preparedTx.tipo === 'DESPESA' && preparedTx.cartaoId && preparedTx.status !== 'CANCELADO' && preparedTx.status !== 'ESTORNADO') {
+      const card = this.data.cards.find((item) => item.id === preparedTx.cartaoId)!;
+      let invoice = nextInvoices.find((item) => item.cartaoId === card.id && item.competencia === preparedTx.competencia);
+      if (invoice && (invoice.status === 'PAGA' || invoice.status === 'CANCELADA')) {
+        throw new Error('A fatura desta competência já está paga ou cancelada. Confira a data da compra.');
+      }
+      if (!invoice) {
+        const [year, month] = preparedTx.competencia.split('-').map(Number);
+        const closeDay = Math.min(card.diaFechamento, new Date(year, month, 0).getDate());
+        const dueOffset = card.diaVencimento <= card.diaFechamento ? 1 : 0;
+        const dueBase = new Date(year, month - 1 + dueOffset, 1);
+        const dueYear = dueBase.getFullYear();
+        const dueMonth = dueBase.getMonth() + 1;
+        const dueDay = Math.min(card.diaVencimento, new Date(dueYear, dueMonth, 0).getDate());
+        invoice = {
+          id: `invoice-${card.id}-${preparedTx.competencia}`,
+          cartaoId: card.id,
+          competencia: preparedTx.competencia,
+          dataFechamento: `${year}-${String(month).padStart(2, '0')}-${String(closeDay).padStart(2, '0')}`,
+          dataVencimento: `${dueYear}-${String(dueMonth).padStart(2, '0')}-${String(dueDay).padStart(2, '0')}`,
+          valorTotalCentavos: 0,
+          valorPagoCentavos: 0,
+          saldoRestanteCentavos: 0,
+          status: 'ABERTA',
+        };
+        nextInvoices.push(invoice);
+      }
+      preparedTx = { ...preparedTx, faturaId: invoice.id };
+      const invoiceIndex = nextInvoices.findIndex((item) => item.id === invoice!.id);
+      nextInvoices[invoiceIndex] = {
+        ...nextInvoices[invoiceIndex],
+        valorTotalCentavos: nextInvoices[invoiceIndex].valorTotalCentavos + preparedTx.valorCentavos,
+        saldoRestanteCentavos: nextInvoices[invoiceIndex].saldoRestanteCentavos + preparedTx.valorCentavos,
+      };
+    }
+
+    const now = new Date().toISOString();
     const newTx: Transaction = {
-      ...tx,
+      ...preparedTx,
       id: `tx-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
       isDeleted: false,
     };
-
     this.data.transactions = [newTx, ...this.data.transactions];
+    this.data.invoices = nextInvoices;
     this.logAudit('CRIAR', 'LANÇAMENTOS', newTx.id, reason, undefined, JSON.stringify(newTx));
     this.persist({ ...this.data });
     return newTx;
   }
 
   public updateTransaction(txId: string, updates: Partial<Transaction>, reason: string = 'Edição de lançamento'): Transaction | null {
-    const idx = this.data.transactions.findIndex((t) => t.id === txId);
+    const idx = this.data.transactions.findIndex((t) => t.id === txId && !t.isDeleted);
     if (idx === -1) return null;
-
     const previous = this.data.transactions[idx];
-    const updated: Transaction = {
-      ...previous,
-      ...updates,
-      updatedAt: new Date().toISOString(),
-    };
+    if (previous.parcelamentoId || previous.tipo === 'LIQUIDACAO') throw new Error('Parcelas geradas e liquidações de fatura devem ser alteradas pelo módulo de origem.');
+    const updated: Transaction = { ...previous, ...updates, updatedAt: new Date().toISOString() };
+    if (!Number.isSafeInteger(updated.valorCentavos) || updated.valorCentavos <= 0) throw new Error('O valor deve ser positivo e informado em centavos inteiros.');
+    if (!updated.descricao.trim()) throw new Error('A descrição não pode ficar vazia.');
+    if (updated.tipo === 'TRANSFERENCIA' && (!updated.contaId || !updated.contaDestinoId || updated.contaId === updated.contaDestinoId)) {
+      throw new Error('Uma transferência exige duas contas diferentes.');
+    }
 
+    const nextInvoices = [...this.data.invoices];
+    if (previous.faturaId) {
+      const invoiceIndex = nextInvoices.findIndex((item) => item.id === previous.faturaId);
+      if (invoiceIndex >= 0) {
+        const invoice = nextInvoices[invoiceIndex];
+        const wasIncluded = !previous.isDeleted && previous.status !== 'CANCELADO' && previous.status !== 'ESTORNADO';
+        const willBeIncluded = !updated.isDeleted && updated.status !== 'CANCELADO' && updated.status !== 'ESTORNADO';
+        const delta = (willBeIncluded ? updated.valorCentavos : 0) - (wasIncluded ? previous.valorCentavos : 0);
+        if (delta !== 0 && (invoice.status === 'PAGA' || invoice.status === 'CANCELADA')) {
+          throw new Error('Não é possível alterar o valor de uma compra vinculada a uma fatura paga ou cancelada.');
+        }
+        if (invoice.valorTotalCentavos + delta < invoice.valorPagoCentavos) {
+          throw new Error('O novo valor deixaria o total da fatura menor que o valor já pago.');
+        }
+        nextInvoices[invoiceIndex] = {
+          ...invoice,
+          valorTotalCentavos: invoice.valorTotalCentavos + delta,
+          saldoRestanteCentavos: invoice.saldoRestanteCentavos + delta,
+        };
+      }
+    }
     this.data.transactions[idx] = updated;
+    this.data.invoices = nextInvoices;
     this.logAudit('EDITAR', 'LANÇAMENTOS', txId, reason, JSON.stringify(previous), JSON.stringify(updated));
     this.persist({ ...this.data });
     return updated;
   }
 
   public deleteTransaction(txId: string, reason: string = 'Exclusão lógica'): boolean {
-    const idx = this.data.transactions.findIndex((t) => t.id === txId);
+    const idx = this.data.transactions.findIndex((t) => t.id === txId && !t.isDeleted);
     if (idx === -1) return false;
-
     const previous = this.data.transactions[idx];
-    // Logical deletion: never erase silently
-    const updated: Transaction = {
-      ...previous,
-      isDeleted: true,
-      status: 'CANCELADO',
-      updatedAt: new Date().toISOString(),
-    };
-
+    if (previous.parcelamentoId || previous.tipo === 'LIQUIDACAO') throw new Error('Parcelas geradas e liquidações de fatura não podem ser excluídas individualmente.');
+    const nextInvoices = [...this.data.invoices];
+    if (previous.faturaId && previous.status !== 'CANCELADO' && previous.status !== 'ESTORNADO') {
+      const invoiceIndex = nextInvoices.findIndex((item) => item.id === previous.faturaId);
+      if (invoiceIndex >= 0) {
+        const invoice = nextInvoices[invoiceIndex];
+        if (invoice.status === 'PAGA' || invoice.status === 'CANCELADA') throw new Error('Não é possível excluir uma compra de uma fatura paga ou cancelada.');
+        nextInvoices[invoiceIndex] = {
+          ...invoice,
+          valorTotalCentavos: Math.max(invoice.valorPagoCentavos, invoice.valorTotalCentavos - previous.valorCentavos),
+          saldoRestanteCentavos: Math.max(0, invoice.saldoRestanteCentavos - previous.valorCentavos),
+        };
+      }
+    }
+    const updated: Transaction = { ...previous, isDeleted: true, status: 'CANCELADO', updatedAt: new Date().toISOString() };
     this.data.transactions[idx] = updated;
+    this.data.invoices = nextInvoices;
     this.logAudit('EXCLUIR_LOGICA', 'LANÇAMENTOS', txId, reason, JSON.stringify(previous), 'isDeleted: true');
     this.persist({ ...this.data });
     return true;
