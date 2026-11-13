@@ -149,9 +149,13 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
       alert('Por favor, informe a justificativa obrigatória para exclusão lógica.');
       return;
     }
-    onDeleteTransaction(deleteModalTx.id, deleteReason);
-    setDeleteModalTx(null);
-    setDeleteReason('');
+    try {
+      onDeleteTransaction(deleteModalTx.id, deleteReason);
+      setDeleteModalTx(null);
+      setDeleteReason('');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Não foi possível excluir o lançamento.');
+    }
   };
 
   return (
