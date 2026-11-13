@@ -13,6 +13,7 @@ import {
   Goal,
   AuditLog,
   SystemSettings,
+  WaterIntakeEntry,
 } from '../types/finance';
 import { INITIAL_SETTINGS, INITIAL_CATEGORIES } from './initialData';
 
@@ -37,6 +38,7 @@ export interface StorageData {
   investments: Investment[];
   goals: Goal[];
   audit: AuditLog[];
+  waterEntries: WaterIntakeEntry[];
 }
 
 class StorageService {
@@ -75,6 +77,7 @@ class StorageService {
             investments: Array.isArray(parsed.investments) ? parsed.investments : [],
             goals: Array.isArray(parsed.goals) ? parsed.goals : [],
             audit: Array.isArray(parsed.audit) ? parsed.audit : [],
+            waterEntries: Array.isArray(parsed.waterEntries) ? parsed.waterEntries : [],
           };
           return normalized;
         }
@@ -99,6 +102,7 @@ class StorageService {
       investments: [],
       goals: [],
       audit: [],
+      waterEntries: [],
     };
     this.persist(defaultData);
     return defaultData;
@@ -786,6 +790,7 @@ class StorageService {
       patrimony: [],
       investments: [],
       goals: [],
+      waterEntries: [],
       audit: [
         {
           id: `aud-${Date.now()}`,
@@ -810,7 +815,7 @@ class StorageService {
 
     const requiredCollections: Array<keyof Omit<StorageData, 'settings'>> = [
       'accounts', 'categories', 'cards', 'transactions', 'invoices', 'installments',
-      'recurrences', 'budgets', 'debts', 'patrimony', 'investments', 'goals', 'audit',
+      'recurrences', 'budgets', 'debts', 'patrimony', 'investments', 'goals', 'audit', 'waterEntries',
     ];
     const missing = requiredCollections.filter((key) => !Array.isArray(imported[key]));
     if (missing.length > 0) {
