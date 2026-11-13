@@ -4,7 +4,8 @@ export type TransactionType =
   | 'TRANSFERENCIA' 
   | 'AJUSTE' 
   | 'ESTORNO' 
-  | 'LIQUIDACAO';
+  | 'LIQUIDACAO' 
+  | 'AMORTIZACAO';
 
 export type TransactionStatus = 
   | 'PREVISTO' 
@@ -118,6 +119,7 @@ export interface Transaction {
   valorCentavos: number; // strictly positive integer cents
   status: TransactionStatus;
   recorrenciaId?: string;
+  debtId?: string;
   parcelamentoId?: string;
   parcelaNumero?: number;
   totalParcelas?: number;
