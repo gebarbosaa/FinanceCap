@@ -315,34 +315,105 @@ class StorageService {
     if (idx === -1) return null;
     const previous = this.data.transactions[idx];
     if (previous.parcelamentoId || previous.tipo === 'LIQUIDACAO') throw new Error('Parcelas geradas e liquidações de fatura devem ser alteradas pelo módulo de origem.');
+
     const updated: Transaction = { ...previous, ...updates, updatedAt: new Date().toISOString() };
     if (!Number.isSafeInteger(updated.valorCentavos) || updated.valorCentavos <= 0) throw new Error('O valor deve ser positivo e informado em centavos inteiros.');
     if (!updated.descricao.trim()) throw new Error('A descrição não pode ficar vazia.');
-    if (updated.tipo === 'TRANSFERENCIA' && (!updated.contaId || !updated.contaDestinoId || updated.contaId === updated.contaDestinoId)) {
-      throw new Error('Uma transferência exige duas contas diferentes.');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(updated.data) || Number.isNaN(new Date(`${updated.data}T12:00:00`).getTime())) {
+      throw new Error('Informe uma data válida.');
+    }
+
+    if (updated.tipo === 'TRANSFERENCIA') {
+      if (!updated.contaId || !updated.contaDestinoId || updated.contaId === updated.contaDestinoId) {
+        throw new Error('Uma transferência exige contas de origem e destino diferentes.');
+      }
+      if (!this.data.accounts.some((account) => account.id === updated.contaId && account.ativo) ||
+          !this.data.accounts.some((account) => account.id === updated.contaDestinoId && account.ativo)) {
+        throw new Error('As duas contas da transferência precisam estar ativas.');
+      }
+      updated.cartaoId = undefined;
+      updated.faturaId = undefined;
+    } else if (updated.tipo === 'DESPESA' && updated.cartaoId) {
+      const card = this.data.cards.find((item) => item.id === updated.cartaoId && item.ativo);
+      if (!card) throw new Error('Selecione um cartão ativo.');
+      const [year, month, day] = updated.data.split('-').map(Number);
+      const monthCompetence = `${year}-${String(month).padStart(2, '0')}`;
+      updated.competencia = day > card.diaFechamento ? addMonthsToCompetencia(monthCompetence, 1) : monthCompetence;
+      updated.formaPagamento = 'CARTAO_CREDITO';
+      updated.contaId = undefined;
+    } else {
+      if (!updated.contaId || !this.data.accounts.some((account) => account.id === updated.contaId && account.ativo)) {
+        throw new Error('Selecione uma conta bancária ativa.');
+      }
+      updated.cartaoId = undefined;
+      updated.faturaId = undefined;
+      if (updated.tipo !== 'TRANSFERENCIA') updated.contaDestinoId = undefined;
+    }
+
+    if (updated.tipo === 'DESPESA' || updated.tipo === 'RECEITA') {
+      if (!this.data.categories.some((category) => category.id === updated.categoriaId && category.tipo === updated.tipo && category.ativo !== false)) {
+        throw new Error('Selecione uma categoria ativa compatível com o lançamento.');
+      }
     }
 
     const nextInvoices = [...this.data.invoices];
-    if (previous.faturaId) {
-      const invoiceIndex = nextInvoices.findIndex((item) => item.id === previous.faturaId);
-      if (invoiceIndex >= 0) {
-        const invoice = nextInvoices[invoiceIndex];
-        const wasIncluded = !previous.isDeleted && previous.status !== 'CANCELADO' && previous.status !== 'ESTORNADO';
-        const willBeIncluded = !updated.isDeleted && updated.status !== 'CANCELADO' && updated.status !== 'ESTORNADO';
-        const delta = (willBeIncluded ? updated.valorCentavos : 0) - (wasIncluded ? previous.valorCentavos : 0);
-        if (delta !== 0 && (invoice.status === 'PAGA' || invoice.status === 'CANCELADA')) {
-          throw new Error('Não é possível alterar o valor de uma compra vinculada a uma fatura paga ou cancelada.');
-        }
-        if (invoice.valorTotalCentavos + delta < invoice.valorPagoCentavos) {
-          throw new Error('O novo valor deixaria o total da fatura menor que o valor já pago.');
-        }
-        nextInvoices[invoiceIndex] = {
-          ...invoice,
-          valorTotalCentavos: invoice.valorTotalCentavos + delta,
-          saldoRestanteCentavos: invoice.saldoRestanteCentavos + delta,
+    let targetInvoiceId: string | undefined;
+    if (updated.tipo === 'DESPESA' && updated.cartaoId) {
+      const card = this.data.cards.find((item) => item.id === updated.cartaoId)!;
+      let targetInvoice = nextInvoices.find((item) => item.cartaoId === card.id && item.competencia === updated.competencia);
+      if (!targetInvoice) {
+        const [year, month] = updated.competencia.split('-').map(Number);
+        const closeDay = Math.min(card.diaFechamento, new Date(year, month, 0).getDate());
+        const dueOffset = card.diaVencimento <= card.diaFechamento ? 1 : 0;
+        const dueBase = new Date(year, month - 1 + dueOffset, 1);
+        const dueYear = dueBase.getFullYear();
+        const dueMonth = dueBase.getMonth() + 1;
+        const dueDay = Math.min(card.diaVencimento, new Date(dueYear, dueMonth, 0).getDate());
+        targetInvoice = {
+          id: `invoice-${card.id}-${updated.competencia}`,
+          cartaoId: card.id,
+          competencia: updated.competencia,
+          dataFechamento: `${year}-${String(month).padStart(2, '0')}-${String(closeDay).padStart(2, '0')}`,
+          dataVencimento: `${dueYear}-${String(dueMonth).padStart(2, '0')}-${String(dueDay).padStart(2, '0')}`,
+          valorTotalCentavos: 0,
+          valorPagoCentavos: 0,
+          saldoRestanteCentavos: 0,
+          status: 'ABERTA',
         };
+        nextInvoices.push(targetInvoice);
       }
+      if (targetInvoice.status === 'PAGA' || targetInvoice.status === 'CANCELADA') {
+        if (previous.faturaId !== targetInvoice.id || previous.valorCentavos !== updated.valorCentavos || previous.status !== updated.status) {
+          throw new Error('A fatura de destino já está paga ou cancelada; não é possível mover ou alterar esta compra.');
+        }
+      }
+      targetInvoiceId = targetInvoice.id;
     }
+    updated.faturaId = targetInvoiceId;
+
+    const wasIncluded = !previous.isDeleted && previous.status !== 'CANCELADO' && previous.status !== 'ESTORNADO';
+    const willBeIncluded = !updated.isDeleted && updated.status !== 'CANCELADO' && updated.status !== 'ESTORNADO';
+    const invoiceDeltas = new Map<string, number>();
+    if (previous.faturaId && wasIncluded) invoiceDeltas.set(previous.faturaId, (invoiceDeltas.get(previous.faturaId) || 0) - previous.valorCentavos);
+    if (targetInvoiceId && willBeIncluded) invoiceDeltas.set(targetInvoiceId, (invoiceDeltas.get(targetInvoiceId) || 0) + updated.valorCentavos);
+
+    for (const [invoiceId, delta] of invoiceDeltas) {
+      if (delta === 0) continue;
+      const invoiceIndex = nextInvoices.findIndex((item) => item.id === invoiceId);
+      if (invoiceIndex < 0) throw new Error('A fatura vinculada não foi encontrada. Atualize os dados e tente novamente.');
+      const invoice = nextInvoices[invoiceIndex];
+      if (invoice.status === 'PAGA' || invoice.status === 'CANCELADA') {
+        throw new Error('Não é possível alterar uma compra vinculada a uma fatura paga ou cancelada.');
+      }
+      const nextTotal = invoice.valorTotalCentavos + delta;
+      if (nextTotal < invoice.valorPagoCentavos) throw new Error('O novo valor deixaria a fatura menor que o total já pago.');
+      nextInvoices[invoiceIndex] = {
+        ...invoice,
+        valorTotalCentavos: nextTotal,
+        saldoRestanteCentavos: nextTotal - invoice.valorPagoCentavos,
+      };
+    }
+
     this.data.transactions[idx] = updated;
     this.data.invoices = nextInvoices;
     this.logAudit('EDITAR', 'LANÇAMENTOS', txId, reason, JSON.stringify(previous), JSON.stringify(updated));
@@ -768,6 +839,56 @@ class StorageService {
     return newAcc;
   }
 
+  public addWaterIntake(amountMl: number, date: string): WaterIntakeEntry {
+    if (!Number.isSafeInteger(amountMl) || amountMl < 1 || amountMl > 5000) {
+      throw new Error('Informe uma quantidade entre 1 e 5.000 ml.');
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(new Date(`${date}T12:00:00`).getTime())) {
+      throw new Error('Informe uma data válida para o consumo de água.');
+    }
+    const entry: WaterIntakeEntry = {
+      id: `water-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      date,
+      amountMl,
+      createdAt: new Date().toISOString(),
+    };
+    const auditEntry: AuditLog = {
+      id: `aud-${Date.now()}-water`,
+      timestamp: new Date().toISOString(),
+      usuario: this.data.settings.nomeProprietario,
+      acao: 'CRIAR',
+      entidade: 'HIDRATACAO',
+      registroId: entry.id,
+      valorPosterior: JSON.stringify(entry),
+      motivo: `Registro de consumo de água: ${amountMl} ml.`,
+      origem: 'SISTEMA_WEB',
+    };
+    this.persist({ ...this.data, waterEntries: [entry, ...this.data.waterEntries], audit: [auditEntry, ...this.data.audit] });
+    return entry;
+  }
+
+  public deleteWaterIntake(entryId: string): boolean {
+    const entry = this.data.waterEntries.find((item) => item.id === entryId);
+    if (!entry) return false;
+    const auditEntry: AuditLog = {
+      id: `aud-${Date.now()}-water`,
+      timestamp: new Date().toISOString(),
+      usuario: this.data.settings.nomeProprietario,
+      acao: 'EXCLUIR_LOGICA',
+      entidade: 'HIDRATACAO',
+      registroId: entryId,
+      valorAnterior: JSON.stringify(entry),
+      motivo: 'Remoção de registro de consumo de água.',
+      origem: 'SISTEMA_WEB',
+    };
+    this.persist({
+      ...this.data,
+      waterEntries: this.data.waterEntries.filter((item) => item.id !== entryId),
+      audit: [auditEntry, ...this.data.audit],
+    });
+    return true;
+  }
+
   public updateSettings(settings: Partial<SystemSettings>) {
     this.data.settings = { ...this.data.settings, ...settings };
     this.logAudit('EDITAR', 'CONFIGURAÇÕES', 'settings', 'Atualização das configurações do sistema');
@@ -815,7 +936,7 @@ class StorageService {
 
     const requiredCollections: Array<keyof Omit<StorageData, 'settings'>> = [
       'accounts', 'categories', 'cards', 'transactions', 'invoices', 'installments',
-      'recurrences', 'budgets', 'debts', 'patrimony', 'investments', 'goals', 'audit', 'waterEntries',
+      'recurrences', 'budgets', 'debts', 'patrimony', 'investments', 'goals', 'audit',
     ];
     const missing = requiredCollections.filter((key) => !Array.isArray(imported[key]));
     if (missing.length > 0) {
