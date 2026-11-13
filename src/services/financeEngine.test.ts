@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { parseToCentavos } from './currency';
-import { calculateAccountBalance, calculateCardLimits, calculateFinancialSummary } from './financeEngine';
+import { calculateAccountBalance, calculateCardLimits, calculateFinancialSummary, generate12MonthProjection } from './financeEngine';
 import { runAll20MandatoryTests } from './testSuite';
-import type { Account, CreditCard, Invoice, InstallmentPlan, Transaction } from '../types/finance';
+import type { Account, CreditCard, Invoice, InstallmentPlan, Recurrence, Transaction } from '../types/finance';
 
 test('parseToCentavos reads Brazilian thousands and decimal separators', () => {
   assert.equal(parseToCentavos('R$ 1.234,56'), 123456);
@@ -313,4 +313,27 @@ test('debt principal amortization reduces cash but is excluded from ordinary exp
   assert.equal(calculateAccountBalance(account, [principal, interest]), 3500);
   const summary = calculateFinancialSummary([account], [], [principal, interest], [], [], [], [], [], settings, '2026-11');
   assert.equal(summary.despesasMesCentavos, 500);
+});
+
+
+test('12-month projection counts a generated recurrence once in the current month and projects future occurrences', () => {
+  const account: Account = {
+    id: 'rec-account', nome: 'Conta', instituicao: 'Banco', tipo: 'CONTA_CORRENTE',
+    saldoInicialCentavos: 100000, dataSaldoInicial: '2026-11-01', ativo: true,
+  };
+  const recurrence: Recurrence = {
+    id: 'rec-monthly', descricao: 'Aluguel', valorCentavos: 10000, tipo: 'DESPESA',
+    frequencia: 'MENSAL', diaVencimento: 5, categoriaId: 'rent', contaId: account.id,
+    ativo: true, ultimaGeracaoCompetencia: '2026-11', idempotencyHash: 'rent-monthly',
+  };
+  const generated: Transaction = {
+    id: 'rent-generated', data: '2026-11-05', competencia: '2026-11', descricao: 'Aluguel',
+    tipo: 'DESPESA', categoriaId: 'rent', contaId: account.id, formaPagamento: 'DEBITO',
+    valorCentavos: 10000, status: 'PENDENTE', origem: 'RECORRENCIA',
+    recorrenciaId: recurrence.id, idExterno: 'rec-monthly:2026-11-05',
+    createdAt: '2026-11-05T12:00:00.000Z', updatedAt: '2026-11-05T12:00:00.000Z',
+  };
+  const projection = generate12MonthProjection([account], [generated], [], [], '2026-11', [recurrence]);
+  assert.equal(projection[0].despesasFixasCentavos, 10000);
+  assert.equal(projection[1].despesasFixasCentavos, 10000);
 });
