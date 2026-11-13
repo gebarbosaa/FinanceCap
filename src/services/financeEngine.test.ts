@@ -225,7 +225,7 @@ test('calculateCardLimits counts exact cent values for generated installment row
   const rows: Transaction[] = [3334, 3334, 3333].map((amount, index) => ({
     id: `installment-row-${index + 1}`,
     data: '2026-11-10',
-    competencia: `2026-${String(index + 11).padStart(2, '0')}`,
+    competencia: ['2026-11', '2026-12', '2027-01'][index],
     descricao: `Compra (${index + 1}/3)`,
     tipo: 'DESPESA',
     categoriaId: 'expense',
