@@ -351,6 +351,24 @@ class StorageService {
     const updatedInstallments = fullyPaid
       ? this.data.installments.map((plan) => {
           if (plan.cartaoId !== inv.cartaoId || plan.parcelasFuturas <= 0) return plan;
+          const linkedPaidRows = this.data.transactions.filter(
+            (transaction) =>
+              transaction.parcelamentoId === plan.id &&
+              transaction.faturaId === inv.id &&
+              !transaction.isDeleted &&
+              transaction.status !== 'CANCELADO' &&
+              transaction.status !== 'ESTORNADO'
+          );
+          if (linkedPaidRows.length > 0) {
+            const paidAmount = linkedPaidRows.reduce((sum, transaction) => sum + transaction.valorCentavos, 0);
+            const paidCount = linkedPaidRows.length;
+            return {
+              ...plan,
+              parcelasPagas: Math.min(plan.totalParcelas, plan.parcelasPagas + paidCount),
+              parcelasFuturas: Math.max(0, plan.parcelasFuturas - paidCount),
+              saldoRestanteCentavos: Math.max(0, plan.saldoRestanteCentavos - paidAmount),
+            };
+          }
           const nextDueCompetencia = addMonthsToCompetencia(plan.primeiraCompetencia, plan.parcelasPagas);
           if (nextDueCompetencia !== inv.competencia) return plan;
           return {
