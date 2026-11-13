@@ -488,12 +488,8 @@ class StorageService {
     if (!category) throw new Error('Selecione uma categoria de despesa ativa.');
     if (!Number.isSafeInteger(plan.valorTotalCentavos) || plan.valorTotalCentavos <= 0) throw new Error('O valor total deve ser positivo e informado em centavos inteiros.');
     if (!Number.isInteger(plan.totalParcelas) || plan.totalParcelas < 2 || plan.totalParcelas > 48) throw new Error('A compra deve ter entre 2 e 48 parcelas.');
-    if (!/^\\d{4}-(0[1-9]|1[0-2])$/.test(plan.primeiraCompetencia)) throw new Error('A primeira competência da fatura é inválida.');
-    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(plan.dataCompra)) throw new Error('A data da compra é inválida.');
-    if (this.data.installments.some((item) => item.compraTransacaoId && item.compraTransacaoId === plan.compraTransacaoId)) {
-      throw new Error('Esta compra já foi cadastrada.');
-    }
-
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(plan.primeiraCompetencia)) throw new Error('A primeira competência da fatura é inválida.');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(plan.dataCompra)) throw new Error('A data da compra é inválida.');
     const planId = `inst-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const createdPlan: InstallmentPlan = {
       ...plan,
