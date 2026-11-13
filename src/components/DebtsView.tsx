@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Landmark, AlertCircle, Calculator, TrendingDown, ArrowRight, ShieldCheck, Check } from 'lucide-react';
 import { Debt } from '../types/finance';
-import { formatCurrency, formatDateBR } from '../services/currency';
+import { formatCurrency, formatDateBR, parseToCentavos } from '../services/currency';
 
 interface DebtsViewProps {
   debts: Debt[];
@@ -10,7 +10,23 @@ interface DebtsViewProps {
 
 export const DebtsView: React.FC<DebtsViewProps> = ({ debts, onAddDebt }) => {
   const [amortizeAmount, setAmortizeAmount] = useState<string>('20000');
-  const [selectedDebt, setSelectedDebt] = useState<Debt>(debts[0]);
+  const [selectedDebt, setSelectedDebt] = useState<Debt | undefined>(debts[0]);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ credor: '', tipo: 'EMPRESTIMO_PESSOAL' as Debt['tipo'], principal: '', saldo: '', juros: '0', parcelasTotais: '1', parcelasRestantes: '1', valorParcela: '', proximoVencimento: new Date().toISOString().slice(0, 10) });
+  const submitDebt = (event: React.FormEvent) => {
+    event.preventDefault();
+    const principal = parseToCentavos(form.principal);
+    const saldo = parseToCentavos(form.saldo || form.principal);
+    const parcela = parseToCentavos(form.valorParcela);
+    const total = Number(form.parcelasTotais);
+    const restantes = Number(form.parcelasRestantes);
+    const juros = Number(form.juros);
+    if (!form.credor.trim() || principal <= 0 || saldo < 0 || parcela <= 0 || !Number.isInteger(total) || total < 1 || !Number.isInteger(restantes) || restantes < 0 || restantes > total || !Number.isFinite(juros) || juros < 0 || !/^\\d{4}-\\d{2}-\\d{2}$/.test(form.proximoVencimento)) {
+      window.alert('Revise os dados da dívida.'); return;
+    }
+    onAddDebt({ credor: form.credor.trim(), tipo: form.tipo, principalContratadoCentavos: principal, saldoDevedorCentavos: saldo, taxaJurosMensalPercentual: juros, parcelasTotais: total, parcelasRestantes: restantes, valorParcelaCentavos: parcela, proximoVencimento: form.proximoVencimento, status: saldo === 0 ? 'QUITADO' : 'EM_DIA' });
+    setShowForm(false);
+  };
 
   // Simulation calculations
   const amortCentavos = Math.round((parseFloat(amortizeAmount) || 0) * 100);
@@ -52,6 +68,19 @@ export const DebtsView: React.FC<DebtsViewProps> = ({ debts, onAddDebt }) => {
         </div>
       </div>
 
+      <div className="flex justify-end"><button type="button" onClick={() => setShowForm(v => !v)} className="rounded-xl bg-orange-500 px-4 py-2 text-xs font-bold text-white">{showForm ? 'Fechar' : 'Adicionar dívida'}</button></div>
+      {showForm && <form onSubmit={submitDebt} className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <label className="text-xs font-semibold">Credor<input required value={form.credor} onChange={e => setForm({...form,credor:e.target.value})} className="mt-1 w-full rounded-lg border p-2 dark:bg-slate-700" /></label>
+        <label className="text-xs font-semibold">Tipo<select value={form.tipo} onChange={e => setForm({...form,tipo:e.target.value as Debt['tipo']})} className="mt-1 w-full rounded-lg border p-2 dark:bg-slate-700"><option value="EMPRESTIMO_PESSOAL">Empréstimo pessoal</option><option value="FINANCIAMENTO_IMOBILIARIO">Financiamento imobiliário</option><option value="FINANCIAMENTO_VEICULO">Financiamento de veículo</option><option value="CONSIGNADO">Consignado</option><option value="DIVIDA_PESSOAL">Dívida pessoal</option><option value="OUTRO">Outro</option></select></label>
+        <label className="text-xs font-semibold">Principal (R$)<input required value={form.principal} onChange={e => setForm({...form,principal:e.target.value})} className="mt-1 w-full rounded-lg border p-2 dark:bg-slate-700" /></label>
+        <label className="text-xs font-semibold">Saldo devedor (R$)<input value={form.saldo} onChange={e => setForm({...form,saldo:e.target.value})} className="mt-1 w-full rounded-lg border p-2 dark:bg-slate-700" placeholder="Igual ao principal" /></label>
+        <label className="text-xs font-semibold">Juros ao mês (%)<input type="number" min="0" step="0.01" value={form.juros} onChange={e => setForm({...form,juros:e.target.value})} className="mt-1 w-full rounded-lg border p-2 dark:bg-slate-700" /></label>
+        <label className="text-xs font-semibold">Parcela (R$)<input required value={form.valorParcela} onChange={e => setForm({...form,valorParcela:e.target.value})} className="mt-1 w-full rounded-lg border p-2 dark:bg-slate-700" /></label>
+        <label className="text-xs font-semibold">Total de parcelas<input type="number" min="1" value={form.parcelasTotais} onChange={e => setForm({...form,parcelasTotais:e.target.value})} className="mt-1 w-full rounded-lg border p-2 dark:bg-slate-700" /></label>
+        <label className="text-xs font-semibold">Restantes<input type="number" min="0" value={form.parcelasRestantes} onChange={e => setForm({...form,parcelasRestantes:e.target.value})} className="mt-1 w-full rounded-lg border p-2 dark:bg-slate-700" /></label>
+        <label className="text-xs font-semibold">Próximo vencimento<input type="date" required value={form.proximoVencimento} onChange={e => setForm({...form,proximoVencimento:e.target.value})} className="mt-1 w-full rounded-lg border p-2 dark:bg-slate-700" /></label>
+        <div className="sm:col-span-2 lg:col-span-3 flex justify-end"><button type="submit" className="rounded-xl bg-orange-500 px-5 py-2.5 text-xs font-bold text-white">Salvar dívida</button></div>
+      </form>}
       {/* Debts Table */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {debts.map((debt) => (
