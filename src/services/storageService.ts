@@ -334,7 +334,7 @@ class StorageService {
       updated.cartaoId = undefined;
       updated.faturaId = undefined;
     } else if (updated.tipo === 'DESPESA' && updated.cartaoId) {
-      const card = this.data.cards.find((item) => item.id === updated.cartaoId && item.ativo);
+      const card = this.data.cards.find((item) => item.id === updated.cartaoId);
       if (!card || (!card.ativo && updated.cartaoId !== previous.cartaoId)) throw new Error('Selecione um cartão ativo.');
       const [year, month, day] = updated.data.split('-').map(Number);
       const monthCompetence = `${year}-${String(month).padStart(2, '0')}`;
