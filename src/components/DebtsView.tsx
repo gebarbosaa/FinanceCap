@@ -6,9 +6,10 @@ import { formatCurrency, formatDateBR, parseToCentavos } from '../services/curre
 interface DebtsViewProps {
   debts: Debt[];
   onAddDebt: (debt: Omit<Debt, 'id'>) => void;
+  onUpdateDebt: (id: string, updates: Partial<Omit<Debt, 'id'>>) => void;
 }
 
-export const DebtsView: React.FC<DebtsViewProps> = ({ debts, onAddDebt }) => {
+export const DebtsView: React.FC<DebtsViewProps> = ({ debts, onAddDebt, onUpdateDebt }) => {
   const [amortizeAmount, setAmortizeAmount] = useState<string>('20000');
   const [selectedDebt, setSelectedDebt] = useState<Debt | undefined>(debts[0]);
   const [showForm, setShowForm] = useState(false);
@@ -102,9 +103,19 @@ export const DebtsView: React.FC<DebtsViewProps> = ({ debts, onAddDebt }) => {
                   {debt.credor}
                 </h3>
               </div>
-              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-lg">
-                {debt.status}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-lg">{debt.status}</span>
+                <button type="button" onClick={(event) => {
+                  event.stopPropagation();
+                  const creditor = window.prompt('Credor:', debt.credor);
+                  if (creditor === null || !creditor.trim()) return;
+                  const balanceText = window.prompt('Saldo devedor atual (R$):', (debt.saldoDevedorCentavos / 100).toFixed(2).replace('.', ','));
+                  if (balanceText === null) return;
+                  const balance = parseToCentavos(balanceText);
+                  if (!Number.isSafeInteger(balance) || balance < 0 || balance > debt.principalContratadoCentavos) { window.alert('Saldo inválido.'); return; }
+                  onUpdateDebt(debt.id, { credor: creditor.trim(), saldoDevedorCentavos: balance, status: balance === 0 ? 'QUITADO' : 'EM_DIA' });
+                }} className="rounded-md border px-2 py-1 text-[10px] font-bold text-orange-600">Editar</button>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-700/30 p-3 rounded-xl text-xs mb-3">
