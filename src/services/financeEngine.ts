@@ -32,7 +32,7 @@ export function calculateAccountBalance(
     if (tx.contaId === account.id) {
       if (tx.tipo === 'RECEITA') {
         balance += tx.valorCentavos;
-      } else if (tx.tipo === 'DESPESA' || tx.tipo === 'LIQUIDACAO') {
+      } else if (tx.tipo === 'DESPESA' || tx.tipo === 'LIQUIDACAO' || tx.tipo === 'AMORTIZACAO') {
         balance -= tx.valorCentavos;
       } else if (tx.tipo === 'AJUSTE') {
         // ajuste can be positive or handled according to direction
