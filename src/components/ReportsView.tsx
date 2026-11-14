@@ -84,7 +84,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ data, onOpenSheetsSync
                 onClick={() => setSelectedSheet(name)}
                 className={`text-xs px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer ${
                   selectedSheet === name
-                    ? 'bg-[#0B2545] text-white'
+                    ? 'bg-orange-500 text-white'
                     : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200'
                 }`}
               >

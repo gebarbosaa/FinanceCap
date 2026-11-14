@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Archive, Check, Edit3, Plus, Tags, X } from 'lucide-react';
 import { Category, Transaction } from '../types/finance';
+import { BRAND_CATEGORY_PALETTE, getBrandCategoryColor } from '../utils/brandPalette';
 
 interface Props {
   categories: Category[];
@@ -10,14 +11,14 @@ interface Props {
   onArchive: (id: string) => void;
 }
 
-const palette = ['#1F4E79', '#3B82F6', '#0D9488', '#10B981', '#D97706', '#EA580C', '#DB2777', '#8B5CF6', '#64748B'];
+const palette = [...BRAND_CATEGORY_PALETTE];
 
 export const CategoriesView: React.FC<Props> = ({ categories, transactions, onAdd, onUpdate, onArchive }) => {
   const [showArchived, setShowArchived] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
   const [nome, setNome] = useState('');
   const [tipo, setTipo] = useState<'RECEITA' | 'DESPESA'>('DESPESA');
-  const [cor, setCor] = useState(palette[0]);
+  const [cor, setCor] = useState<string>(palette[0]);
   const [limite, setLimite] = useState('');
   const [isGranaExtra, setIsGranaExtra] = useState(false);
   const [error, setError] = useState('');
@@ -28,7 +29,7 @@ export const CategoriesView: React.FC<Props> = ({ categories, transactions, onAd
 
   const reset = () => { setEditing(null); setNome(''); setTipo('DESPESA'); setCor(palette[0]); setLimite(''); setIsGranaExtra(false); setError(''); };
   const beginEdit = (category: Category) => {
-    setEditing(category); setNome(category.nome); setTipo(category.tipo); setCor(category.cor || palette[0]);
+    setEditing(category); setNome(category.nome); setTipo(category.tipo); setCor(getBrandCategoryColor(category.id, category.cor));
     setLimite(category.limiteMensalCentavos ? String(category.limiteMensalCentavos / 100) : '');
     setIsGranaExtra(Boolean(category.isGranaExtra)); setError('');
     document.getElementById('category-editor')?.scrollIntoView({ behavior: 'smooth' });
@@ -55,10 +56,10 @@ export const CategoriesView: React.FC<Props> = ({ categories, transactions, onAd
 
   return <div className="max-w-5xl mx-auto space-y-5">
     <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
-      <div><div className="flex items-center gap-2 text-[#1F4E79] dark:text-blue-300"><Tags size={20}/><span className="text-xs font-bold uppercase tracking-widest">Gestão financeira</span></div>
+      <div><div className="flex items-center gap-2 text-orange-600 dark:text-orange-300"><Tags size={20}/><span className="text-xs font-bold uppercase tracking-widest">Gestão financeira</span></div>
         <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">Categorias</h2>
         <p className="text-sm text-slate-500 mt-1">Personalize receitas e despesas sem apagar o histórico.</p></div>
-      <button onClick={() => { reset(); document.getElementById('category-editor')?.scrollIntoView({ behavior: 'smooth' }); }} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0B2545] hover:bg-[#1F4E79] px-4 py-2.5 text-sm font-bold text-white"><Plus size={16}/> Nova categoria</button>
+      <button onClick={() => { reset(); document.getElementById('category-editor')?.scrollIntoView({ behavior: 'smooth' }); }} className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 hover:bg-orange-600 px-4 py-2.5 text-sm font-bold text-white"><Plus size={16}/> Nova categoria</button>
     </div>
     <div className="grid grid-cols-3 gap-3">
       <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4"><p className="text-xs text-slate-500">Ativas</p><p className="text-2xl font-extrabold">{active.length}</p></div>
@@ -77,10 +78,10 @@ export const CategoriesView: React.FC<Props> = ({ categories, transactions, onAd
       </form>
       {notice && <p className="text-xs text-emerald-600">{notice}</p>}
     </section>
-    <div className="flex items-center justify-between"><h3 className="font-bold text-slate-900 dark:text-white">{showArchived?'Categorias arquivadas':'Categorias ativas'}</h3><button onClick={()=>setShowArchived(!showArchived)} className="text-xs font-semibold text-[#1F4E79] dark:text-blue-300">{showArchived?'Ver ativas':'Ver arquivadas'}</button></div>
+    <div className="flex items-center justify-between"><h3 className="font-bold text-slate-900 dark:text-white">{showArchived?'Categorias arquivadas':'Categorias ativas'}</h3><button onClick={()=>setShowArchived(!showArchived)} className="text-xs font-semibold text-orange-600 dark:text-orange-300">{showArchived?'Ver ativas':'Ver arquivadas'}</button></div>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
       {visible.map(category=><article key={category.id} className="flex items-center gap-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
-        <span className="h-10 w-10 rounded-xl flex-shrink-0" style={{backgroundColor:category.cor||'#64748B'}}/>
+        <span className="h-10 w-10 rounded-xl flex-shrink-0" style={{backgroundColor:getBrandCategoryColor(category.id, category.cor)}}/>
         <div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-slate-900 dark:text-white">{category.nome}</p><p className="text-xs text-slate-500">{category.tipo==='RECEITA'?'Receita':'Despesa'} · {usage(category.id)} lançamento(s){category.isGranaExtra?' · Grana Extra':''}</p></div>
         {category.ativo===false ? <><span className="text-[10px] font-bold text-slate-400">ARQUIVADA</span><button title="Reativar" onClick={()=>{ onUpdate(category.id, { ativo: true }); setNotice('Categoria reativada.'); }} className="rounded-lg p-2 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"><Check size={16}/></button></> : <><button title="Editar" onClick={()=>beginEdit(category)} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"><Edit3 size={16}/></button><button title="Arquivar" onClick={()=>archive(category)} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"><Archive size={16}/></button></>}
       </article>)}

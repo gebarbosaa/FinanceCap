@@ -176,14 +176,14 @@ export const CardsView: React.FC<CardsViewProps> = ({
           return (
             <div
               key={card.id}
-              className="bg-gradient-to-br from-[#0B2545] to-[#1F4E79] text-white p-6 rounded-2xl shadow-xl border border-blue-900/60 flex flex-col justify-between relative overflow-hidden"
+              className="bg-gradient-to-br from-[#11100F] via-[#21170F] to-[#3A210F] text-white p-6 rounded-2xl shadow-xl border border-orange-500/30 flex flex-col justify-between relative overflow-hidden"
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-400/10 rounded-full blur-xl pointer-events-none"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-orange-400/15 rounded-full blur-xl pointer-events-none"></div>
 
               <div>
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">
+                    <span className="text-[10px] font-bold text-orange-200 uppercase tracking-wider">
                       {card.instituicao} • {card.bandeira}
                     </span>
                     <h3 className="text-lg font-black tracking-tight">{card.nome}</h3>
@@ -200,18 +200,18 @@ export const CardsView: React.FC<CardsViewProps> = ({
                 {/* Limits Breakdown */}
                 <div className="space-y-2 mt-4 bg-black/20 p-4 rounded-xl border border-white/10">
                   <div className="flex justify-between text-xs">
-                    <span className="text-blue-200">Limite Total:</span>
+                    <span className="text-white/70">Limite Total:</span>
                     <span className="font-bold">{formatCurrency(limits.limiteTotalCentavos)}</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-amber-300">Limite Utilizado:</span>
-                    <span className="font-bold text-amber-300">
+                    <span className="text-orange-200">Limite Utilizado:</span>
+                    <span className="font-bold text-orange-200">
                       {formatCurrency(limits.limiteUtilizadoCentavos)} ({pct.toFixed(1)}%)
                     </span>
                   </div>
                   <div className="flex justify-between text-xs pt-1 border-t border-white/10">
-                    <span className="text-emerald-300 font-bold">Limite Disponível:</span>
-                    <span className="font-black text-emerald-300">
+                    <span className="text-orange-100 font-bold">Limite Disponível:</span>
+                    <span className="font-black text-orange-100">
                       {formatCurrency(limits.limiteDisponivelCentavos)}
                     </span>
                   </div>
@@ -220,7 +220,7 @@ export const CardsView: React.FC<CardsViewProps> = ({
                   <div className="w-full bg-white/20 h-2 rounded-full overflow-hidden mt-2">
                     <div
                       className={`h-full rounded-full transition-all duration-500 ${
-                        pct > 80 ? 'bg-rose-400' : pct > 50 ? 'bg-amber-400' : 'bg-emerald-400'
+                        pct > 80 ? 'bg-rose-400' : 'bg-orange-400'
                       }`}
                       style={{ width: `${Math.min(100, pct)}%` }}
                     ></div>
@@ -229,12 +229,12 @@ export const CardsView: React.FC<CardsViewProps> = ({
               </div>
 
               {/* Cycle Info */}
-              <div className="flex items-center justify-between mt-5 pt-3 border-t border-white/10 text-xs text-blue-200">
+              <div className="flex items-center justify-between mt-5 pt-3 border-t border-white/10 text-xs text-white/70">
                 <div className="flex items-center space-x-1.5">
                   <Calendar className="w-3.5 h-3.5" />
                   <span>Fecha dia {card.diaFechamento}</span>
                 </div>
-                <div className="flex items-center space-x-1.5 text-amber-300 font-semibold">
+                <div className="flex items-center space-x-1.5 text-orange-200 font-semibold">
                   <Clock className="w-3.5 h-3.5" />
                   <span>Vence dia {card.diaVencimento}</span>
                 </div>
@@ -299,7 +299,7 @@ export const CardsView: React.FC<CardsViewProps> = ({
                             : displayStatus === 'VENCIDA'
                             ? 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300'
                             : displayStatus === 'PARCIALMENTE_PAGA'
-                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-orange-200'
                             : 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
                         }`}
                       >

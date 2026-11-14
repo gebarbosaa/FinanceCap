@@ -47,16 +47,16 @@ export const IntelligenceView: React.FC<IntelligenceViewProps> = ({ data }) => {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-[#0B2545] via-[#1F4E79] to-[#0B2545] text-white p-6 rounded-2xl shadow-lg border border-blue-900/60 relative overflow-hidden">
+      <div className="bg-gradient-to-r from-[#11100F] via-[#21170F] to-[#3A210F] text-white p-6 rounded-2xl shadow-lg border border-orange-500/30 relative overflow-hidden">
         <div className="flex items-center space-x-3 mb-2">
-          <div className="p-2 bg-amber-500/20 text-amber-300 rounded-xl border border-amber-500/30">
+          <div className="p-2 bg-amber-500/20 text-orange-200 rounded-xl border border-amber-500/30">
             <Sparkles className="w-6 h-6" />
           </div>
           <div>
             <h2 className="text-xl font-extrabold tracking-tight">
               BF Intelligence — Inteligência Financeira Analítica
             </h2>
-            <p className="text-xs text-blue-200">
+            <p className="text-xs text-white/70">
               Respostas precisas baseadas exclusivamente em dados reais, com rastreabilidade contábil e sem alucinações.
             </p>
           </div>
@@ -94,7 +94,7 @@ export const IntelligenceView: React.FC<IntelligenceViewProps> = ({ data }) => {
         />
         <button
           onClick={() => question.trim() && handleAsk(question)}
-          className="px-4 py-2 bg-[#0B2545] hover:bg-[#1F4E79] text-white text-xs font-bold rounded-xl flex items-center space-x-1.5 transition cursor-pointer shadow"
+          className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-xl flex items-center space-x-1.5 transition cursor-pointer shadow"
         >
           <span>Perguntar</span>
           <Send className="w-3.5 h-3.5" />
@@ -157,7 +157,7 @@ export const IntelligenceView: React.FC<IntelligenceViewProps> = ({ data }) => {
                 <strong className="text-amber-900 dark:text-amber-200 block mb-0.5">
                   Recomendação Estratégica Barbosa Fernandes:
                 </strong>
-                <p className="text-amber-800 dark:text-amber-300 leading-relaxed">
+                <p className="text-amber-800 dark:text-orange-200 leading-relaxed">
                   {presentText(activeAnswer.recomendacao)}
                 </p>
               </div>

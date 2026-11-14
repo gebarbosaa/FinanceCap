@@ -19,6 +19,7 @@ import {
   Recurrence,
 } from '../types/finance';
 import { formatCurrency, parseToCentavos } from '../services/currency';
+import { getBrandCategoryColor } from '../utils/brandPalette';
 import { generate12MonthProjection } from '../services/financeEngine';
 
 interface PlanningViewProps {
@@ -86,7 +87,7 @@ export const PlanningView: React.FC<PlanningViewProps> = ({
       return {
         ...b,
         categoriaNome: cat ? cat.nome : 'Categoria',
-        categoriaCor: cat ? cat.cor : '#3B82F6',
+        categoriaCor: cat ? getBrandCategoryColor(cat.id, cat.cor) : '#FF7900',
         valorRealizadoCentavos: spent,
         diferencaCentavos: diff,
         percentualUtilizado: pct,

@@ -216,7 +216,7 @@ export const SheetsSyncModal: React.FC<SheetsSyncModalProps> = ({
                 <button
                   onClick={() => setConfirmSyncDialog(true)}
                   disabled={isSyncing}
-                  className="p-3 bg-[#0B2545] hover:bg-[#1F4E79] text-white text-xs font-bold rounded-xl shadow transition cursor-pointer flex items-center justify-center space-x-1.5 disabled:opacity-50"
+                  className="p-3 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-xl shadow transition cursor-pointer flex items-center justify-center space-x-1.5 disabled:opacity-50"
                 >
                   <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
                   <span>Sincronizar com Google Sheets</span>

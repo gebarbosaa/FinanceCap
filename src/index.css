@@ -625,3 +625,109 @@ html.dark { --bf-sidebar: #090909; }
 .bf-app svg[class*="text-orange-"] { color: var(--bf-accent) !important; }
 
 /* Match the available-to-spend metric to the same card surface as its peers. */
+
+
+/* --------------------------------------------------------------------------
+   BF visual audit — final cross-page palette enforcement.
+   Brand: white + orange in light mode; near-black + orange in dark mode.
+   Red is reserved for overdue, destructive and critical states.
+   -------------------------------------------------------------------------- */
+.bf-app {
+  color: var(--bf-text);
+  background-color: var(--bf-bg);
+}
+.bf-app [class*="bg-blue-"], .bf-app [class*="bg-indigo-"],
+.bf-app [class*="bg-green-"], .bf-app [class*="bg-emerald-"],
+.bf-app [class*="bg-teal-"], .bf-app [class*="bg-cyan-"],
+.bf-app [class*="bg-lime-"], .bf-app [class*="bg-purple-"],
+.bf-app [class*="bg-violet-"], .bf-app [class*="bg-amber-"],
+.bf-app [class*="bg-yellow-"] {
+  background-color: var(--bf-accent-soft) !important;
+}
+.dark .bf-app [class*="bg-blue-"], .dark .bf-app [class*="bg-indigo-"],
+.dark .bf-app [class*="bg-green-"], .dark .bf-app [class*="bg-emerald-"],
+.dark .bf-app [class*="bg-teal-"], .dark .bf-app [class*="bg-cyan-"],
+.dark .bf-app [class*="bg-lime-"], .dark .bf-app [class*="bg-purple-"],
+.dark .bf-app [class*="bg-violet-"], .dark .bf-app [class*="bg-amber-"],
+.dark .bf-app [class*="bg-yellow-"] {
+  background-color: rgba(255, 121, 0, .14) !important;
+}
+.bf-app [class*="text-blue-"], .bf-app [class*="text-indigo-"],
+.bf-app [class*="text-green-"], .bf-app [class*="text-emerald-"],
+.bf-app [class*="text-teal-"], .bf-app [class*="text-cyan-"],
+.bf-app [class*="text-lime-"], .bf-app [class*="text-purple-"],
+.bf-app [class*="text-violet-"], .bf-app [class*="text-amber-"],
+.bf-app [class*="text-yellow-"] {
+  color: var(--bf-text-soft) !important;
+}
+.dark .bf-app [class*="text-blue-"], .dark .bf-app [class*="text-indigo-"],
+.dark .bf-app [class*="text-green-"], .dark .bf-app [class*="text-emerald-"],
+.dark .bf-app [class*="text-teal-"], .dark .bf-app [class*="text-cyan-"],
+.dark .bf-app [class*="text-lime-"], .dark .bf-app [class*="text-purple-"],
+.dark .bf-app [class*="text-violet-"], .dark .bf-app [class*="text-amber-"],
+.dark .bf-app [class*="text-yellow-"] {
+  color: var(--bf-text-soft) !important;
+}
+.bf-app [class*="border-blue-"], .bf-app [class*="border-indigo-"],
+.bf-app [class*="border-green-"], .bf-app [class*="border-emerald-"],
+.bf-app [class*="border-teal-"], .bf-app [class*="border-cyan-"],
+.bf-app [class*="border-lime-"], .bf-app [class*="border-purple-"],
+.bf-app [class*="border-violet-"], .bf-app [class*="border-amber-"],
+.bf-app [class*="border-yellow-"] {
+  border-color: var(--bf-border) !important;
+}
+/* Legacy colored action buttons become one consistent BF orange action. */
+.bf-app button[class*="bg-blue-"], .bf-app button[class*="bg-indigo-"],
+.bf-app button[class*="bg-green-"], .bf-app button[class*="bg-emerald-"],
+.bf-app button[class*="bg-teal-"], .bf-app button[class*="bg-purple-"],
+.bf-app button[class*="bg-violet-"], .bf-app button[class*="bg-amber-"],
+.bf-app button[class*="bg-yellow-"],
+.bf-app a[class*="bg-blue-"], .bf-app a[class*="bg-indigo-"],
+.bf-app a[class*="bg-green-"], .bf-app a[class*="bg-emerald-"],
+.bf-app a[class*="bg-purple-"], .bf-app a[class*="bg-violet-"] {
+  background-color: var(--bf-accent) !important;
+  color: #fff !important;
+}
+.bf-app button[class*="bg-blue-"]:hover, .bf-app button[class*="bg-indigo-"]:hover,
+.bf-app button[class*="bg-green-"]:hover, .bf-app button[class*="bg-emerald-"]:hover,
+.bf-app button[class*="bg-amber-"]:hover, .bf-app button[class*="bg-yellow-"]:hover,
+.bf-app a[class*="bg-blue-"]:hover, .bf-app a[class*="bg-indigo-"]:hover {
+  background-color: #e86f00 !important;
+  color: #fff !important;
+}
+.bf-app [class*="hover:bg-blue-"]:hover, .bf-app [class*="hover:bg-indigo-"]:hover,
+.bf-app [class*="hover:bg-green-"]:hover, .bf-app [class*="hover:bg-emerald-"]:hover,
+.bf-app [class*="hover:bg-amber-"]:hover, .bf-app [class*="hover:bg-yellow-"]:hover {
+  background-color: #e86f00 !important;
+  color: #fff !important;
+}
+/* Keep overdue/error semantics visible instead of flattening them into neutrals. */
+.bf-app [class*="text-rose-"], .bf-app [class*="text-red-"] {
+  color: #c2410c !important;
+}
+.dark .bf-app [class*="text-rose-"], .dark .bf-app [class*="text-red-"] {
+  color: #fb7185 !important;
+}
+.bf-app [class*="bg-rose-"], .bf-app [class*="bg-red-"] {
+  background-color: #fff1f2 !important;
+}
+.dark .bf-app [class*="bg-rose-"], .dark .bf-app [class*="bg-red-"] {
+  background-color: rgba(190, 24, 93, .18) !important;
+}
+.bf-app [class*="border-rose-"], .bf-app [class*="border-red-"] {
+  border-color: #fecdd3 !important;
+}
+.dark .bf-app [class*="border-rose-"], .dark .bf-app [class*="border-red-"] {
+  border-color: rgba(251, 113, 133, .32) !important;
+}
+/* All primary actions and selected controls use the same accent and radius. */
+.bf-app button[class*="bg-orange-"], .bf-app a[class*="bg-orange-"] {
+  background-color: var(--bf-accent) !important;
+  color: #fff !important;
+}
+.bf-app button[class*="bg-orange-"]:hover, .bf-app a[class*="bg-orange-"]:hover {
+  background-color: #e86f00 !important;
+}
+.bf-app [class*="focus:ring-"], .bf-app [class*="ring-"] {
+  --tw-ring-color: color-mix(in srgb, var(--bf-accent) 42%, transparent) !important;
+}
