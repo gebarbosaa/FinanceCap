@@ -151,7 +151,7 @@ export const Header: React.FC<HeaderProps> = ({
                         className="w-7 h-7 rounded-lg border border-orange-500/50 object-cover"
                       />
                     ) : (
-                      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-xs font-bold text-white">
+                      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center text-xs font-bold text-white">
                         {user.displayName?.charAt(0) || user.email?.charAt(0) || 'G'}
                       </div>
                     )}
