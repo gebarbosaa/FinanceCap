@@ -86,7 +86,7 @@ export const PlanningView: React.FC<PlanningViewProps> = ({
       return {
         ...b,
         categoriaNome: cat ? cat.nome : 'Categoria',
-        categoriaCor: cat ? cat.cor : '#FF7900',
+        categoriaCor: cat ? getBrandCategoryColor(cat.id, cat.cor) : '#FF7900',
         valorRealizadoCentavos: spent,
         diferencaCentavos: diff,
         percentualUtilizado: pct,
