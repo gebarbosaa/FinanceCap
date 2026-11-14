@@ -553,6 +553,50 @@ export async function syncDataToGoogleSheets(
     valueRanges.push({ range: `'${sheetName}'!A1:${lastColumn}1`, values: [headers] });
   }
 
+  // Read sheet IDs and existing grid sizes so exports larger than the initial 500 rows are safe.
+  const metadataResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties(sheetId,title,gridProperties.rowCount)`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!metadataResponse.ok) {
+    const error = await metadataResponse.json();
+    throw new Error(`Não foi possível verificar a estrutura da planilha: ${error.error?.message || metadataResponse.statusText}`);
+  }
+  const metadata = await metadataResponse.json();
+  const sheetInfo = new Map<string, { sheetId: number; rowCount: number }>(
+    (metadata.sheets || []).map((sheet: { properties: { sheetId: number; title: string; gridProperties?: { rowCount?: number } } }) => [
+      sheet.properties.title,
+      { sheetId: sheet.properties.sheetId, rowCount: sheet.properties.gridProperties?.rowCount || 0 },
+    ])
+  );
+  const requiredRows = new Map<string, number>();
+  for (const item of valueRanges) {
+    const match = item.range.match(/^'(.+)'!A1:[A-Z]+(\\d+)$/);
+    if (match) requiredRows.set(match[1], Number(match[2]));
+  }
+  const resizeRequests: Record<string, unknown>[] = [];
+  for (const [sheetName, rowCount] of requiredRows) {
+    const info = sheetInfo.get(sheetName);
+    if (!info) throw new Error(`A aba ${sheetName} não foi encontrada na planilha.`);
+    if (rowCount > info.rowCount) {
+      resizeRequests.push({ updateSheetProperties: {
+        properties: { sheetId: info.sheetId, gridProperties: { rowCount } },
+        fields: 'gridProperties.rowCount',
+      } });
+      info.rowCount = rowCount;
+    }
+  }
+  if (resizeRequests.length > 0) {
+    const resizeResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ requests: resizeRequests }),
+    });
+    if (!resizeResponse.ok) {
+      const error = await resizeResponse.json();
+      throw new Error(`Não foi possível ampliar as abas para receber todos os registros: ${error.error?.message || resizeResponse.statusText}`);
+    }
+  }
+
   // Write current values first, then clear stale rows left by older/larger exports.
   const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, {
     method: 'POST',
@@ -572,11 +616,12 @@ export async function syncDataToGoogleSheets(
   }
 
   const staleRanges = valueRanges.flatMap((item) => {
-    const match = item.range.match(/^'(.+)'!A1:[A-Z]+(\d+)$/);
+    const match = item.range.match(/^'(.+)'!A1:[A-Z]+(\\d+)$/);
     if (!match) return [];
     const sheetName = match[1];
     const lastWrittenRow = Number(match[2]);
-    return lastWrittenRow < 500 ? [`'${sheetName}'!A${lastWrittenRow + 1}:T500`] : [];
+    const existingRows = sheetInfo.get(sheetName)?.rowCount || lastWrittenRow;
+    return lastWrittenRow < existingRows ? [`'${sheetName}'!A${lastWrittenRow + 1}:T${existingRows}`] : [];
   });
   if (staleRanges.length > 0) {
     const clearResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchClear`, {
