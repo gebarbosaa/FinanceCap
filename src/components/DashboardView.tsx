@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { FinancialSummary, Category, Transaction, Invoice, Debt, CreditCard as ICreditCard } from '../types/finance';
 import { formatCurrency, formatDateBR } from '../services/currency';
+import { getBrandCategoryColor } from '../utils/brandPalette';
 import { getTop15Expenses } from '../services/financeEngine';
 import { getEffectiveDebtStatus, getEffectiveInvoiceStatus } from '../utils/dateValidation';
 import { RadarAlert } from '../services/radarService';
@@ -426,7 +427,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       <div className="flex items-center space-x-2 text-[10px] text-slate-500">
                         <span
                           className="px-1.5 py-0.2 rounded font-medium"
-                          style={{ backgroundColor: `${item.categoriaCor}20`, color: item.categoriaCor }}
+                          style={{ backgroundColor: `${getBrandCategoryColor(item.categoriaId, item.categoriaCor)}20`, color: getBrandCategoryColor(item.categoriaId, item.categoriaCor) }}
                         >
                           {item.categoriaNome}
                         </span>
@@ -480,7 +481,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       <div className="flex items-center space-x-2">
                         <span
                           className="w-2.5 h-2.5 rounded-full"
-                          style={{ backgroundColor: cat.cor }}
+                          style={{ backgroundColor: getBrandCategoryColor(cat.id, cat.cor) }}
                         ></span>
                         <span className="font-semibold text-slate-800 dark:text-slate-200">
                           {cat.nome}
@@ -501,7 +502,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     <div className="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${pct}%`, backgroundColor: cat.cor }}
+                        style={{ width: `${pct}%`, backgroundColor: getBrandCategoryColor(cat.id, cat.cor) }}
                       ></div>
                     </div>
                   </div>
