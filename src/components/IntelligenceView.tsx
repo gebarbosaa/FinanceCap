@@ -49,7 +49,7 @@ export const IntelligenceView: React.FC<IntelligenceViewProps> = ({ data }) => {
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-[#11100F] via-[#21170F] to-[#3A210F] text-white p-6 rounded-2xl shadow-lg border border-orange-500/30 relative overflow-hidden">
         <div className="flex items-center space-x-3 mb-2">
-          <div className="p-2 bg-amber-500/20 text-amber-300 rounded-xl border border-amber-500/30">
+          <div className="p-2 bg-amber-500/20 text-orange-200 rounded-xl border border-amber-500/30">
             <Sparkles className="w-6 h-6" />
           </div>
           <div>
@@ -157,7 +157,7 @@ export const IntelligenceView: React.FC<IntelligenceViewProps> = ({ data }) => {
                 <strong className="text-amber-900 dark:text-amber-200 block mb-0.5">
                   Recomendação Estratégica Barbosa Fernandes:
                 </strong>
-                <p className="text-amber-800 dark:text-amber-300 leading-relaxed">
+                <p className="text-amber-800 dark:text-orange-200 leading-relaxed">
                   {presentText(activeAnswer.recomendacao)}
                 </p>
               </div>
