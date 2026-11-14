@@ -48,7 +48,7 @@ export const TestsRunnerView: React.FC = () => {
         <button
           onClick={handleRunTests}
           disabled={isRunning}
-          className="flex items-center space-x-2 px-5 py-2.5 bg-[#0B2545] hover:bg-[#1F4E79] text-white text-xs font-bold rounded-xl shadow cursor-pointer transition disabled:opacity-50"
+          className="flex items-center space-x-2 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-xl shadow cursor-pointer transition disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 ${isRunning ? 'animate-spin' : ''}`} />
           <span>Executar 21 Testes Novamente</span>
