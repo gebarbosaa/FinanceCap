@@ -129,10 +129,10 @@ export const GoogleAccountCard: React.FC<GoogleAccountCardProps> = ({
             <img
               src={user.photoURL}
               alt={user.displayName || 'Usuário Google'}
-              className="w-12 h-12 rounded-full border-2 border-emerald-500 shadow-sm"
+              className="w-12 h-12 rounded-full border-2 border-orange-500 shadow-sm"
             />
           ) : (
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-bold text-lg flex items-center justify-center border-2 border-emerald-500">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-orange-700 text-white font-bold text-lg flex items-center justify-center border-2 border-orange-500">
               {user.displayName?.charAt(0) || user.email?.charAt(0) || 'G'}
             </div>
           )}
