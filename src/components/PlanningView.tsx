@@ -86,7 +86,7 @@ export const PlanningView: React.FC<PlanningViewProps> = ({
       return {
         ...b,
         categoriaNome: cat ? cat.nome : 'Categoria',
-        categoriaCor: cat ? cat.cor : '#3B82F6',
+        categoriaCor: cat ? cat.cor : '#FF7900',
         valorRealizadoCentavos: spent,
         diferencaCentavos: diff,
         percentualUtilizado: pct,
