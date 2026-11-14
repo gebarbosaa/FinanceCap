@@ -562,12 +562,13 @@ export async function syncDataToGoogleSheets(
     throw new Error(`Não foi possível verificar a estrutura da planilha: ${error.error?.message || metadataResponse.statusText}`);
   }
   const metadata = await metadataResponse.json();
-  const sheetInfo = new Map<string, { sheetId: number; rowCount: number }>(
-    (metadata.sheets || []).map((sheet: { properties: { sheetId: number; title: string; gridProperties?: { rowCount?: number } } }) => [
-      sheet.properties.title,
-      { sheetId: sheet.properties.sheetId, rowCount: sheet.properties.gridProperties?.rowCount || 0 },
-    ])
-  );
+  const sheetInfo = new Map<string, { sheetId: number; rowCount: number }>();
+  for (const sheet of (metadata.sheets || []) as Array<{ properties: { sheetId: number; title: string; gridProperties?: { rowCount?: number } } }>) {
+    sheetInfo.set(sheet.properties.title, {
+      sheetId: sheet.properties.sheetId,
+      rowCount: sheet.properties.gridProperties?.rowCount || 0,
+    });
+  }
   const requiredRows = new Map<string, number>();
   for (const item of valueRanges) {
     const match = item.range.match(/^'(.+)'!A1:[A-Z]+(\d+)$/);
