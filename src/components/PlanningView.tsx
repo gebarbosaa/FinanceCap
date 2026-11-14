@@ -19,6 +19,7 @@ import {
   Recurrence,
 } from '../types/finance';
 import { formatCurrency, parseToCentavos } from '../services/currency';
+import { getBrandCategoryColor } from '../utils/brandPalette';
 import { generate12MonthProjection } from '../services/financeEngine';
 
 interface PlanningViewProps {
