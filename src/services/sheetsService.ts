@@ -554,7 +554,7 @@ export async function syncDataToGoogleSheets(
   }
 
   // Read sheet IDs and existing grid sizes so exports larger than the initial 500 rows are safe.
-  const metadataResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties(sheetId,title,gridProperties.rowCount)`, {
+  const metadataResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets(properties(sheetId,title,gridProperties(rowCount)))`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!metadataResponse.ok) {
