@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { parseToCentavos } from './currency';
 import { calculateAccountBalance, calculateCardLimits, calculateFinancialSummary, generate12MonthProjection } from './financeEngine';
 import { runAll20MandatoryTests } from './testSuite';
-import { isValidISODate } from '../utils/dateValidation';
+import { getEffectiveDebtStatus, getEffectiveInvoiceStatus, isValidISODate } from '../utils/dateValidation';
 import type { Account, CreditCard, Invoice, InstallmentPlan, Recurrence, Transaction } from '../types/finance';
 
 test('parseToCentavos reads Brazilian thousands and decimal separators', () => {
@@ -347,4 +347,13 @@ test('isValidISODate rejects impossible calendar dates and accepts leap days', (
   assert.equal(isValidISODate('2026-02-31'), false);
   assert.equal(isValidISODate('2026-13-01'), false);
   assert.equal(isValidISODate('26-02-01'), false);
+});
+
+
+test('effective due statuses mark unpaid invoices and debts as overdue', () => {
+  assert.equal(getEffectiveInvoiceStatus('ABERTA', '2026-11-12', '2026-11-13'), 'VENCIDA');
+  assert.equal(getEffectiveInvoiceStatus('PAGA', '2026-11-12', '2026-11-13'), 'PAGA');
+  assert.equal(getEffectiveInvoiceStatus('CANCELADA', '2026-11-12', '2026-11-13'), 'CANCELADA');
+  assert.equal(getEffectiveDebtStatus('EM_DIA', '2026-11-12', '2026-11-13'), 'ATRASADO');
+  assert.equal(getEffectiveDebtStatus('QUITADO', '2026-11-12', '2026-11-13'), 'QUITADO');
 });

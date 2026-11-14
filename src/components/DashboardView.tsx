@@ -21,6 +21,7 @@ import {
 import { FinancialSummary, Category, Transaction, Invoice, Debt, CreditCard as ICreditCard } from '../types/finance';
 import { formatCurrency, formatDateBR } from '../services/currency';
 import { getTop15Expenses } from '../services/financeEngine';
+import { getEffectiveDebtStatus, getEffectiveInvoiceStatus } from '../utils/dateValidation';
 import { RadarAlert } from '../services/radarService';
 import { User } from 'firebase/auth';
 import { GoogleLogo, GoogleAuthButton } from './GoogleAuthButton';
@@ -526,9 +527,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Invoices to pay */}
           {invoices
-            .filter((inv) => inv.status === 'ABERTA' || inv.status === 'PARCIALMENTE_PAGA')
+            .filter((inv) => inv.status !== 'PAGA' && inv.status !== 'CANCELADA')
             .map((inv) => {
               const card = cards.find((c) => c.id === inv.cartaoId);
+              const invoiceStatus = getEffectiveInvoiceStatus(inv.status, inv.dataVencimento);
               return (
                 <div
                   key={inv.id}
@@ -539,7 +541,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       Fatura {card?.nome || 'Cartão'}
                     </span>
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100">
-                      Venc. {formatDateBR(inv.dataVencimento)}
+                      {invoiceStatus === 'VENCIDA' ? 'VENCIDA' : `Venc. ${formatDateBR(inv.dataVencimento)}`}
                     </span>
                   </div>
                   <div className="text-lg font-black text-slate-900 dark:text-white">
@@ -557,9 +559,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
           {/* Pending debt installments */}
           {debts
-            .filter((d) => d.status === 'EM_DIA')
+            .filter((d) => d.status !== 'QUITADO')
             .slice(0, 2)
-            .map((d) => (
+            .map((d) => {
+              const debtStatus = getEffectiveDebtStatus(d.status, d.proximoVencimento);
+              return (
               <div
                 key={d.id}
                 className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30"
@@ -569,7 +573,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     {d.credor}
                   </span>
                   <span className="text-[10px] font-semibold text-slate-500">
-                    Venc. {formatDateBR(d.proximoVencimento)}
+                    {debtStatus === 'ATRASADO' ? 'ATRASADO' : `Venc. ${formatDateBR(d.proximoVencimento)}`}
                   </span>
                 </div>
                 <div className="text-lg font-black text-slate-900 dark:text-white">
@@ -577,10 +581,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </div>
                 <div className="text-[11px] text-slate-500 mt-2 flex justify-between">
                   <span>Restam {d.parcelasRestantes} parcelas</span>
-                  <span className="font-semibold text-emerald-600">Em dia</span>
+                  <span className={`font-semibold ${debtStatus === 'ATRASADO' ? 'text-rose-600' : 'text-emerald-600'}`}>{debtStatus === 'ATRASADO' ? 'Em atraso' : 'Em dia'}</span>
                 </div>
               </div>
-            ))}
+              );
+            })}
         </div>
       </div>
 

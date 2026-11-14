@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Landmark, AlertCircle, Calculator, TrendingDown, ArrowRight, ShieldCheck, Check } from 'lucide-react';
 import { Account, Category, Debt } from '../types/finance';
 import { formatCurrency, formatDateBR, parseToCentavos } from '../services/currency';
+import { getEffectiveDebtStatus, isValidISODate } from '../utils/dateValidation';
 
 interface DebtsViewProps {
   debts: Debt[];
@@ -107,7 +108,7 @@ export const DebtsView: React.FC<DebtsViewProps> = ({ debts, accounts, categorie
                 </h3>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-lg">{debt.status}</span>
+                <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${getEffectiveDebtStatus(debt.status, debt.proximoVencimento) === 'ATRASADO' ? 'text-rose-700 bg-rose-50 dark:bg-rose-950/40' : 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40'}`}>{getEffectiveDebtStatus(debt.status, debt.proximoVencimento)}</span>
                 <button type="button" onClick={(event) => {
                   event.stopPropagation();
                   const creditor = window.prompt('Credor:', debt.credor);

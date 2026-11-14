@@ -21,6 +21,7 @@ import {
 } from '../types/finance';
 import { formatCurrency, formatDateBR, parseToCentavos } from '../services/currency';
 import { calculateCardLimits } from '../services/financeEngine';
+import { getEffectiveInvoiceStatus } from '../utils/dateValidation';
 
 interface CardsViewProps {
   cards: CreditCard[];
@@ -267,7 +268,8 @@ export const CardsView: React.FC<CardsViewProps> = ({
             <tbody className="divide-y divide-slate-100 dark:divide-slate-700 text-slate-800 dark:text-slate-200">
               {invoices.map((inv) => {
                 const card = cards.find((c) => c.id === inv.cartaoId);
-                const isPaid = inv.status === 'PAGA';
+                const displayStatus = getEffectiveInvoiceStatus(inv.status, inv.dataVencimento);
+                const isPaid = displayStatus === 'PAGA';
 
                 return (
                   <React.Fragment key={inv.id}>
@@ -294,12 +296,14 @@ export const CardsView: React.FC<CardsViewProps> = ({
                         className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                           isPaid
                             ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
-                            : inv.status === 'PARCIALMENTE_PAGA'
+                            : displayStatus === 'VENCIDA'
+                            ? 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300'
+                            : displayStatus === 'PARCIALMENTE_PAGA'
                             ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
                             : 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
                         }`}
                       >
-                        {inv.status}
+                        {displayStatus}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-center">
