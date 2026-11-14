@@ -348,3 +348,13 @@ test('isValidISODate rejects impossible calendar dates and accepts leap days', (
   assert.equal(isValidISODate('2026-13-01'), false);
   assert.equal(isValidISODate('26-02-01'), false);
 });
+
+
+test('effective due statuses mark unpaid invoices and debts as overdue', () => {
+  const { getEffectiveInvoiceStatus, getEffectiveDebtStatus } = require('../utils/dateValidation') as typeof import('../utils/dateValidation');
+  assert.equal(getEffectiveInvoiceStatus('ABERTA', '2026-11-12', '2026-11-13'), 'VENCIDA');
+  assert.equal(getEffectiveInvoiceStatus('PAGA', '2026-11-12', '2026-11-13'), 'PAGA');
+  assert.equal(getEffectiveInvoiceStatus('CANCELADA', '2026-11-12', '2026-11-13'), 'CANCELADA');
+  assert.equal(getEffectiveDebtStatus('EM_DIA', '2026-11-12', '2026-11-13'), 'ATRASADO');
+  assert.equal(getEffectiveDebtStatus('QUITADO', '2026-11-12', '2026-11-13'), 'QUITADO');
+});
