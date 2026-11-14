@@ -204,8 +204,8 @@ export const CardsView: React.FC<CardsViewProps> = ({
                     <span className="font-bold">{formatCurrency(limits.limiteTotalCentavos)}</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-amber-300">Limite Utilizado:</span>
-                    <span className="font-bold text-amber-300">
+                    <span className="text-orange-200">Limite Utilizado:</span>
+                    <span className="font-bold text-orange-200">
                       {formatCurrency(limits.limiteUtilizadoCentavos)} ({pct.toFixed(1)}%)
                     </span>
                   </div>
@@ -229,12 +229,12 @@ export const CardsView: React.FC<CardsViewProps> = ({
               </div>
 
               {/* Cycle Info */}
-              <div className="flex items-center justify-between mt-5 pt-3 border-t border-white/10 text-xs text-blue-200">
+              <div className="flex items-center justify-between mt-5 pt-3 border-t border-white/10 text-xs text-white/70">
                 <div className="flex items-center space-x-1.5">
                   <Calendar className="w-3.5 h-3.5" />
                   <span>Fecha dia {card.diaFechamento}</span>
                 </div>
-                <div className="flex items-center space-x-1.5 text-amber-300 font-semibold">
+                <div className="flex items-center space-x-1.5 text-orange-200 font-semibold">
                   <Clock className="w-3.5 h-3.5" />
                   <span>Vence dia {card.diaVencimento}</span>
                 </div>
@@ -299,7 +299,7 @@ export const CardsView: React.FC<CardsViewProps> = ({
                             : displayStatus === 'VENCIDA'
                             ? 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300'
                             : displayStatus === 'PARCIALMENTE_PAGA'
-                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-orange-200'
                             : 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
                         }`}
                       >
