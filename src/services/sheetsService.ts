@@ -424,9 +424,9 @@ export async function syncDataToGoogleSheets(
     const previousLastDay = new Date(previousDate.getFullYear(), previousDate.getMonth() + 1, 0).getDate();
     const openingDate = `${previousCompetencia}-${String(previousLastDay).padStart(2, '0')}`;
     const openingBalance = data.accounts.filter((account) => account.ativo).reduce((sum, account) =>
-      sum + calculateAccountBalance(account, data.transactions.filter((tx) => tx.data <= openingDate)), 0);
+      sum + (account.dataSaldoInicial > openingDate ? 0 : calculateAccountBalance(account, data.transactions.filter((tx) => tx.data <= openingDate))), 0);
     const closingBalance = data.accounts.filter((account) => account.ativo).reduce((sum, account) =>
-      sum + calculateAccountBalance(account, data.transactions.filter((tx) => tx.data <= lastDate)), 0);
+      sum + (account.dataSaldoInicial > lastDate ? 0 : calculateAccountBalance(account, data.transactions.filter((tx) => tx.data <= lastDate))), 0);
     return { name, competencia, transactions: monthTransactions, receitas, despesas, amortizacoes,
       resultado: receitas - despesas, openingBalance, closingBalance, firstDay, lastDate };
   });
