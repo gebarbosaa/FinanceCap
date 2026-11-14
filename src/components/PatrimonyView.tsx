@@ -96,7 +96,7 @@ export const PatrimonyView: React.FC<PatrimonyViewProps> = ({
       {activeTab === 'BALANCO' && (
         <div className="space-y-6">
           {/* Net Worth Card */}
-          <div className="bg-gradient-to-r from-[#0B2545] to-[#1F4E79] text-white p-6 rounded-2xl shadow-lg border border-blue-900/60 flex flex-col md:flex-row justify-between md:items-center gap-4">
+          <div className="bg-gradient-to-r from-[#11100F] via-[#21170F] to-[#3A210F] text-white p-6 rounded-2xl shadow-lg border border-orange-500/30 flex flex-col md:flex-row justify-between md:items-center gap-4">
             <div>
               <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">
                 Patrimônio Líquido Barbosa Fernandes
