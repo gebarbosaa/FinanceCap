@@ -391,6 +391,120 @@ export async function syncDataToGoogleSheets(
   });
 
 
+  // 17. PLANEJAMENTO — budget vs. realized expenses for the reference year.
+  const categoriesById = new Map(data.categories.map((category) => [category.id, category.nome]));
+  const planningRows = [
+    ['ID', 'Competência', 'Categoria', 'Valor Planejado', 'Valor Realizado', 'Diferença', 'Status', 'Observações'],
+    ...data.budgets.map((budget) => {
+      const realized = data.transactions
+        .filter((tx) => !tx.isDeleted && tx.tipo === 'DESPESA' && tx.status === 'REALIZADO' && tx.categoriaId === budget.categoriaId && tx.competencia === budget.competencia)
+        .reduce((sum, tx) => sum + tx.valorCentavos, 0);
+      const difference = budget.valorPlanejadoCentavos - realized;
+      return [budget.id, budget.competencia, categoriesById.get(budget.categoriaId) || budget.categoriaId,
+        formatCurrency(budget.valorPlanejadoCentavos), formatCurrency(realized), formatCurrency(difference),
+        difference < 0 ? 'ACIMA DO ORÇAMENTO' : difference === 0 ? 'NO LIMITE' : 'DENTRO DO ORÇAMENTO', ''];
+    }),
+  ];
+  valueRanges.push({ range: `'PLANEJAMENTO'!A1:H${planningRows.length}`, values: planningRows });
+
+  // Monthly source data used consistently by the twelve month tabs and annual summaries.
+  const referenceYear = data.settings.anoReferencia;
+  const monthNames = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
+  const monthlyMetrics = monthNames.map((name, index) => {
+    const competencia = `${referenceYear}-${String(index + 1).padStart(2, '0')}`;
+    const monthTransactions = data.transactions.filter((tx) => !tx.isDeleted && tx.competencia === competencia);
+    const receitas = monthTransactions.filter((tx) => tx.tipo === 'RECEITA' && tx.status === 'REALIZADO').reduce((sum, tx) => sum + tx.valorCentavos, 0);
+    const despesas = monthTransactions.filter((tx) => tx.tipo === 'DESPESA' && tx.status === 'REALIZADO').reduce((sum, tx) => sum + tx.valorCentavos, 0);
+    const amortizacoes = monthTransactions.filter((tx) => tx.tipo === 'AMORTIZACAO' && tx.status === 'REALIZADO').reduce((sum, tx) => sum + tx.valorCentavos, 0);
+    const lastDay = new Date(referenceYear, index + 1, 0).getDate();
+    const firstDay = `${competencia}-01`;
+    const lastDate = `${competencia}-${String(lastDay).padStart(2, '0')}`;
+    const previousDate = new Date(referenceYear, index, 0);
+    const previousCompetencia = `${previousDate.getFullYear()}-${String(previousDate.getMonth() + 1).padStart(2, '0')}`;
+    const previousLastDay = new Date(previousDate.getFullYear(), previousDate.getMonth() + 1, 0).getDate();
+    const openingDate = `${previousCompetencia}-${String(previousLastDay).padStart(2, '0')}`;
+    const openingBalance = data.accounts.filter((account) => account.ativo).reduce((sum, account) =>
+      sum + calculateAccountBalance(account, data.transactions.filter((tx) => tx.data <= openingDate)), 0);
+    const closingBalance = data.accounts.filter((account) => account.ativo).reduce((sum, account) =>
+      sum + calculateAccountBalance(account, data.transactions.filter((tx) => tx.data <= lastDate)), 0);
+    return { name, competencia, transactions: monthTransactions, receitas, despesas, amortizacoes,
+      resultado: receitas - despesas, openingBalance, closingBalance, firstDay, lastDate };
+  });
+
+  // 18. RELATÓRIOS — monthly operating indicators.
+  const reportRows = [
+    ['Relatório', 'Período', 'Indicador', 'Valor', 'Comparativo', 'Atualizado em'],
+    ...monthlyMetrics.flatMap((month) => [
+      ['Fluxo mensal', month.competencia, 'Receitas realizadas', formatCurrency(month.receitas), '', ''],
+      ['Fluxo mensal', month.competencia, 'Despesas realizadas', formatCurrency(month.despesas), '', ''],
+      ['Fluxo mensal', month.competencia, 'Amortização de principal', formatCurrency(month.amortizacoes), '', ''],
+      ['Fluxo mensal', month.competencia, 'Resultado operacional', formatCurrency(month.resultado), '', ''],
+    ]),
+  ];
+  valueRanges.push({ range: `'RELATÓRIOS'!A1:F${reportRows.length}`, values: reportRows });
+
+  // 19–30. JANUARY–DECEMBER — all non-deleted entries by competence.
+  monthlyMetrics.forEach((month) => {
+    const rows = [
+      ['Data', 'Descrição', 'Categoria', 'Tipo', 'Conta / Cartão', 'Valor', 'Status', 'Competência'],
+      ...month.transactions.map((tx) => {
+        const accountOrCard = data.accounts.find((account) => account.id === tx.contaId)?.nome ||
+          data.cards.find((card) => card.id === tx.cartaoId)?.nome || '';
+        return [formatDateBR(tx.data), tx.descricao, categoriesById.get(tx.categoriaId) || tx.categoriaId,
+          tx.tipo, accountOrCard, formatCurrency(tx.valorCentavos), tx.status, tx.competencia];
+      }),
+    ];
+    valueRanges.push({ range: `'${month.name}'!A1:H${rows.length}`, values: rows });
+  });
+
+  // 31. CONSOLIDAÇÃO — historical account balances are calculated only through each month-end.
+  const consolidationRows = [
+    ['Competência', 'Entradas', 'Saídas', 'Resultado', 'Saldo Inicial', 'Saldo Final'],
+    ...monthlyMetrics.map((month) => [month.competencia, formatCurrency(month.receitas),
+      formatCurrency(month.despesas), formatCurrency(month.resultado),
+      formatCurrency(month.openingBalance), formatCurrency(month.closingBalance)]),
+  ];
+  valueRanges.push({ range: `'CONSOLIDAÇÃO'!A1:F${consolidationRows.length}`, values: consolidationRows });
+
+  // 32. COMPARATIVO — selected month against the immediately preceding month.
+  const selectedIndex = Math.min(12, Math.max(1, data.settings.mesReferencia)) - 1;
+  const currentMonth = monthlyMetrics[selectedIndex];
+  const previousMonth = selectedIndex === 0
+    ? null
+    : monthlyMetrics[selectedIndex - 1];
+  const comparisonMetrics = [
+    ['Receitas realizadas', currentMonth.receitas, previousMonth?.receitas ?? 0],
+    ['Despesas realizadas', currentMonth.despesas, previousMonth?.despesas ?? 0],
+    ['Resultado operacional', currentMonth.resultado, previousMonth?.resultado ?? 0],
+    ['Amortização de principal', currentMonth.amortizacoes, previousMonth?.amortizacoes ?? 0],
+  ];
+  const comparisonRows = [
+    ['Indicador', 'Mês Atual', 'Mês Anterior', 'Variação', 'Variação %'],
+    ...comparisonMetrics.map(([label, current, previous]) => {
+      const currentValue = Number(current);
+      const previousValue = Number(previous);
+      const variation = currentValue - previousValue;
+      return [String(label), formatCurrency(currentValue), previousMonth ? formatCurrency(previousValue) : 'N/D',
+        formatCurrency(variation), previousMonth && previousValue !== 0 ? `${((variation / Math.abs(previousValue)) * 100).toFixed(1)}%` : 'N/D'];
+    }),
+  ];
+  valueRanges.push({ range: `'COMPARATIVO'!A1:E${comparisonRows.length}`, values: comparisonRows });
+
+  // 33. INDICADORES ANUAIS — monthly series and annual totals.
+  const annualRows = [
+    ['Indicador', ...monthNames, 'Total Anual'],
+    ...[
+      ['Receitas realizadas', monthlyMetrics.map((month) => month.receitas)],
+      ['Despesas realizadas', monthlyMetrics.map((month) => month.despesas)],
+      ['Resultado operacional', monthlyMetrics.map((month) => month.resultado)],
+      ['Amortização de principal', monthlyMetrics.map((month) => month.amortizacoes)],
+    ].map(([label, values]) => {
+      const amounts = values as number[];
+      return [String(label), ...amounts.map((amount) => formatCurrency(amount)), formatCurrency(amounts.reduce((sum, amount) => sum + amount, 0))];
+    }),
+  ];
+  valueRanges.push({ range: `'INDICADORES ANUAIS'!A1:N${annualRows.length}`, values: annualRows });
+
   // Ensure every one of the 32 tabs has a meaningful header row.
   // Existing populated tabs keep their own data/header rows; only missing tabs receive defaults.
   const headersBySheet: Record<string, string[]> = {
@@ -439,7 +553,7 @@ export async function syncDataToGoogleSheets(
     valueRanges.push({ range: `'${sheetName}'!A1:${lastColumn}1`, values: [headers] });
   }
 
-  // Execute batch update
+  // Write current values first, then clear stale rows left by older/larger exports.
   const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, {
     method: 'POST',
     headers: {
@@ -455,6 +569,25 @@ export async function syncDataToGoogleSheets(
   if (!res.ok) {
     const err = await res.json();
     throw new Error(`Falha ao sincronizar com Google Sheets: ${err.error?.message || res.statusText}`);
+  }
+
+  const staleRanges = valueRanges.flatMap((item) => {
+    const match = item.range.match(/^'(.+)'!A1:[A-Z]+(\\d+)$/);
+    if (!match) return [];
+    const sheetName = match[1];
+    const lastWrittenRow = Number(match[2]);
+    return lastWrittenRow < 500 ? [`'${sheetName}'!A${lastWrittenRow + 1}:T500`] : [];
+  });
+  if (staleRanges.length > 0) {
+    const clearResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchClear`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ranges: staleRanges }),
+    });
+    if (!clearResponse.ok) {
+      const error = await clearResponse.json();
+      throw new Error(`Dados sincronizados, mas não foi possível limpar linhas antigas: ${error.error?.message || clearResponse.statusText}`);
+    }
   }
 
   await applyProfessionalSpreadsheetDesign(spreadsheetId, token, valueRanges);
