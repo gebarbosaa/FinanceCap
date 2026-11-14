@@ -71,7 +71,12 @@ export async function loadUserFinance(uid: string, localData: StorageData): Prom
   const cloudData = {
     ...localData,
     ...loaded,
-    settings: settingsSnap.exists() ? settingsSnap.data() : localData.settings,
+    // Never reuse settings from a different or unknown local account. Each UID owns its own settings document.
+    settings: settingsSnap.exists()
+      ? settingsSnap.data()
+      : previousOwner === uid
+        ? localData.settings
+        : INITIAL_SETTINGS,
   } as StorageData;
 
   activeUid = uid;
