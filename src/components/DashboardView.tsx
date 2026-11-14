@@ -561,7 +561,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           {debts
             .filter((d) => d.status !== 'QUITADO')
             .slice(0, 2)
-            .map((d) => (
+            .map((d) => {
+              const debtStatus = getEffectiveDebtStatus(d.status, d.proximoVencimento);
+              return (
               <div
                 key={d.id}
                 className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30"
@@ -571,7 +573,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     {d.credor}
                   </span>
                   <span className="text-[10px] font-semibold text-slate-500">
-                    Venc. {formatDateBR(d.proximoVencimento)}
+                    {debtStatus === 'ATRASADO' ? 'ATRASADO' : `Venc. ${formatDateBR(d.proximoVencimento)}`}
                   </span>
                 </div>
                 <div className="text-lg font-black text-slate-900 dark:text-white">
@@ -582,7 +584,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <span className={`font-semibold ${debtStatus === 'ATRASADO' ? 'text-rose-600' : 'text-emerald-600'}`}>{debtStatus === 'ATRASADO' ? 'Em atraso' : 'Em dia'}</span>
                 </div>
               </div>
-            ))}
+              );
+            })}
         </div>
       </div>
 
