@@ -570,7 +570,7 @@ export async function syncDataToGoogleSheets(
   );
   const requiredRows = new Map<string, number>();
   for (const item of valueRanges) {
-    const match = item.range.match(/^'(.+)'!A1:[A-Z]+(\\d+)$/);
+    const match = item.range.match(/^'(.+)'!A1:[A-Z]+(\d+)$/);
     if (match) requiredRows.set(match[1], Number(match[2]));
   }
   const resizeRequests: Record<string, unknown>[] = [];
@@ -616,7 +616,7 @@ export async function syncDataToGoogleSheets(
   }
 
   const staleRanges = valueRanges.flatMap((item) => {
-    const match = item.range.match(/^'(.+)'!A1:[A-Z]+(\\d+)$/);
+    const match = item.range.match(/^'(.+)'!A1:[A-Z]+(\d+)$/);
     if (!match) return [];
     const sheetName = match[1];
     const lastWrittenRow = Number(match[2]);
