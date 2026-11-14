@@ -98,26 +98,26 @@ export const PatrimonyView: React.FC<PatrimonyViewProps> = ({
           {/* Net Worth Card */}
           <div className="bg-gradient-to-r from-[#11100F] via-[#21170F] to-[#3A210F] text-white p-6 rounded-2xl shadow-lg border border-orange-500/30 flex flex-col md:flex-row justify-between md:items-center gap-4">
             <div>
-              <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">
+              <span className="text-[10px] font-bold text-orange-200 uppercase tracking-wider">
                 Patrimônio Líquido Barbosa Fernandes
               </span>
               <div className="text-3xl font-black tracking-tight mt-1">
                 {formatCurrency(summary.patrimonioLiquidoCentavos)}
               </div>
-              <p className="text-xs text-blue-200 mt-1">
+              <p className="text-xs text-white/70 mt-1">
                 Ativos Reais ({formatCurrency(summary.totalAtivosCentavos)}) - Passivos ({formatCurrency(summary.totalPassivosCentavos)})
               </p>
             </div>
 
             <div className="flex gap-4">
               <div className="bg-black/20 px-4 py-2.5 rounded-xl border border-white/10 text-right">
-                <span className="text-[10px] text-blue-200 block uppercase">Ativos Totais</span>
+                <span className="text-[10px] text-white/70 block uppercase">Ativos Totais</span>
                 <span className="text-sm font-bold text-emerald-400">
                   {formatCurrency(summary.totalAtivosCentavos)}
                 </span>
               </div>
               <div className="bg-black/20 px-4 py-2.5 rounded-xl border border-white/10 text-right">
-                <span className="text-[10px] text-blue-200 block uppercase">Passivos Totais</span>
+                <span className="text-[10px] text-white/70 block uppercase">Passivos Totais</span>
                 <span className="text-sm font-bold text-rose-400">
                   {formatCurrency(summary.totalPassivosCentavos)}
                 </span>
@@ -308,7 +308,7 @@ export const PatrimonyView: React.FC<PatrimonyViewProps> = ({
                       <h4 className="font-extrabold text-slate-900 dark:text-white text-sm">
                         {goal.nome}
                       </h4>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-orange-200">
                         {goal.prioridade}
                       </span>
                     </div>
