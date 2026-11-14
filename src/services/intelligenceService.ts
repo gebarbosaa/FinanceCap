@@ -144,7 +144,7 @@ export function queryBFIntelligence(pergunta: string, data: StorageData): Intell
     let usedVal = 0;
 
     for (const c of data.cards) {
-      const limits = calculateCardLimits(c, data.transactions, data.installments);
+      const limits = calculateCardLimits(c, data.transactions, data.installments, data.invoices);
       const pct = limits.limiteTotalCentavos > 0 ? (limits.limiteUtilizadoCentavos / limits.limiteTotalCentavos) * 100 : 0;
       if (pct > highestPct) {
         highestPct = pct;
