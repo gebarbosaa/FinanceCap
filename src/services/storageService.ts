@@ -19,16 +19,12 @@ import { INITIAL_SETTINGS, INITIAL_CATEGORIES } from './initialData';
 
 import { addMonthsToCompetencia } from './currency';
 import { clearCloudSession, loadUserFinance, saveUserFinance, watchUserFinance } from './cloudDataService';
+import { isValidISODate } from '../utils/dateValidation';
 import type { Unsubscribe } from 'firebase/firestore';
 
 const STORAGE_KEY = 'BF_FINANCE_OS_DATA_V1';
 
-const isValidISODate = (value: string): boolean => {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const [year, month, day] = value.split('-').map(Number);
-  const parsed = new Date(Date.UTC(year, month - 1, day));
-  return parsed.getUTCFullYear() === year && parsed.getUTCMonth() === month - 1 && parsed.getUTCDate() === day;
-};
+
 
 export interface StorageData {
   settings: SystemSettings;
@@ -55,6 +51,7 @@ class StorageService {
   private cloudUid: string | null = null;
   private cloudUnsubscribe: Unsubscribe | null = null;
   private cloudSyncError: string | null = null;
+  private mutationDepth = 0;
 
   constructor() {
     this.data = this.loadData();
@@ -116,6 +113,10 @@ class StorageService {
   }
 
   private persist(data: StorageData) {
+    if (this.mutationDepth > 0) {
+      this.data = data;
+      return;
+    }
     const serialized = JSON.stringify(data);
     try {
       localStorage.setItem(STORAGE_KEY, serialized);
@@ -236,7 +237,7 @@ class StorageService {
   public addTransaction(tx: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>, reason: string = 'Inclusão de lançamento'): Transaction {
     if (!Number.isSafeInteger(tx.valorCentavos) || tx.valorCentavos <= 0) throw new Error('O valor deve ser positivo e informado em centavos inteiros.');
     if (!tx.descricao.trim()) throw new Error('Informe a descrição do lançamento.');
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(tx.data)) throw new Error('Informe uma data válida.');
+    if (!isValidISODate(tx.data)) throw new Error('Informe uma data válida.');
     if (tx.tipo === 'TRANSFERENCIA') {
       if (!tx.contaId || !tx.contaDestinoId) throw new Error('Selecione as contas de origem e destino.');
       if (tx.contaId === tx.contaDestinoId) throw new Error('A conta de origem e a conta de destino devem ser diferentes.');
@@ -326,7 +327,7 @@ class StorageService {
     const updated: Transaction = { ...previous, ...updates, updatedAt: new Date().toISOString() };
     if (!Number.isSafeInteger(updated.valorCentavos) || updated.valorCentavos <= 0) throw new Error('O valor deve ser positivo e informado em centavos inteiros.');
     if (!updated.descricao.trim()) throw new Error('A descrição não pode ficar vazia.');
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(updated.data) || Number.isNaN(new Date(`${updated.data}T12:00:00`).getTime())) {
+    if (!isValidISODate(updated.data)) {
       throw new Error('Informe uma data válida.');
     }
 
@@ -973,28 +974,42 @@ class StorageService {
     if (!Number.isSafeInteger(interestCentavos) || interestCentavos < 0) throw new Error('O valor dos juros é inválido.');
     if (interestCentavos > 0 && !this.data.categories.some((item) => item.id === interestCategoryId && item.tipo === 'DESPESA' && item.ativo !== false)) throw new Error('Selecione uma categoria de despesa válida para os juros.');
     if (this.data.transactions.some((item) => item.idExterno === `debt-payment:${paymentId}:principal` || item.idExterno === `debt-payment:${paymentId}:interest`)) throw new Error('Este pagamento já foi registrado.');
-    const competence = date.slice(0, 7);
-    const principal = this.addTransaction({
-      data: date, competencia: competence, descricao: `Amortização do principal — ${debt.credor}`,
-      tipo: 'AMORTIZACAO', categoriaId: 'cat-desp-12', contaId: accountId,
-      formaPagamento: 'DEBITO', valorCentavos: principalCentavos, status: 'REALIZADO',
-      origem: 'SISTEMA', debtId, idExterno: `debt-payment:${paymentId}:principal`,
-    }, 'Amortização de principal de dívida');
+
+    // Stage principal, interest, debt balance and audit records as one local/cloud commit.
+    const snapshot = JSON.parse(JSON.stringify(this.data)) as StorageData;
+    this.mutationDepth++;
+    let principal: Transaction;
     let interest: Transaction | undefined;
-    if (interestCentavos > 0) {
-      interest = this.addTransaction({
-        data: date, competencia: competence, descricao: `Juros do pagamento — ${debt.credor}`,
-        tipo: 'DESPESA', categoriaId: interestCategoryId, contaId: accountId,
-        formaPagamento: 'DEBITO', valorCentavos: interestCentavos, status: 'REALIZADO',
-        origem: 'SISTEMA', debtId, idExterno: `debt-payment:${paymentId}:interest`,
-      }, 'Pagamento de juros de dívida');
+    let updatedDebt: Debt;
+    try {
+      const competence = date.slice(0, 7);
+      principal = this.addTransaction({
+        data: date, competencia: competence, descricao: `Amortização do principal — ${debt.credor}`,
+        tipo: 'AMORTIZACAO', categoriaId: 'cat-desp-12', contaId: accountId,
+        formaPagamento: 'DEBITO', valorCentavos: principalCentavos, status: 'REALIZADO',
+        origem: 'SISTEMA', debtId, idExterno: `debt-payment:${paymentId}:principal`,
+      }, 'Amortização de principal de dívida');
+      if (interestCentavos > 0) {
+        interest = this.addTransaction({
+          data: date, competencia: competence, descricao: `Juros do pagamento — ${debt.credor}`,
+          tipo: 'DESPESA', categoriaId: interestCategoryId, contaId: accountId,
+          formaPagamento: 'DEBITO', valorCentavos: interestCentavos, status: 'REALIZADO',
+          origem: 'SISTEMA', debtId, idExterno: `debt-payment:${paymentId}:interest`,
+        }, 'Pagamento de juros de dívida');
+      }
+      const remaining = debt.saldoDevedorCentavos - principalCentavos;
+      updatedDebt = this.updateDebt(debtId, {
+        saldoDevedorCentavos: remaining,
+        parcelasRestantes: remaining === 0 ? 0 : debt.parcelasRestantes,
+        status: remaining === 0 ? 'QUITADO' : debt.status,
+      });
+    } catch (error) {
+      this.mutationDepth--;
+      this.data = snapshot;
+      throw error;
     }
-    const remaining = debt.saldoDevedorCentavos - principalCentavos;
-    const updatedDebt = this.updateDebt(debtId, {
-      saldoDevedorCentavos: remaining,
-      parcelasRestantes: remaining === 0 ? 0 : debt.parcelasRestantes,
-      status: remaining === 0 ? 'QUITADO' : debt.status,
-    });
+    this.mutationDepth--;
+    this.persist({ ...this.data });
     return { principal, interest, debt: updatedDebt };
   }
 

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { parseToCentavos } from './currency';
 import { calculateAccountBalance, calculateCardLimits, calculateFinancialSummary, generate12MonthProjection } from './financeEngine';
 import { runAll20MandatoryTests } from './testSuite';
+import { isValidISODate } from '../utils/dateValidation';
 import type { Account, CreditCard, Invoice, InstallmentPlan, Recurrence, Transaction } from '../types/finance';
 
 test('parseToCentavos reads Brazilian thousands and decimal separators', () => {
@@ -336,4 +337,14 @@ test('12-month projection counts a generated recurrence once in the current mont
   const projection = generate12MonthProjection([account], [generated], [], [], '2026-11', [recurrence]);
   assert.equal(projection[0].despesasFixasCentavos, 10000);
   assert.equal(projection[1].despesasFixasCentavos, 10000);
+});
+
+
+test('isValidISODate rejects impossible calendar dates and accepts leap days', () => {
+  assert.equal(isValidISODate('2024-02-29'), true);
+  assert.equal(isValidISODate('2026-02-28'), true);
+  assert.equal(isValidISODate('2026-02-29'), false);
+  assert.equal(isValidISODate('2026-02-31'), false);
+  assert.equal(isValidISODate('2026-13-01'), false);
+  assert.equal(isValidISODate('26-02-01'), false);
 });
